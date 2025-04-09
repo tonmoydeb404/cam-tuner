@@ -1,0 +1,9 @@
+{
+  "name": "CamTuner",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "Customize your webcam configuration.",
+  "background": {
+    "service_worker": "src/background.ts"
+  }
+}

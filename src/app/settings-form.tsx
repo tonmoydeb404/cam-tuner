@@ -1,6 +1,8 @@
 import { FormSelect, FormSlider } from "@/components/form";
 import { useAppContext } from "@/context";
 import ratioOptions from "@/context/ratio-options";
+import useWebcams from "@/hooks/web-cams";
+import { useEffect } from "react";
 
 type Props = {};
 
@@ -13,6 +15,15 @@ const SettingsForm = (props: Props) => {
     cameraSource,
     setCameraSource,
   } = useAppContext();
+  const { webcams } = useWebcams();
+
+  useEffect(() => {
+    if (webcams.length > 0) {
+      setCameraSource(webcams[0].deviceId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webcams]);
+
   return (
     <div className="space-y-5 p-5 border rounded-2xl">
       <FormSelect
@@ -20,7 +31,7 @@ const SettingsForm = (props: Props) => {
         id="source-camera"
         value={cameraSource || ""}
         onChange={setCameraSource}
-        options={[]}
+        options={webcams.map((cam) => ({ id: cam.deviceId, label: cam.label }))}
       />
 
       <FormSelect

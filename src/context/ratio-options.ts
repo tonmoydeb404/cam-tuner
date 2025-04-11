@@ -22,3 +22,8 @@ const ratioOptions = [
 ];
 
 export default ratioOptions;
+
+export const getRatio = (id: string) => {
+  const option = ratioOptions.find((option) => option.id === id);
+  return option ? option.value : 1;
+};

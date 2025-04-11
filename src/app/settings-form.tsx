@@ -31,7 +31,9 @@ const SettingsForm = (props: Props) => {
         id="source-camera"
         value={cameraSource || ""}
         onChange={setCameraSource}
-        options={webcams.map((cam) => ({ id: cam.deviceId, label: cam.label }))}
+        options={webcams
+          .filter((cam) => Boolean(cam.deviceId))
+          .map((cam) => ({ id: cam.deviceId, label: cam.label }))}
       />
 
       <FormSelect

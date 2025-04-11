@@ -13,7 +13,7 @@ const useWebcams = () => {
     async function getCams() {
       try {
         // Ensure permission is granted for camera access
-        await navigator.mediaDevices.getUserMedia({ video: true });
+        // await navigator.mediaDevices.getUserMedia({ video: true });
 
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices

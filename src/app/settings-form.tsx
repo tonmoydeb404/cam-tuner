@@ -1,7 +1,7 @@
 import { FormSelect, FormSlider } from "@/components/form";
 import { useAppContext } from "@/context";
 import ratioOptions from "@/context/ratio-options";
-import useWebcams from "@/hooks/web-cams";
+import useWebcams from "@/hooks/use-web-cams";
 import { useEffect } from "react";
 
 type Props = {};

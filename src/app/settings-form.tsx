@@ -1,4 +1,4 @@
-import { FormSelect, FormSlider } from "@/components/form";
+import { FormSelect, FormSlider, FormSwitch } from "@/components/form";
 import { useAppContext } from "@/context";
 import ratioOptions from "@/context/ratio-options";
 import useWebcams from "@/hooks/use-web-cams";
@@ -10,10 +10,12 @@ const SettingsForm = (props: Props) => {
   const {
     aspectRatio,
     setAspectRatio,
-    setZoom: setZoomLevel,
-    zoom: zoomLevel,
+    setZoom,
+    zoom,
     cameraSource,
     setCameraSource,
+    mirror,
+    setMirror,
   } = useAppContext();
   const { webcams } = useWebcams();
 
@@ -46,11 +48,19 @@ const SettingsForm = (props: Props) => {
       <FormSlider
         label="Zoom"
         id="zoom"
-        value={zoomLevel}
+        value={zoom}
         min={1}
         max={3}
         step={0.1}
-        onChange={setZoomLevel}
+        onChange={setZoom}
+      />
+
+      <FormSwitch
+        label="Mirror"
+        id="mirror"
+        checked={mirror}
+        onChange={setMirror}
+        layout="single-line"
       />
     </div>
   );

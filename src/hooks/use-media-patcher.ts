@@ -66,6 +66,7 @@ function useMediaPatcher(
     config?.brightness,
     config?.contrast,
     config?.saturation,
+    config?.mirror,
   ]);
 
   useEffect(() => {

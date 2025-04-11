@@ -17,6 +17,9 @@ const defaultValue: IAppContext = {
   setContrast: () => {},
   saturation: 100,
   setSaturation: () => {},
+
+  mirror: false,
+  setMirror: () => {},
 };
 const AppContext = createContext(defaultValue);
 
@@ -34,6 +37,8 @@ export const AppContextProvider = (props: Props) => {
   const { children } = props;
 
   const [enable, setEnable] = useState(defaultValue.enable);
+
+  const [mirror, setMirror] = useState(defaultValue.mirror);
 
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
 
@@ -59,6 +64,8 @@ export const AppContextProvider = (props: Props) => {
     setSaturation,
     cameraSource,
     setCameraSource,
+    mirror,
+    setMirror,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

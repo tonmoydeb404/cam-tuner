@@ -4,6 +4,7 @@ export type MediaPatcherConfig = {
   brightness?: number;
   saturation?: number;
   contrast?: number;
+  mirror?: boolean;
 };
 
 export type Size = {
@@ -30,35 +31,41 @@ function generateFilterString(config: MediaPatcherConfig): string {
   return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
 }
 
-function calculateCrop(
-  { width, height }: Size,
-  aspectRatio?: number,
-  zoom: number = 1
-) {
-  const cropWidth = Math.floor(width / zoom);
-  const cropHeight = Math.floor(height / zoom);
-
-  let finalWidth = cropWidth;
-  let finalHeight = cropHeight;
-
-  if (typeof aspectRatio === "number") {
-    const zoomedAspect = cropWidth / cropHeight;
-    if (zoomedAspect > aspectRatio) {
-      finalWidth = Math.floor(cropHeight * aspectRatio);
-    } else {
-      finalHeight = Math.floor(cropWidth / aspectRatio);
-    }
+function calculateCrop({ width, height }: Size, aspectRatio?: number) {
+  if (typeof aspectRatio !== "number") {
+    return {
+      width: width,
+      height: height,
+      offsetX: 0,
+      offsetY: 0,
+    };
   }
 
-  const offsetX = Math.floor((width - finalWidth) / 2);
-  const offsetY = Math.floor((height - finalHeight) / 2);
+  const originalAspect = width / height;
+  let cropWidth = width;
+  let cropHeight = height;
 
-  devLog(`Crop: ${finalWidth}x${finalHeight} @ ${offsetX},${offsetY}`);
+  if (originalAspect > aspectRatio) {
+    cropWidth = Math.floor(height * aspectRatio);
+  } else {
+    cropHeight = Math.floor(width / aspectRatio);
+  }
+
+  const offsetX = Math.floor((width - cropWidth) / 2);
+  const offsetY = Math.floor((height - cropHeight) / 2);
+
+  devLog(`Crop: ${cropWidth}x${cropHeight} @ ${offsetX},${offsetY}`);
+  return { width: cropWidth, height: cropHeight, offsetX, offsetY };
+}
+
+function calculateZoomedSize(size: Size, zoom?: number): Size {
+  if (typeof zoom !== "number" || zoom <= 0) {
+    return size;
+  }
+
   return {
-    width: finalWidth,
-    height: finalHeight,
-    offsetX,
-    offsetY,
+    width: Math.floor(size.width / zoom),
+    height: Math.floor(size.height / zoom),
   };
 }
 
@@ -66,10 +73,12 @@ function applyCanvasProcessing({
   video,
   crop,
   filters,
+  config,
 }: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   filters: string;
+  config: MediaPatcherConfig;
 }): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -81,10 +90,15 @@ function applyCanvasProcessing({
   }
   ctx.filter = filters;
 
+  // Apply mirror mode if enabled
+  if (config.mirror) {
+    ctx.scale(-1, 1); // Flip horizontally
+    ctx.translate(-crop.width, 0); // Adjust the position to match the flip
+  }
+
   function draw() {
-    if (!ctx) return;
     try {
-      ctx.drawImage(
+      ctx?.drawImage(
         video,
         crop.offsetX,
         crop.offsetY,
@@ -128,12 +142,14 @@ export function mediaPatcher(
     if (!videoTrack) throw new Error("No video track found in stream.");
 
     const video = setupVideoElement(videoTrack);
-    const crop = calculateCrop(size, config.aspectRatio, config.zoom ?? 1);
+    const zoomedSize = calculateZoomedSize(size, config.zoom);
+    const crop = calculateCrop(zoomedSize, config.aspectRatio);
     const filters = generateFilterString(config);
     const canvas = applyCanvasProcessing({
       video,
       crop,
       filters,
+      config,
     });
 
     const outputStream = canvas.captureStream();

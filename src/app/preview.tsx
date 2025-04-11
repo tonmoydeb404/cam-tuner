@@ -9,8 +9,15 @@ type Props = {};
 
 const Preview = (props: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { cameraSource, aspectRatio, brightness, contrast, saturation, zoom } =
-    useAppContext();
+  const {
+    cameraSource,
+    aspectRatio,
+    brightness,
+    contrast,
+    saturation,
+    zoom,
+    mirror,
+  } = useAppContext();
   const { stream, error, loading, size } = useMediaStream(cameraSource);
   const patchedStream = useMediaPatcher(stream, size, {
     aspectRatio: getRatio(aspectRatio),
@@ -18,6 +25,7 @@ const Preview = (props: Props) => {
     contrast,
     saturation,
     zoom,
+    mirror,
   });
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { useAppContext } from "@/context";
 import { getRatio } from "@/context/ratio-options";
+import useMediaPatcher from "@/hooks/use-media-patcher";
 import useMediaStream from "@/hooks/use-media-stream";
 import { LucideLoader, LucideX } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -8,17 +9,23 @@ type Props = {};
 
 const Preview = (props: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { cameraSource, aspectRatio } = useAppContext();
-  const { stream, error, loading } = useMediaStream(cameraSource, {
+  const { cameraSource, aspectRatio, brightness, contrast, saturation, zoom } =
+    useAppContext();
+  const { stream, error, loading, size } = useMediaStream(cameraSource);
+  const patchedStream = useMediaPatcher(stream, size, {
     aspectRatio: getRatio(aspectRatio),
+    brightness,
+    contrast,
+    saturation,
+    zoom,
   });
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    if (videoRef.current && patchedStream) {
+      videoRef.current.srcObject = patchedStream;
       videoRef.current.play();
     }
-  }, [stream]);
+  }, [patchedStream]);
 
   if (loading)
     return (
@@ -38,7 +45,7 @@ const Preview = (props: Props) => {
   return (
     <video
       ref={videoRef}
-      className="aspect-video rounded-xl mb-5 w-full bg-accent"
+      className="aspect-video rounded-xl mb-5 w-full bg-accent object-contain"
     />
   );
 };

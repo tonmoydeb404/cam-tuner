@@ -9,8 +9,8 @@ const defaultValue: IAppContext = {
   enable: false,
   setEnable: () => {},
   setAspectRatio: () => {},
-  zoomLevel: 1,
-  setZoomLevel: () => {},
+  zoom: 1,
+  setZoom: () => {},
   brightness: 100,
   setBrightness: () => {},
   contrast: 100,
@@ -38,7 +38,7 @@ export const AppContextProvider = (props: Props) => {
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
 
   const [aspectRatio, setAspectRatio] = useState(defaultValue.aspectRatio);
-  const [zoomLevel, setZoomLevel] = useState(defaultValue.zoomLevel);
+  const [zoom, setZoom] = useState(defaultValue.zoom);
 
   const [brightness, setBrightness] = useState(defaultValue.brightness);
   const [contrast, setContrast] = useState(defaultValue.contrast);
@@ -49,8 +49,8 @@ export const AppContextProvider = (props: Props) => {
     setAspectRatio,
     enable,
     setEnable,
-    zoomLevel,
-    setZoomLevel,
+    zoom,
+    setZoom,
     brightness,
     setBrightness,
     contrast,

@@ -7,8 +7,8 @@ export interface IAppContext {
 
   aspectRatio: string;
   setAspectRatio: React.Dispatch<React.SetStateAction<string>>;
-  zoomLevel: number;
-  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  zoom: number;
+  setZoom: React.Dispatch<React.SetStateAction<number>>;
 
   brightness: number;
   setBrightness: React.Dispatch<React.SetStateAction<number>>;

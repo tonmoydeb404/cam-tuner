@@ -89,19 +89,19 @@ function cropStreamAspectRatio(
   const outputStream = canvas.captureStream();
 
   // Stop original stream when outputStream is stopped
-  outputStream.getTracks().forEach((track) => {
-    const originalStop = track.stop.bind(track);
-    track.stop = () => {
-      try {
-        stream.getTracks().forEach((t) => t.stop());
-        devLog("Original stream stopped.");
-      } catch (err) {
-        devLog("Error stopping original stream:", err);
-      } finally {
-        originalStop();
-      }
-    };
-  });
+  // outputStream.getTracks().forEach((track) => {
+  //   const originalStop = track.stop.bind(track);
+  //   track.stop = () => {
+  //     try {
+  //       stream.getTracks().forEach((t) => t.stop());
+  //       devLog("Original stream stopped.");
+  //     } catch (err) {
+  //       devLog("Error stopping original stream:", err);
+  //     } finally {
+  //       originalStop();
+  //     }
+  //   };
+  // });
 
   return outputStream;
 }

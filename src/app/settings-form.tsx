@@ -10,8 +10,8 @@ const SettingsForm = (props: Props) => {
   const {
     aspectRatio,
     setAspectRatio,
-    setZoomLevel,
-    zoomLevel,
+    setZoom: setZoomLevel,
+    zoom: zoomLevel,
     cameraSource,
     setCameraSource,
   } = useAppContext();

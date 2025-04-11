@@ -1,12 +1,9 @@
-import cropStreamAspectRatio from "@/utils/crop-stream-aspect-ratio";
+import { Size } from "@/utils/media-patcher";
 import { useEffect, useState } from "react";
 
-type MediaStreamConfig = {
-  aspectRatio?: number;
-};
-
-function useMediaStream(deviceId: string | null, config?: MediaStreamConfig) {
+function useMediaStream(deviceId: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [size, setSize] = useState<Size | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -27,20 +24,13 @@ function useMediaStream(deviceId: string | null, config?: MediaStreamConfig) {
         const rawStream = await navigator.mediaDevices.getUserMedia(
           constraints
         );
-
         const track = rawStream.getVideoTracks()[0];
         const settings = track.getSettings();
         const originalWidth = settings.width ?? 1280;
         const originalHeight = settings.height ?? 720;
 
-        const cropped = cropStreamAspectRatio(
-          rawStream,
-          originalWidth,
-          originalHeight,
-          config?.aspectRatio
-        );
-
-        setStream(cropped);
+        setStream(rawStream);
+        setSize({ width: originalWidth, height: originalHeight });
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Unknown error"));
       } finally {
@@ -49,7 +39,7 @@ function useMediaStream(deviceId: string | null, config?: MediaStreamConfig) {
     };
 
     getStream();
-  }, [deviceId, config?.aspectRatio]);
+  }, [deviceId]);
 
   useEffect(() => {
     return () => {
@@ -57,7 +47,7 @@ function useMediaStream(deviceId: string | null, config?: MediaStreamConfig) {
     };
   }, [stream]);
 
-  return { stream, loading, error };
+  return { stream, size, loading, error };
 }
 
 export default useMediaStream;

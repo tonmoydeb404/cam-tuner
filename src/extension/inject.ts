@@ -1,12 +1,13 @@
+import { MessageTypeEnum } from "@/types/window-message";
 import { devLog } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
 
 window.addEventListener("message", (event) => {
-  if (event?.data?.type !== "VCAM_SETTINGS") return;
+  if (event?.data?.type !== MessageTypeEnum.SETTINGS) return;
 
-  const enable = !!event.data?.settings?.enable;
-  const sourceDeviceLabel = event.data?.settings?.cameraSource?.label;
-  const config = event.data?.settings?.config;
+  const enable = !!event.data?.payload?.enable;
+  const sourceDeviceLabel = event.data?.payload?.cameraSource?.label;
+  const config = event.data?.payload?.config;
 
   devLog("Received settings:", {
     enable,

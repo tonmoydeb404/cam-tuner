@@ -1,10 +1,12 @@
+import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
+import Browser from "webextension-polyfill";
 import { IAppContext } from "../context/types";
 import { devLog } from "../utils/log";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
-chrome.storage.sync.get(
-  ["cameraSource", "config", "enable"] as (keyof IAppContext)[],
-  (result) => {
+Browser.storage.sync
+  .get(["cameraSource", "config", "enable"] as (keyof IAppContext)[])
+  .then((result) => {
     const script = document.createElement("script");
     script.setAttribute("type", "module");
     script.setAttribute(
@@ -21,20 +23,26 @@ chrome.storage.sync.get(
 
     script.onload = () => {
       devLog("Script loaded, sending message...", result);
-      window.postMessage({ type: "VCAM_SETTINGS", settings: result }, "*");
+      const messageObj: WindowMessage = {
+        type: MessageTypeEnum.SETTINGS,
+        payload: (result ?? {}) as WindowMessage["payload"],
+      };
+      window.postMessage(messageObj, "*");
     };
-  }
-);
+  });
 
 // Update Settings to the web page ----------------------------------------------------------------------
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "UPDATE_SETTINGS") {
+Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const windowMessage = message as WindowMessage;
+  if (windowMessage?.type === MessageTypeEnum.UPDATE) {
     devLog("Settings Updated...");
     window.postMessage(
-      { type: "VCAM_SETTINGS", settings: message.settings ?? {} },
+      { ...windowMessage, type: MessageTypeEnum.SETTINGS },
       "*"
     );
 
     sendResponse({ success: true });
   }
+
+  return true;
 });

@@ -113,7 +113,7 @@ export function mediaDevicePatcher(
             constraints
           );
 
-          return streamPatcher(stream, { height, width }, config);
+          return streamPatcher(stream, { height, width }, config, true);
         }
       }
 

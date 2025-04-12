@@ -1,3 +1,4 @@
+import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
 import {
   createContext,
   ReactNode,
@@ -6,8 +7,9 @@ import {
   useEffect,
   useState,
 } from "react";
+import Browser from "webextension-polyfill";
 import ratioOptions from "./ratio-options";
-import { IAppContext } from "./types";
+import { IAppCameraSource, IAppConfig, IAppContext } from "./types";
 
 const defaultValue: IAppContext = {
   cameraSource: null,
@@ -49,13 +51,19 @@ export const AppContextProvider = (props: Props) => {
   // ----------------------------------------------------------------------
 
   useEffect(() => {
-    chrome.storage?.sync.get(["enable", "cameraSource", "config"], (result) => {
-      if (typeof result.enable === "boolean") setEnable(result.enable);
-      if (typeof result.cameraSource === "object")
-        setCameraSource(result.cameraSource);
-      if (typeof result.config === "object")
-        setConfig((prev) => ({ ...prev, ...result.config }));
-    });
+    Browser.storage?.sync
+      .get(["enable", "cameraSource", "config"])
+      .then((result) => {
+        if (typeof result.enable === "boolean") {
+          setEnable(result.enable);
+        }
+        if (typeof result.cameraSource === "object") {
+          setCameraSource(result.cameraSource as IAppCameraSource);
+        }
+        if (typeof result.config === "object") {
+          setConfig((prev) => ({ ...prev, ...(result.config as IAppConfig) }));
+        }
+      });
   }, []);
 
   // ----------------------------------------------------------------------
@@ -65,11 +73,20 @@ export const AppContextProvider = (props: Props) => {
   };
 
   const saveToStorage = useCallback(() => {
-    chrome.storage?.sync.set({
+    Browser.storage?.sync.set({
       enable,
       cameraSource,
       config,
     });
+    const message: WindowMessage = {
+      type: MessageTypeEnum.UPDATE,
+      payload: {
+        cameraSource,
+        config,
+        enable,
+      },
+    };
+    Browser.runtime.sendMessage(message);
   }, [enable, cameraSource, config]);
 
   // ----------------------------------------------------------------------

@@ -1,4 +1,4 @@
-export type MediaPatcherConfig = {
+export type StreamPatcherConfig = {
   aspectRatio?: number;
   zoom?: number;
   brightness?: number;
@@ -7,7 +7,7 @@ export type MediaPatcherConfig = {
   mirror?: boolean;
 };
 
-export type Size = {
+export type StreamPatcherSize = {
   width: number;
   height: number;
 };
@@ -23,7 +23,7 @@ function normalizeFilterValue(value?: number): number {
   return Math.max(0, value) / 100;
 }
 
-function generateFilterString(config: MediaPatcherConfig): string {
+function generateFilterString(config: StreamPatcherConfig): string {
   const brightness = normalizeFilterValue(config.brightness);
   const saturation = normalizeFilterValue(config.saturation);
   const contrast = normalizeFilterValue(config.contrast);
@@ -31,7 +31,10 @@ function generateFilterString(config: MediaPatcherConfig): string {
   return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
 }
 
-function calculateCrop({ width, height }: Size, aspectRatio?: number) {
+function calculateCrop(
+  { width, height }: StreamPatcherSize,
+  aspectRatio?: number
+) {
   if (typeof aspectRatio !== "number") {
     return {
       width: width,
@@ -58,7 +61,10 @@ function calculateCrop({ width, height }: Size, aspectRatio?: number) {
   return { width: cropWidth, height: cropHeight, offsetX, offsetY };
 }
 
-function calculateZoomedSize(size: Size, zoom?: number): Size {
+function calculateZoomedSize(
+  size: StreamPatcherSize,
+  zoom?: number
+): StreamPatcherSize {
   if (typeof zoom !== "number" || zoom <= 0) {
     return size;
   }
@@ -78,7 +84,7 @@ function applyCanvasProcessing({
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   filters: string;
-  config: MediaPatcherConfig;
+  config: StreamPatcherConfig;
 }): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -131,10 +137,10 @@ function setupVideoElement(track: MediaStreamTrack): HTMLVideoElement {
   return video;
 }
 
-export function mediaPatcher(
+export function streamPatcher(
   stream: MediaStream,
-  size: Size,
-  config: MediaPatcherConfig = {},
+  size: StreamPatcherSize,
+  config: StreamPatcherConfig = {},
   stopOriginalStream = false
 ): MediaStream {
   try {

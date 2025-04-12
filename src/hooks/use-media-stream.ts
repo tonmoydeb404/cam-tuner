@@ -1,9 +1,9 @@
-import { Size } from "@/utils/media-patcher";
+import { StreamPatcherSize } from "@/utils/stream-patcher";
 import { useEffect, useState } from "react";
 
 function useMediaStream(deviceId: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [size, setSize] = useState<Size | null>(null);
+  const [size, setSize] = useState<StreamPatcherSize | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 

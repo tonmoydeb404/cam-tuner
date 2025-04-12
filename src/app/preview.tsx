@@ -1,7 +1,7 @@
 import { useAppContext } from "@/context";
 import { getRatio } from "@/context/ratio-options";
-import useMediaPatcher from "@/hooks/use-media-patcher";
 import useMediaStream from "@/hooks/use-media-stream";
+import useStreamPatcher from "@/hooks/use-stream-patcher";
 import { LucideLoader, LucideX } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -19,7 +19,7 @@ const Preview = (props: Props) => {
     mirror,
   } = useAppContext();
   const { stream, error, loading, size } = useMediaStream(cameraSource);
-  const patchedStream = useMediaPatcher(stream, size, {
+  const patchedStream = useStreamPatcher(stream, size, {
     aspectRatio: getRatio(aspectRatio),
     brightness,
     contrast,

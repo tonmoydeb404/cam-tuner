@@ -1,4 +1,8 @@
-import { mediaPatcher, MediaPatcherConfig, Size } from "@/utils/media-patcher";
+import {
+  streamPatcher,
+  StreamPatcherConfig,
+  StreamPatcherSize,
+} from "@/utils/stream-patcher";
 import { useEffect, useRef, useState } from "react";
 
 type IdleCallbackId = number;
@@ -18,10 +22,10 @@ const cancelIdle =
     ? window.cancelIdleCallback
     : (id: number) => clearTimeout(id);
 
-function useMediaPatcher(
+function useStreamPatcher(
   stream: MediaStream | null,
-  size: Size | null,
-  config?: MediaPatcherConfig
+  size: StreamPatcherSize | null,
+  config?: StreamPatcherConfig
 ) {
   const [patchedStream, setPatchedStream] = useState<MediaStream | null>(null);
   const previousPatchedStreamRef = useRef<MediaStream | null>(null);
@@ -40,7 +44,7 @@ function useMediaPatcher(
 
     debounceTimeoutRef.current = setTimeout(() => {
       idleCallbackRef.current = requestIdle(() => {
-        const newPatchedStream = mediaPatcher(stream, size, config);
+        const newPatchedStream = streamPatcher(stream, size, config);
 
         if (previousPatchedStreamRef.current) {
           previousPatchedStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -78,4 +82,4 @@ function useMediaPatcher(
   return patchedStream;
 }
 
-export default useMediaPatcher;
+export default useStreamPatcher;

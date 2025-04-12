@@ -12,7 +12,7 @@ import { IAppContext } from "./types";
 const defaultValue: IAppContext = {
   cameraSource: null,
   setCameraSource: () => {},
-  enable: false,
+  enable: true,
   setEnable: () => {},
 
   config: {
@@ -51,7 +51,7 @@ export const AppContextProvider = (props: Props) => {
   useEffect(() => {
     chrome.storage?.sync.get(["enable", "cameraSource", "config"], (result) => {
       if (typeof result.enable === "boolean") setEnable(result.enable);
-      if (typeof result.cameraSource === "string")
+      if (typeof result.cameraSource === "object")
         setCameraSource(result.cameraSource);
       if (typeof result.config === "object")
         setConfig((prev) => ({ ...prev, ...result.config }));

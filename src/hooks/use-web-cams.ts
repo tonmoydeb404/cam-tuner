@@ -23,6 +23,8 @@ const useWebcams = () => {
             label: device.label,
           }));
 
+        console.log(devices.filter((item) => item.kind === "videoinput"));
+
         setWebcams(videoInputs);
       } catch (error) {
         console.error("Error accessing webcams:", error);

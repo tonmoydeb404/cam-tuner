@@ -14,7 +14,11 @@ const SettingsForm = (props: Props) => {
 
   useEffect(() => {
     if (webcams.length > 0) {
-      setCameraSource(webcams[0].deviceId);
+      setCameraSource((prev) => {
+        if (prev) return prev;
+
+        return webcams[0];
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webcams]);
@@ -24,8 +28,12 @@ const SettingsForm = (props: Props) => {
       <FormSelect
         label="Source Camera"
         id="source-camera"
-        value={cameraSource || ""}
-        onChange={setCameraSource}
+        value={cameraSource?.deviceId || ""}
+        onChange={(value) =>
+          setCameraSource(
+            webcams.find((item) => item.deviceId === value) ?? null
+          )
+        }
         options={webcams
           .filter((cam) => Boolean(cam.deviceId))
           .map((cam) => ({ value: cam.deviceId, label: cam.label }))}

@@ -5,7 +5,7 @@
   "{{firefox}}.manifest_version": 2,
   "description": "Customize your webcam configuration.",
   "background": {
-    "service_worker": "src/background.ts"
+    "service_worker": "src/extension/background.ts"
   },
   "{{chrome}}.action": {
     "default_popup": "index.html"
@@ -16,5 +16,27 @@
   "permissions": [
     "contentSettings",
     "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/extension/content.ts"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/extension/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
   ]
 }

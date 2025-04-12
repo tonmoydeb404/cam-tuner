@@ -9,7 +9,9 @@ type Props = {};
 const Preview = (props: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { cameraSource, config } = useAppContext();
-  const { stream, error, loading, size } = useMediaStream(cameraSource);
+  const { stream, error, loading, size } = useMediaStream(
+    cameraSource?.deviceId ?? null
+  );
   const patchedStream = useStreamPatcher(stream, size, config);
 
   useEffect(() => {

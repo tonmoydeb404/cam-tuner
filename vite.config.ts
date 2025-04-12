@@ -6,7 +6,11 @@ import webExtension from "vite-plugin-web-extension";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [webExtension(), react(), tailwindcss()],
+  plugins: [
+    webExtension({ additionalInputs: ["src/extension/inject.ts"] }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -1,12 +1,16 @@
-import { devLog } from "./utils/log";
+import { IAppContext } from "../context/types";
+import { devLog } from "../utils/log";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
 chrome.storage.sync.get(
-  ["ratioX", "ratioY", "zoomLevel", "enable"],
+  ["cameraSource", "config", "enable"] as (keyof IAppContext)[],
   (result) => {
     const script = document.createElement("script");
     script.setAttribute("type", "module");
-    script.setAttribute("src", chrome.runtime.getURL("lib/inject.js"));
+    script.setAttribute(
+      "src",
+      chrome.runtime.getURL("src/extension/inject.js")
+    );
 
     const head =
       document.head ||
@@ -16,7 +20,7 @@ chrome.storage.sync.get(
     head.insertBefore(script, head.lastChild);
 
     script.onload = () => {
-      devLog("Script loaded, sending message...");
+      devLog("Script loaded, sending message...", result);
       window.postMessage({ type: "VCAM_SETTINGS", settings: result }, "*");
     };
   }

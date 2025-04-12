@@ -46,9 +46,11 @@ const matchDeviceId = (deviceId: ConstrainDOMString) => {
 
 export function mediaDevicePatcher(
   enable: boolean,
-  sourceDeviceId: string,
+  sourceDeviceLabel: string,
   config: StreamPatcherConfig
 ) {
+  let sourceDeviceId: undefined | string;
+
   if (!enable) {
     MediaDevices.prototype.enumerateDevices = enumerateDevicesFn;
     MediaDevices.prototype.getUserMedia = getUserMediaFn;
@@ -61,11 +63,13 @@ export function mediaDevicePatcher(
     const res = await enumerateDevicesFn.call(navigator.mediaDevices);
 
     // Include virtual cam only if there is already a real camera
-    const sourceDeviceIndex = res.findIndex(
-      (r) => r.deviceId === sourceDeviceId && r?.kind === "videoinput"
+    const videoInputs = res.filter((item) => item.kind === "videoinput");
+    const sourceDevice = videoInputs.find(
+      (item) => item.label === sourceDeviceLabel
     );
+    sourceDeviceId = sourceDevice?.deviceId;
 
-    if (sourceDeviceIndex !== -1) {
+    if (videoInputs.length > 0 || !!sourceDeviceId) {
       const mediaDevice: Omit<MediaDeviceInfo, "toJSON"> = {
         deviceId: MEDIA_DEVICE_ID,
         groupId: MEDIA_GROUP_ID,

@@ -9,12 +9,19 @@ export interface IAppConfig {
   mirror: boolean;
 }
 
+export interface IAppCameraSource {
+  label: string;
+  deviceId: string;
+}
+
 export interface IAppContext {
   enable: boolean;
   setEnable: React.Dispatch<React.SetStateAction<boolean>>;
 
-  cameraSource: string | null;
-  setCameraSource: React.Dispatch<React.SetStateAction<string | null>>;
+  cameraSource: IAppCameraSource | null;
+  setCameraSource: React.Dispatch<
+    React.SetStateAction<IAppCameraSource | null>
+  >;
 
   config: IAppConfig;
   setConfig: React.Dispatch<React.SetStateAction<IAppConfig>>;

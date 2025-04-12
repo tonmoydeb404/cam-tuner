@@ -1,3 +1,5 @@
+import { devLog } from "./log";
+
 export type StreamPatcherConfig = {
   aspectRatio?: number;
   zoom?: number;
@@ -11,12 +13,6 @@ export type StreamPatcherSize = {
   width: number;
   height: number;
 };
-
-function devLog(...args: unknown[]) {
-  if (process.env.NODE_ENV === "development") {
-    console.log("[MediaPatcher]", ...args);
-  }
-}
 
 function normalizeFilterValue(value?: number): number {
   if (typeof value !== "number") return 1;

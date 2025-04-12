@@ -7,16 +7,9 @@ import { useEffect } from "react";
 type Props = {};
 
 const SettingsForm = (props: Props) => {
-  const {
-    aspectRatio,
-    setAspectRatio,
-    setZoom,
-    zoom,
-    cameraSource,
-    setCameraSource,
-    mirror,
-    setMirror,
-  } = useAppContext();
+  const { cameraSource, setCameraSource, config, updateConfig } =
+    useAppContext();
+  const { mirror, zoom, aspectRatio } = config;
   const { webcams } = useWebcams();
 
   useEffect(() => {
@@ -35,15 +28,20 @@ const SettingsForm = (props: Props) => {
         onChange={setCameraSource}
         options={webcams
           .filter((cam) => Boolean(cam.deviceId))
-          .map((cam) => ({ id: cam.deviceId, label: cam.label }))}
+          .map((cam) => ({ value: cam.deviceId, label: cam.label }))}
       />
 
       <FormSelect
         label="Aspect Ratio"
         id="aspect-ratio"
-        value={aspectRatio}
-        onChange={setAspectRatio}
-        options={ratioOptions}
+        value={String(aspectRatio)}
+        onChange={(value) =>
+          updateConfig("aspectRatio")(Number(value) || ratioOptions[0].value)
+        }
+        options={ratioOptions.map((item) => ({
+          ...item,
+          value: String(item.value),
+        }))}
       />
       <FormSlider
         label="Zoom"
@@ -52,14 +50,14 @@ const SettingsForm = (props: Props) => {
         min={1}
         max={3}
         step={0.1}
-        onChange={setZoom}
+        onChange={updateConfig("zoom")}
       />
 
       <FormSwitch
         label="Mirror"
         id="mirror"
         checked={mirror}
-        onChange={setMirror}
+        onChange={updateConfig("mirror")}
         layout="single-line"
       />
     </div>

@@ -4,14 +4,8 @@ import { useAppContext } from "@/context";
 type Props = {};
 
 const PreferenceForm = (props: Props) => {
-  const {
-    brightness,
-    contrast,
-    saturation,
-    setBrightness,
-    setContrast,
-    setSaturation,
-  } = useAppContext();
+  const { config, updateConfig } = useAppContext();
+  const { brightness, contrast, saturation } = config;
 
   return (
     <div className="space-y-3 border p-5 rounded-2xl">
@@ -22,7 +16,7 @@ const PreferenceForm = (props: Props) => {
         min={0}
         max={200}
         step={1}
-        onChange={setBrightness}
+        onChange={updateConfig("brightness")}
       />
 
       <FormSlider
@@ -32,7 +26,7 @@ const PreferenceForm = (props: Props) => {
         min={0}
         max={200}
         step={1}
-        onChange={setContrast}
+        onChange={updateConfig("contrast")}
       />
 
       <FormSlider
@@ -42,7 +36,7 @@ const PreferenceForm = (props: Props) => {
         min={0}
         max={200}
         step={1}
-        onChange={setSaturation}
+        onChange={updateConfig("saturation")}
       />
     </div>
   );

@@ -1,25 +1,31 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import ratioOptions from "./ratio-options";
 import { IAppContext } from "./types";
 
 const defaultValue: IAppContext = {
   cameraSource: null,
   setCameraSource: () => {},
-  aspectRatio: ratioOptions[0].id,
   enable: false,
   setEnable: () => {},
-  setAspectRatio: () => {},
-  zoom: 1,
-  setZoom: () => {},
-  brightness: 100,
-  setBrightness: () => {},
-  contrast: 100,
-  setContrast: () => {},
-  saturation: 100,
-  setSaturation: () => {},
 
-  mirror: false,
-  setMirror: () => {},
+  config: {
+    aspectRatio: ratioOptions[0].value,
+    zoom: 1,
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    mirror: false,
+  },
+  setConfig: () => {},
+  updateConfig: () => () => {},
+  saveToStorage: () => {},
 };
 const AppContext = createContext(defaultValue);
 
@@ -37,35 +43,46 @@ export const AppContextProvider = (props: Props) => {
   const { children } = props;
 
   const [enable, setEnable] = useState(defaultValue.enable);
-
-  const [mirror, setMirror] = useState(defaultValue.mirror);
-
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
+  const [config, setConfig] = useState(defaultValue.config);
 
-  const [aspectRatio, setAspectRatio] = useState(defaultValue.aspectRatio);
-  const [zoom, setZoom] = useState(defaultValue.zoom);
+  // ----------------------------------------------------------------------
 
-  const [brightness, setBrightness] = useState(defaultValue.brightness);
-  const [contrast, setContrast] = useState(defaultValue.contrast);
-  const [saturation, setSaturation] = useState(defaultValue.saturation);
+  useEffect(() => {
+    chrome.storage?.sync.get(["enable", "cameraSource", "config"], (result) => {
+      if (typeof result.enable === "boolean") setEnable(result.enable);
+      if (typeof result.cameraSource === "string")
+        setCameraSource(result.cameraSource);
+      if (typeof result.config === "object")
+        setConfig((prev) => ({ ...prev, ...result.config }));
+    });
+  }, []);
 
-  const value = {
-    aspectRatio,
-    setAspectRatio,
+  // ----------------------------------------------------------------------
+
+  const updateConfig: IAppContext["updateConfig"] = (key) => (value) => {
+    setConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const saveToStorage = useCallback(() => {
+    chrome.storage?.sync.set({
+      enable,
+      cameraSource,
+      config,
+    });
+  }, [enable, cameraSource, config]);
+
+  // ----------------------------------------------------------------------
+
+  const value: IAppContext = {
     enable,
     setEnable,
-    zoom,
-    setZoom,
-    brightness,
-    setBrightness,
-    contrast,
-    setContrast,
-    saturation,
-    setSaturation,
     cameraSource,
     setCameraSource,
-    mirror,
-    setMirror,
+    config,
+    setConfig,
+    updateConfig,
+    saveToStorage,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

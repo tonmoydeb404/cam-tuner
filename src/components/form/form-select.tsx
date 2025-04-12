@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/select";
 
 type Option = {
-  id: string;
-  label?: string;
+  label: string;
+  value: string;
 };
 
 interface FormSelectProps {
@@ -38,8 +38,8 @@ export function FormSelect({
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.label || option.id}
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>

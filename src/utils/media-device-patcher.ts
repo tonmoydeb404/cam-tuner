@@ -1,11 +1,12 @@
+import { env } from "@/config";
 import { devLog } from "./log";
 import { streamPatcher, StreamPatcherConfig } from "./stream-patcher";
 
 // Configuartions ----------------------------------------------------------------------
 
-const MEDIA_DEVICE_ID = "v-cam";
-const MEDIA_GROUP_ID = "v-cam_group";
-const MEDIA_LABEL = "vCam v1.0";
+const MEDIA_DEVICE_ID = `${env.VITE_CAM_NAME}_${env.VITE_CAM_VERSION}`;
+const MEDIA_GROUP_ID = `${env.VITE_CAM_NAME}_group`;
+const MEDIA_LABEL = `${env.VITE_CAM_NAME} v${env.VITE_CAM_VERSION}`;
 
 // Global Variables ----------------------------------------------------------------------
 

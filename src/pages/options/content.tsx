@@ -75,7 +75,7 @@ const Content = () => {
             repository.
           </p>
           <a
-            href="https://github.com/your-repo/issues"
+            href="https://github.com/tonmoydeb404/cam-tuner/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm border rounded hover:bg-muted transition"

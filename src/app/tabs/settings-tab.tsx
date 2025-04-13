@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 type Props = {};
 
-const SettingsForm = (props: Props) => {
+const SettingsTab = (props: Props) => {
   const { cameraSource, setCameraSource, config, updateConfig } =
     useAppContext();
   const { aspectRatio } = config;
@@ -55,4 +55,4 @@ const SettingsForm = (props: Props) => {
   );
 };
 
-export default SettingsForm;
+export default SettingsTab;

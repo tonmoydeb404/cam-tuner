@@ -5,7 +5,7 @@ import { IAppConfig } from "@/context/types";
 
 type Props = {};
 
-const AdvancedForm = (props: Props) => {
+const AdvancedTab = (props: Props) => {
   const { config, updateConfig } = useAppContext();
   const { mirror, zoom, align } = config;
 
@@ -46,4 +46,4 @@ const AdvancedForm = (props: Props) => {
   );
 };
 
-export default AdvancedForm;
+export default AdvancedTab;

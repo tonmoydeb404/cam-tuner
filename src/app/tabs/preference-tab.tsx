@@ -3,7 +3,7 @@ import { useAppContext } from "@/context";
 
 type Props = {};
 
-const PreferenceForm = (props: Props) => {
+const PreferenceTab = (props: Props) => {
   const { config, updateConfig } = useAppContext();
   const { brightness, contrast, saturation } = config;
 
@@ -42,4 +42,4 @@ const PreferenceForm = (props: Props) => {
   );
 };
 
-export default PreferenceForm;
+export default PreferenceTab;

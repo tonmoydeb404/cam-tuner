@@ -1,26 +1,21 @@
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppContext } from "@/context";
 import EnableGuard from "@/guards/enable-guard";
-import AdvancedForm from "./advanced-form";
+import ApplyBtn from "./apply-btn";
 import Header from "./header";
-import PreferenceForm from "./preference-form";
 import Preview from "./preview";
-import SettingsForm from "./settings-form";
+import AdvancedTab from "./tabs/advanced-tab";
+import PreferenceTab from "./tabs/preference-tab";
+import SettingsTab from "./tabs/settings-tab";
 
 type Props = {};
 
 const App = (props: Props) => {
-  const { applySettings: saveToStorage } = useAppContext();
-
   return (
     <div className="p-5">
       <Header />
       <EnableGuard>
         <Preview />
-        <div className="flex flex-col mb-5">
-          <Button onClick={() => saveToStorage()}>Save Settings</Button>
-        </div>
+        <ApplyBtn />
 
         <Tabs defaultValue="settings" className="w-full">
           <TabsList className="mb-5 w-full">
@@ -29,13 +24,13 @@ const App = (props: Props) => {
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           <TabsContent value="settings">
-            <SettingsForm />
+            <SettingsTab />
           </TabsContent>
           <TabsContent value="preference">
-            <PreferenceForm />
+            <PreferenceTab />
           </TabsContent>
           <TabsContent value="advanced">
-            <AdvancedForm />
+            <AdvancedTab />
           </TabsContent>
         </Tabs>
       </EnableGuard>

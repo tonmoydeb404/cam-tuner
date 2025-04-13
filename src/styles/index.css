@@ -117,9 +117,6 @@
   body {
     @apply text-base font-sans bg-background text-foreground;
   }
-  html {
-    @apply w-sm;
-  }
 
   html body[data-scroll-locked] {
     overflow: visible !important;

@@ -23,19 +23,23 @@ function useWebcamPermission() {
         };
       } catch (error) {
         // Fallback: Try requesting access
-        try {
-          await navigator.mediaDevices.getUserMedia({ video: true });
-          setHasPermission(true);
-        } catch (err) {
-          setHasPermission(false);
-        }
+        await requestPermission();
       }
     };
 
     checkPermission();
   }, []);
 
-  return { hasPermission, isSupported };
+  const requestPermission = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasPermission(true);
+    } catch (err) {
+      setHasPermission(false);
+    }
+  };
+
+  return { hasPermission, isSupported, requestPermission };
 }
 
 export default useWebcamPermission;

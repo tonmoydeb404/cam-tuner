@@ -8,12 +8,12 @@
     "service_worker": "src/extension/background.ts"
   },
   "{{chrome}}.action": {
-    "default_popup": "index.html"
+    "default_popup": "src/pages/popup/index.html"
   },
   "{{firefox}}.browser_action": {
-    "default_popup": "index.html"
+    "default_popup": "src/pages/popup/index.html"
   },
-  "options_page": "src/options.html",
+  "options_page": "src/pages/options/index.html",
   "permissions": [
     "storage"
   ],

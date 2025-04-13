@@ -32,8 +32,11 @@ function useWebcamPermission() {
 
   const requestPermission = async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setHasPermission(true);
+
+      // Immediately stop all video tracks to turn off camera
+      stream.getTracks().forEach((track) => track.stop());
     } catch (err) {
       setHasPermission(false);
     }

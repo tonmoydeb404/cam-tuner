@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context";
 import useWebcamPermission from "@/hooks/use-webcam-permission";
 import { LucideCamera, LucideCameraOff } from "lucide-react";
+import Browser from "webextension-polyfill";
 import PreferenceForm from "./preference-form";
 import Preview from "./preview";
 import SettingsForm from "./settings-form";
@@ -35,7 +36,9 @@ const App = (props: Props) => {
           To continue, please allow access to your camera in the browser
           settings.
         </p>
-        <Button>Allow Access</Button>
+        <Button onClick={() => Browser.runtime.openOptionsPage()}>
+          Allow Access
+        </Button>
       </div>
     );
   }

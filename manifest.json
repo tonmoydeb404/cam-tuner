@@ -5,7 +5,10 @@
   "{{firefox}}.manifest_version": 2,
   "description": "Customize your webcam configuration.",
   "background": {
-    "service_worker": "src/extension/background.ts"
+    "{{chrome}}.service_worker": "src/extension/background.ts",
+    "{{firefox}}.scripts": [
+      "src/extension/background.ts"
+    ]
   },
   "{{chrome}}.action": {
     "default_popup": "src/pages/popup/index.html"
@@ -29,7 +32,7 @@
       "all_frames": true
     }
   ],
-  "web_accessible_resources": [
+  "{{chrome}}.web_accessible_resources": [
     {
       "resources": [
         "src/extension/*"
@@ -38,6 +41,9 @@
         "<all_urls>"
       ]
     }
+  ],
+  "{{firefox}}.web_accessible_resources": [
+    "src/extension/*"
   ],
   "icons": {
     "16": "icons/icon16.png",

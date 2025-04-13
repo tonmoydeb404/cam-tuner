@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "prebuild": "tsc -b",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:chrome": "TARGET=chrome pnpm build",
+    "build:firefox": "TARGET=firefox pnpm build"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.3",

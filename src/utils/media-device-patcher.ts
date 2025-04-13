@@ -1,6 +1,7 @@
 import { env } from "@/config";
+import { StreamPatcherConfig } from "@/types/stream-patcher";
 import { devLog } from "./log";
-import { streamPatcher, StreamPatcherConfig } from "./stream-patcher";
+import { streamPatcher } from "./stream-patcher";
 
 // Configuartions ----------------------------------------------------------------------
 

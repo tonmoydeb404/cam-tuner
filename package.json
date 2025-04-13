@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:firefox": "TARGET=firefox pnpm dev",
     "build": "vite build",
     "prebuild": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:chrome": "TARGET=chrome pnpm build",
     "build:firefox": "TARGET=firefox pnpm build"
   },
   "dependencies": {

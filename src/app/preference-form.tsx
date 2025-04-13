@@ -8,7 +8,7 @@ const PreferenceForm = (props: Props) => {
   const { brightness, contrast, saturation } = config;
 
   return (
-    <div className="space-y-3 border p-5 rounded-2xl">
+    <div className="space-y-5 border p-5 rounded-2xl">
       <FormSlider
         label="Brightness"
         id="brightness"

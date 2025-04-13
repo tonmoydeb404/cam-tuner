@@ -1,3 +1,4 @@
+import { StreamPatcherConfig } from "@/types/stream-patcher";
 import React from "react";
 
 export interface IAppConfig {
@@ -7,6 +8,7 @@ export interface IAppConfig {
   contrast: number;
   saturation: number;
   mirror: boolean;
+  align: StreamPatcherConfig["align"];
 }
 
 export interface IAppCameraSource {

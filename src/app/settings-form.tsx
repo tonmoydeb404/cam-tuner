@@ -1,4 +1,4 @@
-import { FormSelect, FormSlider, FormSwitch } from "@/components/form";
+import { FormSelect } from "@/components/form";
 import { useAppContext } from "@/context";
 import ratioOptions from "@/context/ratio-options";
 import useWebcams from "@/hooks/use-web-cams";
@@ -9,7 +9,7 @@ type Props = {};
 const SettingsForm = (props: Props) => {
   const { cameraSource, setCameraSource, config, updateConfig } =
     useAppContext();
-  const { mirror, zoom, aspectRatio } = config;
+  const { aspectRatio } = config;
   const { webcams } = useWebcams();
 
   useEffect(() => {
@@ -50,23 +50,6 @@ const SettingsForm = (props: Props) => {
           ...item,
           value: String(item.value),
         }))}
-      />
-      <FormSlider
-        label="Zoom"
-        id="zoom"
-        value={zoom}
-        min={1}
-        max={3}
-        step={0.1}
-        onChange={updateConfig("zoom")}
-      />
-
-      <FormSwitch
-        label="Mirror"
-        id="mirror"
-        checked={mirror}
-        onChange={updateConfig("mirror")}
-        layout="single-line"
       />
     </div>
   );

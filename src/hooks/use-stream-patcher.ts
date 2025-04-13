@@ -1,8 +1,5 @@
-import {
-  streamPatcher,
-  StreamPatcherConfig,
-  StreamPatcherSize,
-} from "@/utils/stream-patcher";
+import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
+import { streamPatcher } from "@/utils/stream-patcher";
 import { useEffect, useRef, useState } from "react";
 
 type IdleCallbackId = number;
@@ -71,6 +68,7 @@ function useStreamPatcher(
     config?.contrast,
     config?.saturation,
     config?.mirror,
+    config?.align,
   ]);
 
   useEffect(() => {

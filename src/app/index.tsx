@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context";
 import EnableGuard from "@/guards/enable-guard";
+import AdvancedForm from "./advanced-form";
 import Header from "./header";
 import PreferenceForm from "./preference-form";
 import Preview from "./preview";
@@ -25,12 +26,16 @@ const App = (props: Props) => {
           <TabsList className="mb-5 w-full">
             <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="preference">Preference</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           <TabsContent value="settings">
             <SettingsForm />
           </TabsContent>
           <TabsContent value="preference">
             <PreferenceForm />
+          </TabsContent>
+          <TabsContent value="advanced">
+            <AdvancedForm />
           </TabsContent>
         </Tabs>
       </EnableGuard>

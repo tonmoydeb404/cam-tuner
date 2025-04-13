@@ -1,18 +1,5 @@
+import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
 import { devLog } from "./log";
-
-export type StreamPatcherConfig = {
-  aspectRatio?: number;
-  zoom?: number;
-  brightness?: number;
-  saturation?: number;
-  contrast?: number;
-  mirror?: boolean;
-};
-
-export type StreamPatcherSize = {
-  width: number;
-  height: number;
-};
 
 function normalizeFilterValue(value?: number): number {
   if (typeof value !== "number") return 1;
@@ -27,10 +14,29 @@ function generateFilterString(config: StreamPatcherConfig): string {
   return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
 }
 
-function calculateCrop(
-  { width, height }: StreamPatcherSize,
-  aspectRatio?: number
+function calculateOffest(
+  original: StreamPatcherSize,
+  modified: StreamPatcherSize,
+  align: StreamPatcherConfig["align"] = "center"
 ) {
+  let x = 0;
+
+  if (align === "left") {
+    x = 0;
+  } else if (align === "right") {
+    x = original.width - modified.width;
+  } else {
+    x = Math.floor((original.width - modified.width) / 2);
+  }
+
+  const y = Math.floor((original.height - modified.height) / 2);
+
+  return { x, y };
+}
+
+function calculateCrop(size: StreamPatcherSize, aspectRatio?: number) {
+  const { width, height } = size;
+
   if (typeof aspectRatio !== "number") {
     return {
       width: width,
@@ -50,24 +56,23 @@ function calculateCrop(
     cropHeight = Math.floor(width / aspectRatio);
   }
 
-  const offsetX = Math.floor((width - cropWidth) / 2);
-  const offsetY = Math.floor((height - cropHeight) / 2);
-
-  devLog(`Crop: ${cropWidth}x${cropHeight} @ ${offsetX},${offsetY}`);
-  return { width: cropWidth, height: cropHeight, offsetX, offsetY };
+  devLog(`Crop: ${cropWidth}x${cropHeight}`);
+  return { width: cropWidth, height: cropHeight };
 }
 
-function calculateZoomedSize(
-  size: StreamPatcherSize,
-  zoom?: number
-): StreamPatcherSize {
-  if (typeof zoom !== "number" || zoom <= 0) {
-    return size;
+function calculateZoomedSize(size: StreamPatcherSize, zoom?: number) {
+  if (typeof zoom !== "number" || zoom <= 1) {
+    return { ...size };
   }
 
+  const zoomWidth = Math.floor(size.width / zoom);
+  const zoomHeight = Math.floor(size.height / zoom);
+
+  devLog(`zoom: ${zoomWidth}x${zoomHeight}`);
+
   return {
-    width: Math.floor(size.width / zoom),
-    height: Math.floor(size.height / zoom),
+    width: zoomWidth,
+    height: zoomHeight,
   };
 }
 
@@ -144,12 +149,17 @@ export function streamPatcher(
     if (!videoTrack) throw new Error("No video track found in stream.");
 
     const video = setupVideoElement(videoTrack);
-    const zoomedSize = calculateZoomedSize(size, config.zoom);
-    const crop = calculateCrop(zoomedSize, config.aspectRatio);
+    const crop = calculateCrop(size, config.aspectRatio);
+    const zoom = calculateZoomedSize(crop, config.zoom);
+    const offset = calculateOffest(size, zoom, config.align);
     const filters = generateFilterString(config);
     const canvas = applyCanvasProcessing({
       video,
-      crop,
+      crop: {
+        ...zoom,
+        offsetX: offset.x,
+        offsetY: offset.y,
+      },
       filters,
       config,
     });

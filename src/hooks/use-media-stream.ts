@@ -1,4 +1,4 @@
-import { StreamPatcherSize } from "@/utils/stream-patcher";
+import { StreamPatcherSize } from "@/types/stream-patcher";
 import { useEffect, useState } from "react";
 
 function useMediaStream(deviceId: string | null) {

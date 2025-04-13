@@ -24,6 +24,7 @@ const defaultValue: IAppContext = {
     contrast: 100,
     saturation: 100,
     mirror: false,
+    align: "center",
   },
   setConfig: () => {},
   updateConfig: () => () => {},

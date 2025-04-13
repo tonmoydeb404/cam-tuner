@@ -12,18 +12,13 @@ const useWebcams = () => {
   useEffect(() => {
     async function getCams() {
       try {
-        // Ensure permission is granted for camera access
-        // await navigator.mediaDevices.getUserMedia({ video: true });
-
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices
-          .filter((device) => device.kind === "videoinput")
+          .filter((device) => device.kind === "videoinput" && !!device.deviceId)
           .map((device) => ({
             deviceId: device.deviceId,
             label: device.label,
           }));
-
-        console.log(devices.filter((item) => item.kind === "videoinput"));
 
         setWebcams(videoInputs);
       } catch (error) {

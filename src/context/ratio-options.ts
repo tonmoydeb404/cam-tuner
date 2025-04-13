@@ -12,12 +12,12 @@ const ratioOptions = [
     label: "1:1",
   },
   {
-    value: 9 / 16,
-    label: "9:16",
+    value: 3 / 4,
+    label: "3:4",
   },
   {
-    value: 3 / 2,
-    label: "3:2",
+    value: 9 / 16,
+    label: "9:16",
   },
 ];
 

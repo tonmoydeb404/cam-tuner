@@ -16,7 +16,7 @@ export interface IAppCameraSource {
 
 export interface IAppContext {
   enable: boolean;
-  setEnable: React.Dispatch<React.SetStateAction<boolean>>;
+  setEnable: (v: boolean) => void;
 
   cameraSource: IAppCameraSource | null;
   setCameraSource: React.Dispatch<
@@ -29,5 +29,5 @@ export interface IAppContext {
     key: K
   ) => (value: IAppContext["config"][K]) => void;
 
-  saveToStorage: () => void;
+  applySettings: () => void;
 }

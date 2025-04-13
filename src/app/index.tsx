@@ -10,7 +10,7 @@ import SettingsForm from "./settings-form";
 type Props = {};
 
 const App = (props: Props) => {
-  const { saveToStorage } = useAppContext();
+  const { applySettings: saveToStorage } = useAppContext();
 
   return (
     <div className="p-5">

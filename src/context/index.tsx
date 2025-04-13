@@ -27,7 +27,7 @@ const defaultValue: IAppContext = {
   },
   setConfig: () => {},
   updateConfig: () => () => {},
-  saveToStorage: () => {},
+  applySettings: () => {},
 };
 const AppContext = createContext(defaultValue);
 
@@ -55,6 +55,8 @@ export const AppContextProvider = (props: Props) => {
       .get(["enable", "cameraSource", "config"])
       .then((result) => {
         if (typeof result.enable === "boolean") {
+          console.log(result.enable);
+
           setEnable(result.enable);
         }
         if (typeof result.cameraSource === "object") {
@@ -72,7 +74,11 @@ export const AppContextProvider = (props: Props) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  const saveToStorage = useCallback(() => {
+  const saveSettings = (
+    enable: boolean,
+    cameraSource: IAppCameraSource | null,
+    config: IAppConfig
+  ) => {
     Browser.storage?.sync.set({
       enable,
       cameraSource,
@@ -87,19 +93,31 @@ export const AppContextProvider = (props: Props) => {
       },
     };
     Browser.runtime.sendMessage(message);
+  };
+
+  const applySettings = useCallback(() => {
+    saveSettings(enable, cameraSource, config);
   }, [enable, cameraSource, config]);
+
+  const updateEnable: IAppContext["setEnable"] = useCallback(
+    (checked) => {
+      setEnable(checked);
+      saveSettings(checked, cameraSource, config);
+    },
+    [cameraSource, config]
+  );
 
   // ----------------------------------------------------------------------
 
   const value: IAppContext = {
     enable,
-    setEnable,
+    setEnable: updateEnable,
     cameraSource,
     setCameraSource,
     config,
     setConfig,
     updateConfig,
-    saveToStorage,
+    applySettings: applySettings,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

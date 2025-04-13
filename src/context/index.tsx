@@ -13,7 +13,9 @@ import { IAppCameraSource, IAppConfig, IAppContext } from "./types";
 
 const defaultValue: IAppContext = {
   cameraSource: null,
+  changesPending: false,
   setCameraSource: () => {},
+  initCameraSource: () => {},
   enable: true,
   setEnable: () => {},
 
@@ -48,6 +50,9 @@ export const AppContextProvider = (props: Props) => {
   const [enable, setEnable] = useState(defaultValue.enable);
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
   const [config, setConfig] = useState(defaultValue.config);
+  const [changesPending, setChangesPending] = useState(
+    defaultValue.changesPending
+  );
 
   // ----------------------------------------------------------------------
 
@@ -73,6 +78,7 @@ export const AppContextProvider = (props: Props) => {
 
   const updateConfig: IAppContext["updateConfig"] = (key) => (value) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
+    setChangesPending(true);
   };
 
   const saveSettings = (
@@ -85,6 +91,7 @@ export const AppContextProvider = (props: Props) => {
       cameraSource,
       config,
     });
+    setChangesPending(false);
     const message: WindowMessage = {
       type: MessageTypeEnum.UPDATE,
       payload: {
@@ -108,17 +115,32 @@ export const AppContextProvider = (props: Props) => {
     [cameraSource, config]
   );
 
+  const initCameraSource: IAppContext["initCameraSource"] = (value) => {
+    setCameraSource((prev) => {
+      if (prev) return prev;
+      setChangesPending(true);
+      return value;
+    });
+  };
+
+  const updateCameraSource: IAppContext["setCameraSource"] = (value) => {
+    setCameraSource(value);
+    setChangesPending(true);
+  };
+
   // ----------------------------------------------------------------------
 
   const value: IAppContext = {
     enable,
     setEnable: updateEnable,
     cameraSource,
-    setCameraSource,
+    setCameraSource: updateCameraSource,
+    initCameraSource,
     config,
     setConfig,
     updateConfig,
-    applySettings: applySettings,
+    applySettings,
+    changesPending,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

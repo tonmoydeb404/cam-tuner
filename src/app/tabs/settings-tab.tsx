@@ -7,18 +7,19 @@ import { useEffect } from "react";
 type Props = {};
 
 const SettingsTab = (props: Props) => {
-  const { cameraSource, setCameraSource, config, updateConfig } =
-    useAppContext();
+  const {
+    cameraSource,
+    setCameraSource,
+    initCameraSource,
+    config,
+    updateConfig,
+  } = useAppContext();
   const { aspectRatio } = config;
   const { webcams } = useWebcams();
 
   useEffect(() => {
-    if (webcams.length > 0) {
-      setCameraSource((prev) => {
-        if (prev) return prev;
-
-        return webcams[0];
-      });
+    if (webcams[0]?.deviceId) {
+      initCameraSource(webcams[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webcams]);

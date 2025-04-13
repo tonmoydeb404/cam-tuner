@@ -21,6 +21,7 @@ export interface IAppContext {
   setEnable: (v: boolean) => void;
 
   cameraSource: IAppCameraSource | null;
+  initCameraSource: (v: IAppCameraSource) => void;
   setCameraSource: React.Dispatch<
     React.SetStateAction<IAppCameraSource | null>
   >;
@@ -32,4 +33,6 @@ export interface IAppContext {
   ) => (value: IAppContext["config"][K]) => void;
 
   applySettings: () => void;
+
+  changesPending: boolean;
 }

@@ -1,3 +1,9 @@
-html {
-  width: 400px;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./theme.css";
+
+@layer base {
+  body {
+    width: 400px;
+  }
 }

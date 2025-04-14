@@ -53,13 +53,6 @@ export function mediaDevicePatcher(
 ) {
   let sourceDeviceId: undefined | string;
 
-  if (!enable) {
-    MediaDevices.prototype.enumerateDevices = enumerateDevicesFn;
-    MediaDevices.prototype.getUserMedia = getUserMediaFn;
-    devLog(MEDIA_LABEL, "DISABLED");
-    return;
-  }
-
   MediaDevices.prototype.enumerateDevices = async function () {
     devLog("Intercepting enumerateDevices...");
     const res = await enumerateDevicesFn.call(navigator.mediaDevices);
@@ -114,6 +107,11 @@ export function mediaDevicePatcher(
             navigator.mediaDevices,
             constraints
           );
+
+          // if patching not enabled then return original stream rather blocking
+          if (!enable) {
+            return stream;
+          }
 
           return streamPatcher(stream, { height, width }, config, true);
         }

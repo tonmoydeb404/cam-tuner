@@ -25,10 +25,12 @@ const ApplyBtn = (props: Props) => {
       </Button>
 
       {showAlert && (
-        <Alert className="relative">
+        <Alert className="relative border-amber-500 bg-amber-100">
           <LucideBadgeInfo className="h-4 w-4" />
-          <AlertTitle>Camera Settings Updated</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="font-semibold">
+            Camera Settings Updated
+          </AlertTitle>
+          <AlertDescription className="text-foreground">
             To apply changes, turn the camera off and on again in the website
             you're using.
           </AlertDescription>

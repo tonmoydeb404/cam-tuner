@@ -11,7 +11,12 @@ const useWebcams = () => {
 
   useEffect(() => {
     async function getCams() {
+      let stream: MediaStream | undefined;
       try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices
           .filter((device) => device.kind === "videoinput" && !!device.deviceId)
@@ -20,12 +25,18 @@ const useWebcams = () => {
             label: device.label,
           }));
 
+        console.log(devices);
+        console.log(videoInputs);
+
         setWebcams(videoInputs);
       } catch (error) {
         console.error("Error accessing webcams:", error);
         setWebcams([]);
       } finally {
         setLoading(false);
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
       }
     }
 

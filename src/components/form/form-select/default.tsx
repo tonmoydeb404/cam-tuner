@@ -6,22 +6,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormSelectProps } from ".";
 
-type Option = {
-  label: string;
-  value: string;
-};
-
-interface FormSelectProps {
-  label: string;
-  id: string;
-  value: string;
-  options: Option[];
-  onChange: (value: string) => void;
-  className?: string;
-}
-
-export function FormSelect({
+export function DefaultVariant({
   label,
   id,
   value,

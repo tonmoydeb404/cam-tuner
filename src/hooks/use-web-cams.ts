@@ -25,8 +25,8 @@ const useWebcams = () => {
             label: device.label,
           }));
 
-        console.log(devices);
-        console.log(videoInputs);
+        // console.log(devices);
+        // console.log(videoInputs);
 
         setWebcams(videoInputs);
       } catch (error) {

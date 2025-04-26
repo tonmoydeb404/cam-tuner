@@ -1,7 +1,7 @@
 import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
 import Browser from "webextension-polyfill";
 import { IAppContext } from "../context/types";
-import { devLog } from "../utils/log";
+import { Logger } from "../utils/log";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
 Browser.storage.sync
@@ -22,7 +22,7 @@ Browser.storage.sync
     head.insertBefore(script, head.lastChild);
 
     script.onload = () => {
-      devLog("Script loaded, sending message...", result);
+      Logger.dev("Script loaded, sending message...", result);
       const messageObj: WindowMessage = {
         type: MessageTypeEnum.SETTINGS,
         payload: (result ?? {}) as WindowMessage["payload"],
@@ -35,7 +35,7 @@ Browser.storage.sync
 Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const windowMessage = message as WindowMessage;
   if (windowMessage?.type === MessageTypeEnum.UPDATE) {
-    devLog("Settings Updated...");
+    Logger.dev("Settings Updated...");
     window.postMessage(
       { ...windowMessage, type: MessageTypeEnum.SETTINGS },
       "*"

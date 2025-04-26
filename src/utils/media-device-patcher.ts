@@ -1,6 +1,6 @@
 import { env } from "@/config";
 import { StreamPatcherConfig } from "@/types/stream-patcher";
-import { devLog } from "./log";
+import { Logger } from "./log";
 import { streamPatcher } from "./stream-patcher";
 
 // Configuartions ----------------------------------------------------------------------
@@ -54,7 +54,7 @@ export function mediaDevicePatcher(
   let sourceDeviceId: undefined | string;
 
   MediaDevices.prototype.enumerateDevices = async function () {
-    devLog("Intercepting enumerateDevices...");
+    Logger.dev("Intercepting enumerateDevices...");
     const res = await enumerateDevicesFn.call(navigator.mediaDevices);
 
     // Include virtual cam only if there is already a real camera
@@ -75,7 +75,7 @@ export function mediaDevicePatcher(
         ...mediaDevice,
         toJSON: () => JSON.stringify(mediaDevice),
       });
-      devLog("Virtual webcam added to device list.");
+      Logger.dev("Virtual webcam added to device list.");
     }
 
     return res;
@@ -87,7 +87,7 @@ export function mediaDevicePatcher(
         const { video } = arg;
 
         if (video.deviceId && matchDeviceId(video.deviceId)) {
-          devLog(`${MEDIA_LABEL} requested`);
+          Logger.dev(`${MEDIA_LABEL} requested`);
 
           const width = getMediaTrackWidth(video) ?? 1280;
           const height = getMediaTrackHeight(video) ?? 720;
@@ -124,5 +124,5 @@ export function mediaDevicePatcher(
     }
   };
 
-  devLog(MEDIA_LABEL, "INSTALLED.");
+  Logger.dev(MEDIA_LABEL, "INSTALLED.");
 }

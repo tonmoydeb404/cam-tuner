@@ -1,5 +1,5 @@
 import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
-import { devLog } from "./log";
+import { Logger } from "./log";
 
 function normalizeFilterValue(value?: number): number {
   if (typeof value !== "number") return 1;
@@ -56,7 +56,7 @@ function calculateCrop(size: StreamPatcherSize, aspectRatio?: number) {
     cropHeight = Math.floor(width / aspectRatio);
   }
 
-  devLog(`Crop: ${cropWidth}x${cropHeight}`);
+  Logger.dev(`Crop: ${cropWidth}x${cropHeight}`);
   return { width: cropWidth, height: cropHeight };
 }
 
@@ -68,7 +68,7 @@ function calculateZoomedSize(size: StreamPatcherSize, zoom?: number) {
   const zoomWidth = Math.floor(size.width / zoom);
   const zoomHeight = Math.floor(size.height / zoom);
 
-  devLog(`zoom: ${zoomWidth}x${zoomHeight}`);
+  Logger.dev(`zoom: ${zoomWidth}x${zoomHeight}`);
 
   return {
     width: zoomWidth,
@@ -117,7 +117,7 @@ function applyCanvasProcessing({
         crop.height
       );
     } catch (err) {
-      devLog("Draw failed:", err);
+      Logger.dev("Draw failed:", err);
     }
     requestAnimationFrame(draw);
   }
@@ -133,7 +133,7 @@ function setupVideoElement(track: MediaStreamTrack): HTMLVideoElement {
   video.playsInline = true;
   video.autoplay = true;
   video.play().catch((err) => {
-    devLog("Video play error:", err);
+    Logger.dev("Video play error:", err);
   });
   return video;
 }
@@ -172,9 +172,9 @@ export function streamPatcher(
         track.stop = () => {
           try {
             stream.getTracks().forEach((t) => t.stop());
-            devLog("Original stream stopped.");
+            Logger.dev("Original stream stopped.");
           } catch (err) {
-            devLog("Error stopping original stream:", err);
+            Logger.dev("Error stopping original stream:", err);
           } finally {
             originalStop();
           }
@@ -184,7 +184,7 @@ export function streamPatcher(
 
     return outputStream;
   } catch (err) {
-    devLog("mediaPatcher error:", err);
+    Logger.dev("mediaPatcher error:", err);
     return stream; // Fallback to original stream if something fails
   }
 }

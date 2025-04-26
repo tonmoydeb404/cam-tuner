@@ -1,5 +1,5 @@
 import { MessageTypeEnum } from "@/types/window-message";
-import { devLog } from "../utils/log";
+import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
 
 window.addEventListener("message", (event) => {
@@ -12,7 +12,7 @@ window.addEventListener("message", (event) => {
   const sourceDeviceLabel = event.data?.payload?.cameraSource?.label;
   const config = event.data?.payload?.config;
 
-  devLog("Received settings:", {
+  Logger.dev("Received settings:", {
     enable,
     sourceDeviceLabel,
     config,

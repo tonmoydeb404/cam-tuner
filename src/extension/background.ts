@@ -1,8 +1,9 @@
 import { MessageTypeEnum } from "@/types/window-message";
+import { Logger } from "@/utils/log";
 import browser from "webextension-polyfill";
 
 browser.runtime.onInstalled.addListener(() => {
-  console.log("Installed!");
+  Logger.dev("Installed!");
 });
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {

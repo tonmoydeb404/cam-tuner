@@ -61,8 +61,6 @@ export const AppContextProvider = (props: Props) => {
       .get(["enable", "cameraSource", "config"])
       .then((result) => {
         if (typeof result.enable === "boolean") {
-          console.log(result.enable);
-
           setEnable(result.enable);
         }
         if (typeof result.cameraSource === "object") {

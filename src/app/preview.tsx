@@ -17,29 +17,32 @@ const Preview = (props: Props) => {
   useEffect(() => {
     if (videoRef.current && patchedStream) {
       videoRef.current.srcObject = patchedStream;
-      videoRef.current.play();
     }
   }, [patchedStream]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="aspect-video w-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl">
         <LucideLoader className="animate-spin" />
         <p className="text-accent-foreground">Loading camera...</p>
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <div className="aspect-video w-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl">
         <LucideX />
         <p className="text-accent-foreground">Error: {error.message}</p>
       </div>
     );
+  }
 
   return (
     <video
       ref={videoRef}
       className="aspect-video rounded-xl mb-5 w-full bg-accent object-contain"
+      autoPlay
     />
   );
 };

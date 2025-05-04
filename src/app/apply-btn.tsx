@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useAppContext } from "@/context";
+import { useAppContext } from "@/context/app";
 import { LucideBadgeInfo, LucideX } from "lucide-react";
 import { useState } from "react";
 

@@ -1,5 +1,5 @@
 import { FormSwitch } from "@/components/form";
-import { useAppContext } from "@/context";
+import { useAppContext } from "@/context/app";
 import useDebounce from "@/hooks/use-debounce";
 
 type Props = {};

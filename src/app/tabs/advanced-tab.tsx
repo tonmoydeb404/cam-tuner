@@ -1,7 +1,7 @@
 import { FormSlider, FormSwitch } from "@/components/form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppContext } from "@/context";
-import { IAppConfig } from "@/context/types";
+import { useAppContext } from "@/context/app";
+import { IAppConfig } from "@/context/app/types";
 
 type Props = {};
 

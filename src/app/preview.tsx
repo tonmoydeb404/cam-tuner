@@ -1,4 +1,4 @@
-import { useAppContext } from "@/context";
+import { useAppContext } from "@/context/app";
 import useMediaStream from "@/hooks/use-media-stream";
 import useStreamPatcher from "@/hooks/use-stream-patcher";
 import { LucideLoader, LucideX } from "lucide-react";

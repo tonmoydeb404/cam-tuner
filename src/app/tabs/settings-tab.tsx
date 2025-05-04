@@ -1,7 +1,7 @@
 import { FormSelect } from "@/components/form";
-import { useAppContext } from "@/context";
-import ratioOptions from "@/context/ratio-options";
-import useWebcams from "@/hooks/use-web-cams";
+import { useAppContext } from "@/context/app";
+import ratioOptions from "@/context/app/ratio-options";
+import { useWebcamsContext } from "@/context/webcams";
 import { useEffect } from "react";
 
 type Props = {};
@@ -15,7 +15,7 @@ const SettingsTab = (props: Props) => {
     updateConfig,
   } = useAppContext();
   const { aspectRatio } = config;
-  const { webcams } = useWebcams();
+  const { webcams } = useWebcamsContext();
 
   useEffect(() => {
     if (webcams[0]?.deviceId) {

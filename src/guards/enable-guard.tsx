@@ -1,4 +1,4 @@
-import { useAppContext } from "@/context";
+import { useAppContext } from "@/context/app";
 import { LucidePowerOff } from "lucide-react";
 import { ReactNode } from "react";
 

@@ -1,6 +1,6 @@
 import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
 import Browser from "webextension-polyfill";
-import { IAppContext } from "../context/types";
+import { IAppContext } from "../context/app/types";
 import { Logger } from "../utils/log";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------

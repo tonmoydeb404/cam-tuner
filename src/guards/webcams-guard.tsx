@@ -1,4 +1,4 @@
-import useWebcams from "@/hooks/use-web-cams";
+import { useWebcamsContext } from "@/context/webcams";
 import { Loader2, LucideCameraOff } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ type Props = {
 };
 
 const WebcamsGuard = ({ children }: Props) => {
-  const { webcams, loading } = useWebcams();
+  const { webcams, loading } = useWebcamsContext();
 
   if (loading) {
     return (

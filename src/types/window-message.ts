@@ -1,4 +1,4 @@
-import { IAppCameraSource, IAppConfig } from "@/context/types";
+import { IAppCameraSource, IAppConfig } from "@/context/app/types";
 
 export enum MessageTypeEnum {
   SETTINGS = "cam_tuner-settings",

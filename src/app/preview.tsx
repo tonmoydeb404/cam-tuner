@@ -1,4 +1,4 @@
-import { useAppContext } from "@/context";
+import { useAppContext } from "@/context/app";
 import useMediaStream from "@/hooks/use-media-stream";
 import useStreamPatcher from "@/hooks/use-stream-patcher";
 import { LucideLoader, LucideX } from "lucide-react";
@@ -17,30 +17,33 @@ const Preview = (props: Props) => {
   useEffect(() => {
     if (videoRef.current && patchedStream) {
       videoRef.current.srcObject = patchedStream;
-      videoRef.current.play();
     }
   }, [patchedStream]);
 
-  if (loading)
-    return (
-      <div className="aspect-video w-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl">
-        <LucideLoader className="animate-spin" />
-        <p className="text-accent-foreground">Loading camera...</p>
-      </div>
-    );
-  if (error)
-    return (
-      <div className="aspect-video w-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl">
-        <LucideX />
-        <p className="text-accent-foreground">Error: {error.message}</p>
-      </div>
-    );
-
   return (
-    <video
-      ref={videoRef}
-      className="aspect-video rounded-xl mb-5 w-full bg-accent object-contain"
-    />
+    <div className="aspect-video w-full h-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl mx-auto">
+      {loading && (
+        <>
+          <LucideLoader className="animate-spin" />
+          <p className="text-accent-foreground">Loading camera...</p>
+        </>
+      )}
+
+      {!loading && !!error && (
+        <>
+          <LucideX />
+          <p className="text-accent-foreground">Error: {error.message}</p>
+        </>
+      )}
+
+      {!loading && !error && (
+        <video
+          ref={videoRef}
+          className="rounded-xl w-full h-full bg-accent object-contain max-w-full max-h-full aspect-video"
+          autoPlay
+        />
+      )}
+    </div>
   );
 };
 

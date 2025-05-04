@@ -13,9 +13,11 @@ const useWebcams = () => {
     async function getCams() {
       let stream: MediaStream | undefined;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
+        if (__BROWSER__ === "firefox") {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+        }
 
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices

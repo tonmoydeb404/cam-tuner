@@ -1,12 +1,15 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useAppContext } from "@/context";
-import { LucideBadgeInfo, LucideX } from "lucide-react";
+import { useAppContext } from "@/context/app";
+import { LucideAlertTriangle, LucideX } from "lucide-react";
 import { useState } from "react";
 
-type Props = {};
+type Props = {
+  onTroubleshoot: () => void;
+};
 
 const ApplyBtn = (props: Props) => {
+  const { onTroubleshoot } = props;
   const { applySettings, changesPending } = useAppContext();
   const [showAlert, setShowAlert] = useState(false);
 
@@ -16,23 +19,30 @@ const ApplyBtn = (props: Props) => {
   };
 
   return (
-    <div className="flex flex-col mb-5 space-y-3">
+    <div className="flex flex-col space-y-3">
       <Button
         onClick={updateSettings}
         variant={changesPending ? "default" : "outline"}
       >
-        {changesPending ? "Update Changes" : "Save Changes"}
+        Sync Changes
       </Button>
 
       {showAlert && (
         <Alert className="relative border-amber-500 bg-amber-100">
-          <LucideBadgeInfo className="h-4 w-4" />
-          <AlertTitle className="font-semibold">
-            Camera Settings Updated
+          <LucideAlertTriangle className="h-4 w-4" />
+          <AlertTitle className="font-medium">
+            Camera Settings Synced
           </AlertTitle>
-          <AlertDescription className="text-foreground">
-            To apply changes, turn the camera off and on again in the website
-            you're using.
+          <AlertDescription>
+            <p className="text-foreground !leading-[1.4]">
+              If changes are not reflected immediately, try to{" "}
+              <span
+                className="text-primary hover:underline cursor-pointer"
+                onClick={onTroubleshoot}
+              >
+                troubleshoot
+              </span>
+            </p>
           </AlertDescription>
           <Button
             size={"icon"}

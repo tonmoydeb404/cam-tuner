@@ -21,7 +21,7 @@ const Preview = (props: Props) => {
   }, [patchedStream]);
 
   return (
-    <div className="aspect-video w-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl mx-auto">
+    <div className="aspect-video w-full h-full bg-accent flex flex-col items-center justify-center mb-5 rounded-xl mx-auto">
       {loading && (
         <>
           <LucideLoader className="animate-spin" />

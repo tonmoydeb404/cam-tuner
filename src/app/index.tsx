@@ -17,12 +17,12 @@ const App = (props: Props) => {
     <div className="p-5">
       <Header />
       <EnableGuard>
-        <div className="flex items-start gap-x-8">
-          <div className="w-[350px] shrink-0 flex flex-col justify-between h-full">
+        <div className="flex items-stretch gap-x-8">
+          <div className="w-[350px] shrink-0 flex flex-col justify-between">
             <Preview />
             <ApplyBtn onTroubleshoot={() => setTab("troubleshoot")} />
           </div>
-          <div className="grow">
+          <div className="grow h-[400px]">
             <Tabs value={tab} onValueChange={setTab} className="w-full">
               <TabsList className="mb-3 w-full">
                 <TabsTrigger value="common">Common</TabsTrigger>

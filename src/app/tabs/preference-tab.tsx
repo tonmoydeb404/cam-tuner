@@ -57,6 +57,7 @@ const PreferenceTab = (props: Props) => {
           updateConfig("brightness")(100);
           updateConfig("contrast")(100);
           updateConfig("saturation")(100);
+          updateConfig("zoom")(1);
         }}
       >
         Reset Default

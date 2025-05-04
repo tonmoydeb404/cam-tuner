@@ -7,7 +7,7 @@ import { streamPatcher } from "./stream-patcher";
 
 const MEDIA_DEVICE_ID = `${env.VITE_CAM_NAME}_${env.VITE_CAM_VERSION}`;
 const MEDIA_GROUP_ID = `${env.VITE_CAM_NAME}_group`;
-const MEDIA_LABEL = `${env.VITE_CAM_NAME} v${env.VITE_CAM_VERSION}`;
+const MEDIA_LABEL = `${env.VITE_CAM_NAME}`;
 
 // Global Variables ----------------------------------------------------------------------
 

@@ -1,5 +1,6 @@
 import { FormSlider } from "@/components/form";
-import { useAppContext } from "@/context";
+import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/context/app";
 
 type Props = {};
 
@@ -38,6 +39,18 @@ const PreferenceTab = (props: Props) => {
         step={1}
         onChange={updateConfig("saturation")}
       />
+
+      <Button
+        variant={"outline"}
+        className="w-full"
+        onClick={() => {
+          updateConfig("brightness")(100);
+          updateConfig("contrast")(100);
+          updateConfig("saturation")(100);
+        }}
+      >
+        Reset Default
+      </Button>
     </div>
   );
 };

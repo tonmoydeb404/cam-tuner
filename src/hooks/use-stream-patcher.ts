@@ -1,6 +1,6 @@
 import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
 import { streamPatcher } from "@/utils/stream-patcher";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type IdleCallbackId = number;
 
@@ -22,12 +22,30 @@ const cancelIdle =
 function useStreamPatcher(
   stream: MediaStream | null,
   size: StreamPatcherSize | null,
-  config?: StreamPatcherConfig
+  config: StreamPatcherConfig = {} // Set default empty object if undefined
 ) {
   const [patchedStream, setPatchedStream] = useState<MediaStream | null>(null);
   const previousPatchedStreamRef = useRef<MediaStream | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleCallbackRef = useRef<IdleCallbackId | null>(null);
+
+  // Memoize the patching logic to avoid unnecessary recalculations
+  const patchStream = useCallback(() => {
+    if (!stream || !size) return;
+
+    const newPatchedStream = streamPatcher(stream, size, config);
+
+    // Check if the patched stream is different from the previous one
+    if (previousPatchedStreamRef.current !== newPatchedStream) {
+      // Stop the tracks from the previous patched stream
+      if (previousPatchedStreamRef.current) {
+        previousPatchedStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+
+      previousPatchedStreamRef.current = newPatchedStream;
+      setPatchedStream(newPatchedStream);
+    }
+  }, [stream, size, config]);
 
   useEffect(() => {
     if (!stream || !size) {
@@ -41,14 +59,7 @@ function useStreamPatcher(
 
     debounceTimeoutRef.current = setTimeout(() => {
       idleCallbackRef.current = requestIdle(() => {
-        const newPatchedStream = streamPatcher(stream, size, config);
-
-        if (previousPatchedStreamRef.current) {
-          previousPatchedStreamRef.current.getTracks().forEach((t) => t.stop());
-        }
-
-        previousPatchedStreamRef.current = newPatchedStream;
-        setPatchedStream(newPatchedStream);
+        patchStream();
       });
     }, 300);
 
@@ -56,21 +67,9 @@ function useStreamPatcher(
       if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
       if (idleCallbackRef.current !== null) cancelIdle(idleCallbackRef.current);
     };
+  }, [stream, size, config, patchStream]); // Added patchStream to dependencies
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    stream,
-    size?.width,
-    size?.height,
-    config?.aspectRatio,
-    config?.zoom,
-    config?.brightness,
-    config?.contrast,
-    config?.saturation,
-    config?.mirror,
-    config?.align,
-  ]);
-
+  // Cleanup when component unmounts or stream is removed
   useEffect(() => {
     return () => {
       previousPatchedStreamRef.current?.getTracks().forEach((t) => t.stop());

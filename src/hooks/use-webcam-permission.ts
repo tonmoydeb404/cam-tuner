@@ -1,3 +1,4 @@
+import { Logger } from "@/utils/log";
 import { useEffect, useState } from "react";
 
 function useWebcamPermission() {
@@ -13,17 +14,18 @@ function useWebcamPermission() {
         }
 
         const result = await navigator.permissions.query({
-          name: "camera" as PermissionName,
+          name: "camera",
         });
 
         setHasPermission(result.state === "granted");
 
-        result.onchange = () => {
-          setHasPermission(result.state === "granted");
-        };
+        result.addEventListener("change", (ev) => {
+          if (ev.target && "state" in ev.target) {
+            setHasPermission(ev.target.state === "granted");
+          }
+        });
       } catch (error) {
-        // Fallback: Try requesting access
-        await requestPermission();
+        Logger.error("Failed to check permission: ", error);
       }
     };
 
@@ -33,7 +35,6 @@ function useWebcamPermission() {
   const requestPermission = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasPermission(true);
 
       // Immediately stop all video tracks to turn off camera
       stream.getTracks().forEach((track) => track.stop());

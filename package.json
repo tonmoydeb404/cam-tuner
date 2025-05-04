@@ -1,7 +1,7 @@
 {
   "name": "cam-tuner",
-  "private": true,
-  "version": "1.01.0",
+  "private": false,
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

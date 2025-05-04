@@ -14,7 +14,7 @@ function useWebcamPermission() {
         }
 
         const result = await navigator.permissions.query({
-          name: "camera",
+          name: "camera" as PermissionName,
         });
 
         setHasPermission(result.state === "granted");

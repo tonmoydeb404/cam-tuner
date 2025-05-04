@@ -30,7 +30,12 @@ const usages = [
   {
     id: 1,
     title: "Select Camera Source",
-    text: "Select CamTuner from camera source in your desired web application (Ex: Meet, Zoom)",
+    text: (
+      <>
+        Select <b>CamTuner</b> from camera source in your desired web
+        application (Ex: Meet, Zoom)
+      </>
+    ),
     icon: <Video size={20} />,
   },
   {

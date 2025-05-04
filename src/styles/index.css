@@ -119,7 +119,7 @@
   }
 
   html.popup body {
-    width: 400px;
+    width: 800px;
 
     &[data-scroll-locked] {
       margin-right: 0 !important;

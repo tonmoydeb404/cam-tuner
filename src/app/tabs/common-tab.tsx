@@ -2,27 +2,14 @@ import { FormSelect } from "@/components/form";
 import { useAppContext } from "@/context/app";
 import ratioOptions from "@/context/app/ratio-options";
 import { useWebcamsContext } from "@/context/webcams";
-import { useEffect } from "react";
 
 type Props = {};
 
-const SettingsTab = (props: Props) => {
-  const {
-    cameraSource,
-    setCameraSource,
-    initCameraSource,
-    config,
-    updateConfig,
-  } = useAppContext();
+const CommonTab = (props: Props) => {
+  const { cameraSource, setCameraSource, config, updateConfig } =
+    useAppContext();
   const { aspectRatio } = config;
   const { webcams } = useWebcamsContext();
-
-  useEffect(() => {
-    if (webcams[0]?.deviceId) {
-      initCameraSource(webcams[0]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [webcams]);
 
   return (
     <div className="space-y-5 p-5 border rounded-2xl">
@@ -56,4 +43,4 @@ const SettingsTab = (props: Props) => {
   );
 };
 
-export default SettingsTab;
+export default CommonTab;

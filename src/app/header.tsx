@@ -13,7 +13,7 @@ const Header = (props: Props) => {
 
   return (
     <div className="flex items-center justify-between mb-5">
-      <h1 className="text-lg font-bold">Cam Tuner</h1>
+      <h1 className="text-lg font-bold">CamTuner</h1>
       <FormSwitch
         checked={enable}
         onChange={debouncedSetEnable}

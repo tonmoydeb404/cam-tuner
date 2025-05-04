@@ -30,18 +30,21 @@ const getMediaTrackHeight = (video: MediaTrackConstraints) => {
   return video.height;
 };
 
-const matchDeviceId = (deviceId: ConstrainDOMString) => {
+const matchDeviceId = (
+  deviceId: ConstrainDOMString,
+  targetDeviceId: string
+) => {
   if (Array.isArray(deviceId)) {
-    return deviceId.includes(MEDIA_DEVICE_ID);
+    return deviceId.includes(targetDeviceId);
   }
 
   if (typeof deviceId === "object" && "exact" in deviceId) {
     return (
-      deviceId.exact === MEDIA_DEVICE_ID || deviceId.ideal === MEDIA_DEVICE_ID
+      deviceId.exact === targetDeviceId || deviceId.ideal === targetDeviceId
     );
   }
 
-  return deviceId === MEDIA_DEVICE_ID;
+  return deviceId === targetDeviceId;
 };
 
 // Main Function ----------------------------------------------------------------------
@@ -52,6 +55,7 @@ export function mediaDevicePatcher(
   config: StreamPatcherConfig
 ) {
   let sourceDeviceId: undefined | string;
+  const randDeviceId = `${MEDIA_DEVICE_ID}_${Date.now()}`; // random device id makes sure realtime updates
 
   MediaDevices.prototype.enumerateDevices = async function () {
     Logger.dev("Intercepting enumerateDevices...");
@@ -66,7 +70,7 @@ export function mediaDevicePatcher(
 
     if (videoInputs.length > 0 || !!sourceDeviceId) {
       const mediaDevice: Omit<MediaDeviceInfo, "toJSON"> = {
-        deviceId: MEDIA_DEVICE_ID,
+        deviceId: randDeviceId,
         groupId: MEDIA_GROUP_ID,
         kind: "videoinput",
         label: MEDIA_LABEL,
@@ -86,7 +90,7 @@ export function mediaDevicePatcher(
       if (arg?.video && typeof arg.video !== "boolean") {
         const { video } = arg;
 
-        if (video.deviceId && matchDeviceId(video.deviceId)) {
+        if (video.deviceId && matchDeviceId(video.deviceId, randDeviceId)) {
           Logger.dev(`${MEDIA_LABEL} requested`);
 
           const width = getMediaTrackWidth(video) ?? 1280;
@@ -117,6 +121,9 @@ export function mediaDevicePatcher(
         }
       }
 
+      // currentStream = null;
+      // currentArg = null;
+
       return await getUserMediaFn.call(navigator.mediaDevices, arg);
     } catch (error) {
       console.error("Error accessing media devices:", error);
@@ -124,5 +131,6 @@ export function mediaDevicePatcher(
     }
   };
 
+  navigator.mediaDevices.dispatchEvent(new Event("devicechange"));
   Logger.dev(MEDIA_LABEL, "INSTALLED.");
 }

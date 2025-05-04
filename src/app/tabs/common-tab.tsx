@@ -1,4 +1,4 @@
-import { FormSelect } from "@/components/form";
+import { FormSelect, FormTabs } from "@/components/form";
 import { useAppContext } from "@/context/app";
 import ratioOptions from "@/context/app/ratio-options";
 import { useWebcamsContext } from "@/context/webcams";
@@ -8,7 +8,7 @@ type Props = {};
 const CommonTab = (props: Props) => {
   const { cameraSource, setCameraSource, config, updateConfig } =
     useAppContext();
-  const { aspectRatio } = config;
+  const { aspectRatio, align, mirror } = config;
   const { webcams } = useWebcamsContext();
 
   return (
@@ -38,6 +38,44 @@ const CommonTab = (props: Props) => {
           ...item,
           value: String(item.value),
         }))}
+      />
+
+      <FormTabs
+        label="Crop Align"
+        id="align"
+        value={align || "center"}
+        onChange={updateConfig("align")}
+        options={[
+          {
+            label: "Left",
+            value: "left",
+          },
+          {
+            label: "Center",
+            value: "center",
+          },
+          {
+            label: "Right",
+            value: "right",
+          },
+        ]}
+      />
+
+      <FormTabs
+        label="Mirror"
+        id="mirror"
+        value={mirror ? String(mirror) : "false"}
+        onChange={(value) => updateConfig("mirror")(value === "true")}
+        options={[
+          {
+            label: "Disabled",
+            value: "false",
+          },
+          {
+            label: "Enabled",
+            value: "true",
+          },
+        ]}
       />
     </div>
   );

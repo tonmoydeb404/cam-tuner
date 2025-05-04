@@ -4,10 +4,9 @@ import { useState } from "react";
 import ApplyBtn from "./apply-btn";
 import Header from "./header";
 import Preview from "./preview";
-import AdvancedTab from "./tabs/advanced-tab";
 import CommonTab from "./tabs/common-tab";
 import PreferenceTab from "./tabs/preference-tab";
-import UsageTab from "./tabs/usage-tab";
+import TroubleshootTab from "./tabs/troubleshoot-tab";
 
 type Props = {};
 
@@ -21,15 +20,14 @@ const App = (props: Props) => {
         <div className="flex items-start gap-x-8">
           <div className="w-[350px] shrink-0 flex flex-col justify-between h-full">
             <Preview />
-            <ApplyBtn onTroubleshoot={() => setTab("usage")} />
+            <ApplyBtn onTroubleshoot={() => setTab("troubleshoot")} />
           </div>
           <div className="grow">
             <Tabs value={tab} onValueChange={setTab} className="w-full">
               <TabsList className="mb-3 w-full">
                 <TabsTrigger value="common">Common</TabsTrigger>
                 <TabsTrigger value="preference">Preference</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-                <TabsTrigger value="usage">Usage</TabsTrigger>
+                <TabsTrigger value="troubleshoot">Troubleshoot</TabsTrigger>
               </TabsList>
               <TabsContent value="common">
                 <CommonTab />
@@ -37,11 +35,8 @@ const App = (props: Props) => {
               <TabsContent value="preference">
                 <PreferenceTab />
               </TabsContent>
-              <TabsContent value="advanced">
-                <AdvancedTab />
-              </TabsContent>
-              <TabsContent value="usage">
-                <UsageTab />
+              <TabsContent value="troubleshoot">
+                <TroubleshootTab />
               </TabsContent>
             </Tabs>
           </div>

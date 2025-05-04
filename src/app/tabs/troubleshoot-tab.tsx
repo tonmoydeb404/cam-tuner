@@ -2,7 +2,7 @@ import { Camera, Cog, RefreshCw, Video } from "lucide-react";
 
 type Props = {};
 
-const UsageTab = (props: Props) => {
+const TroubleshootTab = (props: Props) => {
   return (
     <div className="p-5 border rounded-2xl shadow-sm">
       <ol className="space-y-5">
@@ -24,7 +24,7 @@ const UsageTab = (props: Props) => {
   );
 };
 
-export default UsageTab;
+export default TroubleshootTab;
 
 const usages = [
   {

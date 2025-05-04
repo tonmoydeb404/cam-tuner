@@ -6,10 +6,20 @@ type Props = {};
 
 const PreferenceTab = (props: Props) => {
   const { config, updateConfig } = useAppContext();
-  const { brightness, contrast, saturation } = config;
+  const { brightness, contrast, saturation, zoom } = config;
 
   return (
     <div className="space-y-5 border p-5 rounded-2xl">
+      <FormSlider
+        label="Zoom"
+        id="zoom"
+        value={zoom}
+        min={1}
+        max={3}
+        step={0.1}
+        onChange={updateConfig("zoom")}
+      />
+
       <FormSlider
         label="Brightness"
         id="brightness"

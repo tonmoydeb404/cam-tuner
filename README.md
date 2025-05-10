@@ -4,6 +4,9 @@
 
 **CamTuner** is a browser extension that lets you customize your webcam feed — adjust zoom, crop, color settings, and more — and output it as a virtual webcam for use in video calls and streaming.
 
+[![Get it on Chrome Web Store](https://img.shields.io/badge/Available_on-Chrome_Web_Store-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/camtuner/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb)
+[![Get it on Firefox Add-ons](https://img.shields.io/badge/Available_on-Firefox_Add--ons-orange?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/camtuner/)
+
 > **Note**: CamTuner is an enhanced version of [vCam](https://github.com/tonmoydeb404/v-cam). It is built with React and TypeScript, unlike vCam, which was written in raw JavaScript.
 
 ## ✨ Features
@@ -47,7 +50,7 @@
 
 ## 🚀 Installation
 
-CamTuner will soon be available on the [Chrome Web Store](#) & [Firefox Addon Store](#) for one-click installation.
+CamTuner available on the [Chrome Web Store](https://chromewebstore.google.com/detail/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb) & [Firefox Addon Store](https://addons.mozilla.org/en-US/firefox/addon/camtuner/) for one-click installation.
 
 ### 🧪 Local Development
 

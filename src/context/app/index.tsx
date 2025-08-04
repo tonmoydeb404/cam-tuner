@@ -9,13 +9,10 @@ import {
 } from "react";
 import Browser from "webextension-polyfill";
 import ratioOptions from "./ratio-options";
-import { IAppCameraSource, IAppConfig, IAppContext } from "./types";
+import { IAppConfig, IAppContext } from "./types";
 
 const defaultValue: IAppContext = {
-  cameraSource: null,
   changesPending: false,
-  setCameraSource: () => {},
-  initCameraSource: () => {},
   enable: true,
   setEnable: () => {},
 
@@ -48,7 +45,6 @@ export const AppContextProvider = (props: Props) => {
   const { children } = props;
 
   const [enable, setEnable] = useState(defaultValue.enable);
-  const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
   const [config, setConfig] = useState(defaultValue.config);
   const [changesPending, setChangesPending] = useState(
     defaultValue.changesPending
@@ -63,9 +59,6 @@ export const AppContextProvider = (props: Props) => {
         if (typeof result.enable === "boolean") {
           setEnable(result.enable);
         }
-        if (typeof result.cameraSource === "object") {
-          setCameraSource(result.cameraSource as IAppCameraSource);
-        }
         if (typeof result.config === "object") {
           setConfig((prev) => ({ ...prev, ...(result.config as IAppConfig) }));
         }
@@ -79,21 +72,15 @@ export const AppContextProvider = (props: Props) => {
     setChangesPending(true);
   };
 
-  const saveSettings = (
-    enable: boolean,
-    cameraSource: IAppCameraSource | null,
-    config: IAppConfig
-  ) => {
+  const saveSettings = (enable: boolean, config: IAppConfig) => {
     Browser.storage?.sync.set({
       enable,
-      cameraSource,
       config,
     });
     setChangesPending(false);
     const message: WindowMessage = {
       type: MessageTypeEnum.UPDATE,
       payload: {
-        cameraSource,
         config,
         enable,
       },
@@ -102,38 +89,22 @@ export const AppContextProvider = (props: Props) => {
   };
 
   const applySettings = useCallback(() => {
-    saveSettings(enable, cameraSource, config);
-  }, [enable, cameraSource, config]);
+    saveSettings(enable, config);
+  }, [enable, config]);
 
   const updateEnable: IAppContext["setEnable"] = useCallback(
     (checked) => {
       setEnable(checked);
-      saveSettings(checked, cameraSource, config);
+      saveSettings(checked, config);
     },
-    [cameraSource, config]
+    [config]
   );
-
-  const initCameraSource: IAppContext["initCameraSource"] = (value) => {
-    setCameraSource((prev) => {
-      if (prev) return prev;
-      setChangesPending(true);
-      return value;
-    });
-  };
-
-  const updateCameraSource: IAppContext["setCameraSource"] = (value) => {
-    setCameraSource(value);
-    setChangesPending(true);
-  };
 
   // ----------------------------------------------------------------------
 
   const value: IAppContext = {
     enable,
     setEnable: updateEnable,
-    cameraSource,
-    setCameraSource: updateCameraSource,
-    initCameraSource,
     config,
     setConfig,
     updateConfig,

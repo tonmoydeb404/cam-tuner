@@ -11,20 +11,9 @@ export interface IAppConfig {
   align: StreamPatcherConfig["align"];
 }
 
-export interface IAppCameraSource {
-  label: string;
-  deviceId: string;
-}
-
 export interface IAppContext {
   enable: boolean;
   setEnable: (v: boolean) => void;
-
-  cameraSource: IAppCameraSource | null;
-  initCameraSource: (v: IAppCameraSource) => void;
-  setCameraSource: React.Dispatch<
-    React.SetStateAction<IAppCameraSource | null>
-  >;
 
   config: IAppConfig;
   setConfig: React.Dispatch<React.SetStateAction<IAppConfig>>;

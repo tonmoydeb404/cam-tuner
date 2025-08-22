@@ -75,23 +75,23 @@ export default TroubleshootTab;
 const setupSteps = [
   {
     id: 1,
+    title: "Enable Floating Preview",
+    text: "Click 'Show Preview' to open a floating window that displays your camera feed in real-time.",
+  },
+  {
+    id: 2,
     title: "Configure Your Camera",
     text: "Use the Camera tab to select your camera and adjust frame settings like aspect ratio and mirroring.",
   },
   {
-    id: 2,
-    title: "Apply Effects",
-    text: "Go to Effects tab to adjust zoom, brightness, contrast, and saturation in real-time.",
-  },
-  {
     id: 3,
-    title: "Apply Changes", 
-    text: "Click the Apply Changes button to save your settings and make them available to video apps.",
+    title: "Apply Effects",
+    text: "Go to Effects tab to adjust zoom, brightness, contrast, and saturation while watching the floating preview.",
   },
   {
     id: 4,
     title: "Select CamTuner in Video Apps",
-    text: "In your video app (Google Meet, Zoom, etc.), select 'CamTuner' as your camera source.",
+    text: "In your video app (Google Meet, Zoom, etc.), select 'CamTuner' as your camera source. All changes are automatically applied in real-time.",
   },
 ];
 
@@ -99,8 +99,8 @@ const shortcuts = [
   { keys: ['1'], description: 'Switch to Camera tab' },
   { keys: ['2'], description: 'Switch to Effects tab' },
   { keys: ['3'], description: 'Switch to Help tab' },
-  { keys: ['Ctrl', 'Enter'], description: 'Apply changes' },
   { keys: ['Ctrl', 'Space'], description: 'Toggle extension on/off' },
+  { keys: ['Ctrl', 'P'], description: 'Toggle floating preview' },
 ];
 
 const commonIssues = [

@@ -22,9 +22,7 @@ export interface IAppContext {
 
   cameraSource: IAppCameraSource | null;
   initCameraSource: (v: IAppCameraSource) => void;
-  setCameraSource: React.Dispatch<
-    React.SetStateAction<IAppCameraSource | null>
-  >;
+  setCameraSource: (v: IAppCameraSource | null) => void;
 
   config: IAppConfig;
   setConfig: React.Dispatch<React.SetStateAction<IAppConfig>>;

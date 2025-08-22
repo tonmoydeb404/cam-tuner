@@ -1,11 +1,13 @@
+import { FloatingPreview } from "@/components/floating-preview";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context/app";
 import EnableGuard from "@/guards/enable-guard";
+import useFloatingPreview from "@/hooks/use-floating-preview";
 import useKeyboardShortcuts from "@/hooks/use-keyboard-shortcuts";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import ApplyBtn from "./apply-btn";
 import Header from "./header";
-import Preview from "./preview";
 import CommonTab from "./tabs/common-tab";
 import PreferenceTab from "./tabs/preference-tab";
 import TroubleshootTab from "./tabs/troubleshoot-tab";
@@ -14,7 +16,8 @@ type Props = {};
 
 const App = (props: Props) => {
   const [tab, setTab] = useState<string>("common");
-  const { changesPending, applySettings, enable, setEnable } = useAppContext();
+  const { enable, setEnable } = useAppContext();
+  const floatingPreview = useFloatingPreview();
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -34,16 +37,16 @@ const App = (props: Props) => {
       description: 'Switch to Help tab'
     },
     {
-      key: 'Enter',
-      ctrlKey: true,
-      action: () => changesPending && applySettings(),
-      description: 'Apply changes'
-    },
-    {
       key: ' ',
       ctrlKey: true,
       action: () => setEnable(!enable),
       description: 'Toggle extension on/off'
+    },
+    {
+      key: 'p',
+      ctrlKey: true,
+      action: () => floatingPreview.togglePreview(),
+      description: 'Toggle floating preview'
     }
   ], true);
 
@@ -52,21 +55,45 @@ const App = (props: Props) => {
       {/* Header - fixed height */}
       <div className="shrink-0 bg-background border-b border-border/50">
         <Header />
-        {changesPending && (
-          <div className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200 dark:border-amber-800/50">
-            <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Changes pending - apply to save
-            </div>
-          </div>
-        )}
       </div>
 
       <EnableGuard>
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Preview Section */}
-          <div className="p-4 pb-3">
-            <Preview />
+          {/* Floating Preview Control */}
+          <div className="p-4 pb-3 border-b border-border/50">
+            <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Eye className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-card-foreground">
+                    Floating Preview
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    View camera changes in real-time while using other apps
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={floatingPreview.togglePreview}
+                variant={floatingPreview.isVisible ? "default" : "outline"}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {floatingPreview.isVisible ? (
+                  <>
+                    <EyeOff className="h-4 w-4" />
+                    Hide Preview
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    Show Preview
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Controls Section */}
@@ -96,14 +123,14 @@ const App = (props: Props) => {
                 </TabsContent>
               </div>
             </Tabs>
-            
-            {/* Apply Button - Fixed at bottom */}
-            <div className="pb-4 pt-2 border-t border-border/50 bg-background">
-              <ApplyBtn onTroubleshoot={() => setTab("troubleshoot")} />
-            </div>
           </div>
         </div>
       </EnableGuard>
+
+      {/* Floating Preview Window */}
+      {floatingPreview.isVisible && (
+        <FloatingPreview onClose={floatingPreview.hidePreview} />
+      )}
     </div>
   );
 };

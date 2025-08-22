@@ -178,6 +178,21 @@
     @apply bg-accent;
   }
 
+  /* Floating preview window styling */
+  .floating-preview-window {
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure floating preview uses proper theme variables */
+  .floating-preview-window * {
+    @apply border-border outline-ring/50;
+  }
+
   /* Advanced Animations & Micro-interactions */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;

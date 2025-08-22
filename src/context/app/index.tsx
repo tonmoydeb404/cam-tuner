@@ -50,9 +50,6 @@ export const AppContextProvider = (props: Props) => {
   const [enable, setEnable] = useState(defaultValue.enable);
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
   const [config, setConfig] = useState(defaultValue.config);
-  const [changesPending, setChangesPending] = useState(
-    defaultValue.changesPending
-  );
 
   // ----------------------------------------------------------------------
 
@@ -75,8 +72,9 @@ export const AppContextProvider = (props: Props) => {
   // ----------------------------------------------------------------------
 
   const updateConfig: IAppContext["updateConfig"] = (key) => (value) => {
-    setConfig((prev) => ({ ...prev, [key]: value }));
-    setChangesPending(true);
+    const newConfig = { ...config, [key]: value };
+    setConfig(newConfig);
+    saveSettings(enable, cameraSource, newConfig);
   };
 
   const saveSettings = (
@@ -89,7 +87,6 @@ export const AppContextProvider = (props: Props) => {
       cameraSource,
       config,
     });
-    setChangesPending(false);
     const message: WindowMessage = {
       type: MessageTypeEnum.UPDATE,
       payload: {
@@ -116,14 +113,16 @@ export const AppContextProvider = (props: Props) => {
   const initCameraSource: IAppContext["initCameraSource"] = (value) => {
     setCameraSource((prev) => {
       if (prev) return prev;
-      setChangesPending(true);
       return value;
     });
+    if (!cameraSource) {
+      saveSettings(enable, value, config);
+    }
   };
 
   const updateCameraSource: IAppContext["setCameraSource"] = (value) => {
     setCameraSource(value);
-    setChangesPending(true);
+    saveSettings(enable, value, config);
   };
 
   // ----------------------------------------------------------------------
@@ -138,7 +137,7 @@ export const AppContextProvider = (props: Props) => {
     setConfig,
     updateConfig,
     applySettings,
-    changesPending,
+    changesPending: false,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

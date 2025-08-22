@@ -1,9 +1,10 @@
 import { FormSwitch } from "@/components/form";
 import { StatusIndicator } from "@/components/ui/status-indicator";
+import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/app";
 import { useWebcamsContext } from "@/context/webcams";
 import useDebounce from "@/hooks/use-debounce";
-import { Settings } from "lucide-react";
+import { Settings, Eye } from "lucide-react";
 
 type Props = {};
 
@@ -24,6 +25,20 @@ const Header = (props: Props) => {
   const getStatusText = () => {
     if (!enable) return 'Disabled';
     return hasActiveCamera ? 'Active & Connected' : 'Active - No Camera';
+  };
+
+  const openSidePanel = async () => {
+    try {
+      // Check if sidePanel API is available (Chrome only)
+      if (typeof chrome !== 'undefined' && chrome.sidePanel) {
+        const currentWindow = await chrome.windows.getCurrent();
+        if (currentWindow.id) {
+          await chrome.sidePanel.open({ windowId: currentWindow.id });
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to open side panel:', error);
+    }
   };
 
   return (
@@ -47,18 +62,32 @@ const Header = (props: Props) => {
           </div>
         </div>
 
-        {/* Enable/Disable Toggle */}
+        {/* Controls */}
         <div className="flex items-center gap-2">
-          <div className="text-xs font-medium text-foreground">
-            {enable ? "ON" : "OFF"}
+          {/* Live Preview Button */}
+          <Button
+            onClick={openSidePanel}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            title="Open Live Preview"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+          
+          {/* Enable/Disable Toggle */}
+          <div className="flex items-center gap-2">
+            <div className="text-xs font-medium text-foreground">
+              {enable ? "ON" : "OFF"}
+            </div>
+            <FormSwitch
+              checked={enable}
+              onChange={debouncedSetEnable}
+              id="enable"
+              label=""
+              className="gap-1"
+            />
           </div>
-          <FormSwitch
-            checked={enable}
-            onChange={debouncedSetEnable}
-            id="enable"
-            label=""
-            className="gap-1"
-          />
         </div>
       </div>
     </div>

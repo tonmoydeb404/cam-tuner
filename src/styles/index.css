@@ -178,6 +178,36 @@
     @apply bg-accent;
   }
 
+  html.sidepanel {
+    /* Ensure side panel applies theme classes correctly */
+    &.dark,
+    &.light {
+      color-scheme: var(--color-scheme);
+    }
+    
+    body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      
+      /* Side panel specific optimizations */
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: oklch(var(--muted));
+        border-radius: 2px;
+      }
+    }
+  }
+
   /* Floating preview window styling */
   .floating-preview-window {
     font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

@@ -16,9 +16,13 @@
   "{{firefox}}.browser_action": {
     "default_popup": "src/pages/popup/index.html"
   },
+  "{{chrome}}.side_panel": {
+    "default_path": "src/pages/sidepanel/index.html"
+  },
   "options_page": "src/pages/options/index.html",
   "permissions": [
-    "storage"
+    "storage",
+    "{{chrome}}.sidePanel"
   ],
   "content_scripts": [
     {

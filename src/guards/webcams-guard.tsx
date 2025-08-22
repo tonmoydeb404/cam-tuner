@@ -9,6 +9,8 @@ type Props = {
 const WebcamsGuard = ({ children }: Props) => {
   const { webcams, loading } = useWebcamsContext();
 
+  console.log(webcams);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-sm text-muted-foreground text-center">

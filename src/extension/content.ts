@@ -1,4 +1,4 @@
-import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
+import { MessageTypeEnum } from "@/types/window-message";
 import Browser from "webextension-polyfill";
 import { IAppContext } from "../context/app/types";
 import { Logger } from "../utils/log";
@@ -23,26 +23,32 @@ Browser.storage.sync
 
     script.onload = () => {
       Logger.dev("Script loaded, sending message...", result);
-      const messageObj: WindowMessage = {
+      const messageObj = {
         type: MessageTypeEnum.SETTINGS,
-        payload: (result ?? {}) as WindowMessage["payload"],
+        payload: (result ?? {}),
       };
       window.postMessage(messageObj, "*");
     };
   });
 
 // Update Settings to the web page ----------------------------------------------------------------------
-Browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  const windowMessage = message as WindowMessage;
-  if (windowMessage?.type === MessageTypeEnum.UPDATE) {
+Browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+  if (message?.type === MessageTypeEnum.UPDATE) {
     Logger.dev("Settings Updated...");
-    window.postMessage(
-      { ...windowMessage, type: MessageTypeEnum.SETTINGS },
-      "*"
-    );
-
+    const settingsMessage = {
+      type: MessageTypeEnum.SETTINGS,
+      payload: message.payload
+    };
+    window.postMessage(settingsMessage, "*");
     sendResponse({ success: true });
   }
+  
+  // Floating preview feature disabled
+  // if (message?.type === MessageTypeEnum.FLOATING_PREVIEW) {
+  //   Logger.dev("Floating Preview Command...");
+  //   window.postMessage(message, "*");
+  //   sendResponse({ success: true });
+  // }
 
   return true;
 });

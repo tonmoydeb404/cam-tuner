@@ -3,20 +3,25 @@ import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
 
 window.addEventListener("message", (event) => {
-  if (event?.data?.type !== MessageTypeEnum.SETTINGS) return;
+  if (event?.data?.type === MessageTypeEnum.SETTINGS) {
+    const enable =
+      typeof event.data?.payload?.enable === "boolean"
+        ? event.data?.payload?.enable
+        : true;
+    const sourceDeviceLabel = event.data?.payload?.cameraSource?.label;
+    const config = event.data?.payload?.config;
 
-  const enable =
-    typeof event.data?.payload?.enable === "boolean"
-      ? event.data?.payload?.enable
-      : true;
-  const sourceDeviceLabel = event.data?.payload?.cameraSource?.label;
-  const config = event.data?.payload?.config;
+    Logger.dev("Received settings:", {
+      enable,
+      sourceDeviceLabel,
+      config,
+    });
 
-  Logger.dev("Received settings:", {
-    enable,
-    sourceDeviceLabel,
-    config,
-  });
+    mediaDevicePatcher(enable, sourceDeviceLabel, config);
+  }
 
-  mediaDevicePatcher(enable, sourceDeviceLabel, config);
+  // Floating preview feature disabled
+  // if (event?.data?.type === MessageTypeEnum.FLOATING_PREVIEW) {
+  //   // Floating preview functionality temporarily disabled
+  // }
 });

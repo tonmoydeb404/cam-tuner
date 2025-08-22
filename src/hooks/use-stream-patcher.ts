@@ -1,5 +1,6 @@
 import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
 import { streamPatcher } from "@/utils/stream-patcher";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type IdleCallbackId = number;
@@ -39,7 +40,7 @@ function useStreamPatcher(
     if (previousPatchedStreamRef.current !== newPatchedStream) {
       // Stop the tracks from the previous patched stream
       if (previousPatchedStreamRef.current) {
-        previousPatchedStreamRef.current.getTracks().forEach((t) => t.stop());
+        cleanupMediaStream(previousPatchedStreamRef.current);
       }
 
       previousPatchedStreamRef.current = newPatchedStream;
@@ -72,7 +73,7 @@ function useStreamPatcher(
   // Cleanup when component unmounts or stream is removed
   useEffect(() => {
     return () => {
-      previousPatchedStreamRef.current?.getTracks().forEach((t) => t.stop());
+      cleanupMediaStream(previousPatchedStreamRef.current);
     };
   }, []);
 

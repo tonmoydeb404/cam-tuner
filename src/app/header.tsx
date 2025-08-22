@@ -3,6 +3,7 @@ import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useAppContext } from "@/context/app";
 import { useWebcamsContext } from "@/context/webcams";
 import useDebounce from "@/hooks/use-debounce";
+import { Logger } from "@/utils/log";
 import { Eye, Power, Settings } from "lucide-react";
 
 const Header = () => {
@@ -37,7 +38,7 @@ const Header = () => {
         }
       }
     } catch (error) {
-      console.warn(
+      Logger.warn(
         "Side panel not available, falling back to options page:",
         error
       );
@@ -49,7 +50,7 @@ const Header = () => {
         chrome.runtime.openOptionsPage();
       }
     } catch (error) {
-      console.warn("Failed to open options page:", error);
+      Logger.warn("Failed to open options page:", error);
     }
   };
 

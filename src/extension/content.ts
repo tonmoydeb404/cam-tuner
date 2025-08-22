@@ -1,56 +1,37 @@
 import { MessageTypeEnum } from "@/types/window-message";
-import Browser from "webextension-polyfill";
 import { IAppContext } from "../context/app/types";
 import { Logger } from "../utils/log";
+import { browserStorage, scriptInjection, messageUtils } from "../utils/browser-api";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
-Browser.storage.sync
-  .get(["cameraSource", "config", "enable"] as (keyof IAppContext)[])
-  .then((result) => {
-    const script = document.createElement("script");
-    script.setAttribute("type", "module");
-    script.setAttribute(
-      "src",
-      chrome.runtime.getURL("src/extension/inject.js")
-    );
-
-    const head =
-      document.head ||
-      document.getElementsByTagName("head")[0] ||
-      document.documentElement;
-
-    head.insertBefore(script, head.lastChild);
-
-    script.onload = () => {
+const initializeExtension = async () => {
+  const result = await browserStorage.get(["cameraSource", "config", "enable"]);
+  
+  const scriptLoaded = await scriptInjection.inject(
+    "src/extension/inject.js",
+    () => {
       Logger.dev("Script loaded, sending message...", result);
-      const messageObj = {
-        type: MessageTypeEnum.SETTINGS,
-        payload: result ?? {},
-      };
-      window.postMessage(messageObj, "*");
-    };
-  });
+      messageUtils.postToWindow(MessageTypeEnum.SETTINGS, result ?? {});
+    }
+  );
+  
+  if (!scriptLoaded) {
+    Logger.error("Failed to inject extension script");
+  }
+};
+
+initializeExtension();
 
 // Listen for storage changes and update web page ----------------------------------------------------------------------
-Browser.storage.sync.onChanged.addListener((changes) => {
+const relevantKeys = ["cameraSource", "config", "enable"] as (keyof IAppContext)[];
+
+browserStorage.onChange((changes, result) => {
   Logger.dev("Storage changed:", changes);
-  
-  // Check if any relevant settings changed
-  const relevantKeys = ["cameraSource", "config", "enable"] as (keyof IAppContext)[];
-  const hasRelevantChanges = relevantKeys.some(key => key in changes);
-  
-  if (hasRelevantChanges) {
-    // Get updated settings and send to web page
-    Browser.storage.sync.get(relevantKeys).then((result) => {
-      const settingsMessage = {
-        type: MessageTypeEnum.SETTINGS,
-        payload: result,
-      };
-      window.postMessage(settingsMessage, "*");
-      Logger.dev("Settings updated via storage change:", result);
-    });
+  if (result) {
+    messageUtils.postToWindow(MessageTypeEnum.SETTINGS, result);
+    Logger.dev("Settings updated via storage change:", result);
   }
-});
+}, relevantKeys);
 
 // Update Settings to the web page ----------------------------------------------------------------------
 // Browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {

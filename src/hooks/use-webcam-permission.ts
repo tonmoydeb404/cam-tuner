@@ -1,4 +1,5 @@
 import { Logger } from "@/utils/log";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useEffect, useState } from "react";
 
 function useWebcamPermission() {
@@ -37,7 +38,7 @@ function useWebcamPermission() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
       // Immediately stop all video tracks to turn off camera
-      stream.getTracks().forEach((track) => track.stop());
+      cleanupMediaStream(stream);
     } catch (err) {
       setHasPermission(false);
     }

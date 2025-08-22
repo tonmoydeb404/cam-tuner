@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Logger } from "@/utils/log";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 
 type WebcamDevice = {
   deviceId: string;
@@ -29,13 +31,11 @@ const useWebcams = () => {
 
         setWebcams(videoInputs);
       } catch (error) {
-        console.error("Error accessing webcams:", error);
+        Logger.error("Error accessing webcams:", error);
         setWebcams([]);
       } finally {
         setLoading(false);
-        if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
-        }
+        cleanupMediaStream(stream);
       }
     }
 

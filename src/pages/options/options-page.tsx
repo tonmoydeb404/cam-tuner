@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Logger } from "@/utils/log";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 import {
   Card,
   CardContent,
@@ -147,13 +149,11 @@ const LivePreviewCard = () => {
     };
 
     const handleDeviceChange = async () => {
-      console.log('Camera devices changed, refreshing stream...');
+      Logger.dev('Camera devices changed, refreshing stream...');
       
       // Stop current stream
       if (streamRef.current) {
-        streamRef.current
-          .getTracks()
-          .forEach((track: MediaStreamTrack) => track.stop());
+        cleanupMediaStream(streamRef.current);
         streamRef.current = null;
         setStream(null);
       }
@@ -275,7 +275,7 @@ const OptionsPageContent = () => {
 const OptionsPage = () => {
   useEffect(() => {
     const messageListener = (message: unknown, _sender: chrome.runtime.MessageSender, sendResponse: (response?: unknown) => void) => {
-      console.log('Options page received message:', message);
+      Logger.dev('Options page received message:', message);
       
       // Handle different message types
       const msg = message as { type?: string };
@@ -285,17 +285,17 @@ const OptionsPage = () => {
           sendResponse({ success: true });
           break;
         default:
-          console.log('Unknown message type:', msg.type);
+          Logger.warn('Unknown message type:', msg.type);
       }
     };
 
     const storageChangeListener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      console.log('Storage changes:', changes);
+      Logger.dev('Storage changes:', changes);
       
       // Handle specific key changes
       Object.keys(changes).forEach((key) => {
         const change = changes[key];
-        console.log(`Key "${key}" changed from`, change.oldValue, 'to', change.newValue);
+        Logger.dev(`Key "${key}" changed from`, change.oldValue, 'to', change.newValue);
       });
     };
 

@@ -1,8 +1,9 @@
 import "../../styles/index.css";
+import ErrorBoundary from "@/components/ui/error-boundary";
+import useTheme from "@/hooks/use-theme";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import OptionsPage from "./options-page";
-import useTheme from "@/hooks/use-theme";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   useTheme(); // Initialize system theme detection
@@ -13,8 +14,10 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <StrictMode>
-    <ThemeProvider>
-      <OptionsPage />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <OptionsPage />
+      </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>
 );

@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function useThrottle<T extends (...args: any[]) => any>(
   callback: T,
   delay: number

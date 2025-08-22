@@ -25,30 +25,51 @@ Browser.storage.sync
       Logger.dev("Script loaded, sending message...", result);
       const messageObj = {
         type: MessageTypeEnum.SETTINGS,
-        payload: (result ?? {}),
+        payload: result ?? {},
       };
       window.postMessage(messageObj, "*");
     };
   });
 
-// Update Settings to the web page ----------------------------------------------------------------------
-Browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
-  if (message?.type === MessageTypeEnum.UPDATE) {
-    Logger.dev("Settings Updated...");
-    const settingsMessage = {
-      type: MessageTypeEnum.SETTINGS,
-      payload: message.payload
-    };
-    window.postMessage(settingsMessage, "*");
-    sendResponse({ success: true });
-  }
+// Listen for storage changes and update web page ----------------------------------------------------------------------
+Browser.storage.sync.onChanged.addListener((changes) => {
+  Logger.dev("Storage changed:", changes);
   
-  // Floating preview feature disabled
-  // if (message?.type === MessageTypeEnum.FLOATING_PREVIEW) {
-  //   Logger.dev("Floating Preview Command...");
-  //   window.postMessage(message, "*");
-  //   sendResponse({ success: true });
-  // }
-
-  return true;
+  // Check if any relevant settings changed
+  const relevantKeys = ["cameraSource", "config", "enable"] as (keyof IAppContext)[];
+  const hasRelevantChanges = relevantKeys.some(key => key in changes);
+  
+  if (hasRelevantChanges) {
+    // Get updated settings and send to web page
+    Browser.storage.sync.get(relevantKeys).then((result) => {
+      const settingsMessage = {
+        type: MessageTypeEnum.SETTINGS,
+        payload: result,
+      };
+      window.postMessage(settingsMessage, "*");
+      Logger.dev("Settings updated via storage change:", result);
+    });
+  }
 });
+
+// Update Settings to the web page ----------------------------------------------------------------------
+// Browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+//   if (message?.type === MessageTypeEnum.UPDATE) {
+//     Logger.dev("Settings Updated...");
+//     const settingsMessage = {
+//       type: MessageTypeEnum.SETTINGS,
+//       payload: message.payload,
+//     };
+//     window.postMessage(settingsMessage, "*");
+//     sendResponse({ success: true });
+//   }
+
+//   // Floating preview feature disabled
+//   // if (message?.type === MessageTypeEnum.FLOATING_PREVIEW) {
+//   //   Logger.dev("Floating Preview Command...");
+//   //   window.postMessage(message, "*");
+//   //   sendResponse({ success: true });
+//   // }
+
+//   return true;
+// });

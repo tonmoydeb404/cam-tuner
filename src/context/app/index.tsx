@@ -20,6 +20,7 @@ import {
 const defaultOverlay: IGifOverlay = {
   enabled: false,
   gifUrl: "",
+  mp4Url: "",
   gifId: "",
   position: { x: 50, y: 50 },
   scale: 1,
@@ -191,10 +192,11 @@ export const AppContextProvider = (props: Props) => {
   }, []);
 
   const setSelectedGif = useCallback(
-    (gifUrl: string, gifId: string) => {
+    (gifUrl: string, mp4Url: string, gifId: string) => {
       const newOverlay = {
         ...overlay,
         gifUrl,
+        mp4Url,
         gifId,
         enabled: true,
       };

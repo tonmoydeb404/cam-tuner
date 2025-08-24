@@ -4,6 +4,7 @@ import React from "react";
 export interface IGifOverlay {
   enabled: boolean;
   gifUrl: string;
+  mp4Url: string;
   gifId: string;
   position: {
     x: number;
@@ -50,7 +51,7 @@ export interface IAppContext {
     key: K
   ) => (value: IGifOverlay[K]) => void;
   resetOverlay: () => void;
-  setSelectedGif: (gifUrl: string, gifId: string) => void;
+  setSelectedGif: (gifUrl: string, mp4Url: string, gifId: string) => void;
 
   applySettings: () => void;
 

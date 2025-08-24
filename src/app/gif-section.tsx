@@ -78,7 +78,7 @@ const GifSection = () => {
 
   const handleGifSelect = useCallback(
     (gif: KlipyGif) => {
-      setSelectedGif(gif.file.hd.gif.url, gif.id.toString());
+      setSelectedGif(gif.file.hd.gif.url, gif.file.hd.mp4.url, gif.id.toString());
     },
     [setSelectedGif]
   );

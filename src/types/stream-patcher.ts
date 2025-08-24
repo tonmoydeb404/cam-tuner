@@ -9,6 +9,7 @@ export type StreamPatcherConfig = {
   gifOverlay?: {
     enabled: boolean;
     gifUrl: string;
+    mp4Url: string;
     gifId: string;
     position: {
       x: number;

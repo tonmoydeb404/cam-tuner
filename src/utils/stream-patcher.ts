@@ -106,17 +106,74 @@ function applyCanvasProcessing({
   }
 
   // GIF overlay setup
-  let gifElement: HTMLImageElement | null = null;
+  let gifVideo: HTMLVideoElement | null = null;
   let gifStartTime = 0;
   let gifVisible = false;
+  let gifCompleted = false; // Track if GIF display period has completed
 
-  if (gifOverlay?.enabled && gifOverlay.gifUrl) {
-    gifElement = new Image();
-    gifElement.crossOrigin = "anonymous";
-    gifElement.src = gifOverlay.gifUrl;
-    gifElement.onload = () => {
-      Logger.dev("GIF loaded for overlay");
-    };
+  if (gifOverlay?.enabled && gifOverlay.mp4Url) {
+    // Create video element for animated GIF playback
+    gifVideo = document.createElement("video");
+    gifVideo.crossOrigin = "anonymous";
+    gifVideo.loop = true;
+    gifVideo.muted = true;
+    gifVideo.playsInline = true;
+    gifVideo.autoplay = true;
+    gifVideo.src = gifOverlay.mp4Url;
+
+    gifVideo.addEventListener("loadeddata", () => {
+      Logger.dev("Animated GIF loaded for overlay");
+      gifVideo?.play().catch((err) => {
+        Logger.dev("GIF video play error:", err);
+      });
+    });
+  }
+
+  function drawGifOverlay(ctx: CanvasRenderingContext2D) {
+    if (
+      !gifOverlay?.enabled ||
+      !gifVideo ||
+      gifVideo.readyState < 2 || // HAVE_CURRENT_DATA or higher
+      gifCompleted
+    ) {
+      return;
+    }
+
+    const currentTime = Date.now();
+
+    // Initialize start time on first draw
+    if (gifStartTime === 0) {
+      gifStartTime = currentTime + gifOverlay.delay * 1000;
+    }
+
+    // Check if we're within the display duration
+    const elapsedTime = (currentTime - gifStartTime) / 1000;
+    gifVisible = elapsedTime >= 0 && elapsedTime <= gifOverlay.duration;
+
+    if (gifVisible) {
+      // Calculate GIF position and size
+      const gifWidth = gifVideo.videoWidth * gifOverlay.scale;
+      const gifHeight = gifVideo.videoHeight * gifOverlay.scale;
+      const gifX = (crop.width * gifOverlay.position.x) / 100 - gifWidth / 2;
+      const gifY = (crop.height * gifOverlay.position.y) / 100 - gifHeight / 2;
+
+      // Apply opacity
+      const previousAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = gifOverlay.opacity / 100;
+
+      // Draw animated GIF (video element)
+      ctx.drawImage(gifVideo, gifX, gifY, gifWidth, gifHeight);
+
+      // Restore opacity
+      ctx.globalAlpha = previousAlpha;
+    }
+
+    // Mark as completed after duration ends (no more looping)
+    if (elapsedTime > gifOverlay.duration) {
+      gifCompleted = true;
+      gifVideo.pause(); // Stop playing the GIF
+      Logger.dev("GIF overlay completed, hiding permanently");
+    }
   }
 
   function draw(ctx: CanvasRenderingContext2D) {
@@ -134,48 +191,8 @@ function applyCanvasProcessing({
         crop.height
       );
 
-      // Draw GIF overlay if enabled and loaded
-      if (
-        gifOverlay?.enabled &&
-        gifElement?.complete &&
-        gifElement.naturalWidth > 0
-      ) {
-        const currentTime = Date.now();
-
-        // Initialize start time on first draw
-        if (gifStartTime === 0) {
-          gifStartTime = currentTime + gifOverlay.delay * 1000;
-        }
-
-        // Check if we're within the display duration
-        const elapsedTime = (currentTime - gifStartTime) / 1000;
-        gifVisible = elapsedTime >= 0 && elapsedTime <= gifOverlay.duration;
-
-        if (gifVisible) {
-          // Calculate GIF position and size
-          const gifWidth = gifElement.naturalWidth * gifOverlay.scale;
-          const gifHeight = gifElement.naturalHeight * gifOverlay.scale;
-          const gifX =
-            (crop.width * gifOverlay.position.x) / 100 - gifWidth / 2;
-          const gifY =
-            (crop.height * gifOverlay.position.y) / 100 - gifHeight / 2;
-
-          // Apply opacity
-          const previousAlpha = ctx.globalAlpha;
-          ctx.globalAlpha = gifOverlay.opacity / 100;
-
-          // Draw GIF
-          ctx.drawImage(gifElement, gifX, gifY, gifWidth, gifHeight);
-
-          // Restore opacity
-          ctx.globalAlpha = previousAlpha;
-        }
-
-        // Reset timer after duration completes
-        if (elapsedTime > gifOverlay.duration + 1) {
-          gifStartTime = 0; // Reset for next cycle
-        }
-      }
+      // Draw GIF overlay
+      drawGifOverlay(ctx);
     } catch (err) {
       Logger.dev("Draw failed:", err);
     }

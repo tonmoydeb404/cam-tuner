@@ -13,7 +13,7 @@
     "build:firefox": "TARGET=firefox pnpm build",
     "build:chrome": "TARGET=firefox pnpm build",
     "sync-version": "node -e \"const pkg=require('./package.json');const manifest=require('./manifest.json');manifest.version=pkg.version;require('fs').writeFileSync('manifest.json',JSON.stringify(manifest,null,2));console.log('✓ Synced version',pkg.version,'to manifest.json')\"",
-    "postversion": "pnpm sync-version && git add manifest.json"
+    "postversion": "pnpm sync-version && git add manifest.json && git commit --amend --no-edit"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",

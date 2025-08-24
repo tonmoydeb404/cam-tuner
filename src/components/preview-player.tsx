@@ -1,6 +1,7 @@
 import { cleanupMediaStream } from "@/utils/stream-utils";
 import { LucidePause, Play, RefreshCw, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import Browser from "webextension-polyfill";
 import { Button } from "./ui/button";
 import { LoadingState } from "./ui/loading-state";
 
@@ -93,12 +94,7 @@ const PreviewPlayer = () => {
   };
 
   const openOptionsPage = (): void => {
-    if (typeof chrome !== "undefined" && chrome.runtime) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      // Fallback for non-extension environments
-      window.open("/options", "_blank");
-    }
+    Browser.runtime.openOptionsPage();
   };
 
   // Event handlers

@@ -1,5 +1,5 @@
-import Browser from "webextension-polyfill";
 import { IAppContext } from "@/context/app/types";
+import Browser from "webextension-polyfill";
 import { Logger } from "./log";
 
 /**
@@ -50,14 +50,19 @@ export const browserStorage = {
    * @returns Function to remove the listener
    */
   onChange(
-    callback: (changes: { [key: string]: chrome.storage.StorageChange }, result?: Partial<IAppContext>) => void,
+    callback: (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      result?: Partial<IAppContext>
+    ) => void,
     keys?: StorageKeys
   ) {
-    const listener = async (changes: { [key: string]: chrome.storage.StorageChange }) => {
+    const listener = async (changes: {
+      [key: string]: chrome.storage.StorageChange;
+    }) => {
       if (keys) {
-        const hasRelevantChanges = keys.some(key => key in changes);
+        const hasRelevantChanges = keys.some((key) => key in changes);
         if (!hasRelevantChanges) return;
-        
+
         // Get updated values for relevant keys
         const result = await this.get(keys);
         callback(changes, result);
@@ -67,10 +72,10 @@ export const browserStorage = {
     };
 
     Browser.storage.sync.onChanged.addListener(listener);
-    
+
     // Return cleanup function
     return () => Browser.storage.sync.onChanged.removeListener(listener);
-  }
+  },
 };
 
 /**
@@ -87,18 +92,19 @@ export const scriptInjection = {
     try {
       const script = document.createElement("script");
       script.setAttribute("type", "module");
-      script.setAttribute("src", chrome.runtime.getURL(scriptPath));
+      script.setAttribute("src", Browser.runtime.getURL(scriptPath));
 
-      const head = document.head || 
-                  document.getElementsByTagName("head")[0] || 
-                  document.documentElement;
+      const head =
+        document.head ||
+        document.getElementsByTagName("head")[0] ||
+        document.documentElement;
 
       return new Promise((resolve) => {
         script.onload = () => {
           onLoad?.();
           resolve(true);
         };
-        
+
         script.onerror = () => {
           Logger.error("Failed to inject script:", scriptPath);
           resolve(false);
@@ -110,7 +116,7 @@ export const scriptInjection = {
       Logger.error("Script injection error:", error);
       return false;
     }
-  }
+  },
 };
 
 /**
@@ -144,5 +150,5 @@ export const messageUtils = {
       Logger.error("Failed to send runtime message:", error);
       return { success: false, error };
     }
-  }
+  },
 };

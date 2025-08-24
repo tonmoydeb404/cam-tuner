@@ -3,8 +3,8 @@ import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useAppContext } from "@/context/app";
 import { useWebcamsContext } from "@/context/webcams";
 import useDebounce from "@/hooks/use-debounce";
-import { Logger } from "@/utils/log";
 import { Eye, Power, Settings } from "lucide-react";
+import Browser from "webextension-polyfill";
 
 type Props = {
   showPreviewBtn?: boolean;
@@ -31,32 +31,16 @@ const Header = (props: Props) => {
   };
 
   const openLivePreview = async () => {
-    try {
-      // Check if sidePanel API is available (Chrome only)
-      if (typeof chrome !== "undefined" && chrome.sidePanel) {
-        const currentWindow = await chrome.windows.getCurrent();
-        if (currentWindow.id) {
-          await chrome.sidePanel.open({ windowId: currentWindow.id });
-          // Close the popup after opening sidepanel
-          window.close();
-          return;
-        }
+    if (__BROWSER__ === "chrome") {
+      const currentWindow = await chrome.windows.getCurrent();
+      if (currentWindow?.id) {
+        chrome.sidePanel.open({ windowId: currentWindow.id });
+        window.close();
+        return;
       }
-    } catch (error) {
-      Logger.warn(
-        "Side panel not available, falling back to options page:",
-        error
-      );
     }
 
-    // Fallback: Open options page for browsers without side panel support
-    try {
-      if (typeof chrome !== "undefined" && chrome.runtime) {
-        chrome.runtime.openOptionsPage();
-      }
-    } catch (error) {
-      Logger.warn("Failed to open options page:", error);
-    }
+    Browser.runtime.openOptionsPage();
   };
 
   return (

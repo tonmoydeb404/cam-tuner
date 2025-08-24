@@ -1,4 +1,5 @@
 import { StreamPatcherSize } from "@/types/stream-patcher";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useEffect, useState } from "react";
 
 function useMediaStream(deviceId: string | null) {
@@ -43,7 +44,7 @@ function useMediaStream(deviceId: string | null) {
 
   useEffect(() => {
     return () => {
-      stream?.getTracks().forEach((t) => t.stop());
+      cleanupMediaStream(stream);
     };
   }, [stream]);
 

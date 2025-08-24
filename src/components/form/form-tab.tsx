@@ -33,7 +33,7 @@ export function FormTabs<T extends string>({
         onValueChange={onChange as () => void}
         className="w-full"
       >
-        <TabsList className="w-full">
+        <TabsList className="w-full bg-accent dark:bg-background">
           {options.map((item) => (
             <TabsTrigger key={item.value} value={item.value}>
               {item.label}

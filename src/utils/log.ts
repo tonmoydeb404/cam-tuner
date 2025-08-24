@@ -22,6 +22,10 @@ export class Logger {
     return console.log(this.prefix("✅"), ...messages);
   }
 
+  warn(...messages: unknown[]) {
+    return console.warn(this.prefix("⚠️"), ...messages);
+  }
+
   error(...messages: unknown[]) {
     return console.error(this.prefix("❌"), ...messages);
   }
@@ -38,6 +42,10 @@ export class Logger {
 
   static success(...messages: unknown[]) {
     return console.log("[✅]", ...messages);
+  }
+
+  static warn(...messages: unknown[]) {
+    return console.warn("[⚠️]", ...messages);
   }
 
   static error(...messages: unknown[]) {

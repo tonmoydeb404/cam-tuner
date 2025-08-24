@@ -8,18 +8,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import useWebcamPermission from "@/hooks/use-webcam-permission";
 import { CameraOff, Loader2, LucideCamera } from "lucide-react";
 
-const Content = () => {
-  const { hasPermission, isSupported, requestPermission } =
-    useWebcamPermission();
+type Props = {
+  isSupported: boolean;
+  hasPermission: boolean | null;
+  requestPermission: () => void;
+};
+
+const SettingsSection = (props: Props) => {
+  const { hasPermission, isSupported, requestPermission } = props;
 
   return (
     <div className="container mx-auto py-10">
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl">CamTuner Options</CardTitle>
+          <CardTitle className="text-2xl">Settings</CardTitle>
           <CardDescription>Configure your extension settings</CardDescription>
         </CardHeader>
 
@@ -103,4 +107,4 @@ const Content = () => {
   );
 };
 
-export default Content;
+export default SettingsSection;

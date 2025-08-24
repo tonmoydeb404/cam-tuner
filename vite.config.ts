@@ -13,7 +13,10 @@ export default defineConfig({
   },
   plugins: [
     webExtension({
-      additionalInputs: ["src/extension/inject.ts"],
+      additionalInputs: [
+        "src/extension/inject.ts",
+        "src/pages/sidepanel/index.html"
+      ],
       browser: target,
     }),
     react(),

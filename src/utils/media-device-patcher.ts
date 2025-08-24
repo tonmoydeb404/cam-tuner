@@ -2,6 +2,15 @@ import { env } from "@/config";
 import { StreamPatcherConfig } from "@/types/stream-patcher";
 import { Logger } from "./log";
 import { streamPatcher } from "./stream-patcher";
+import {
+  getMediaTrackDimension,
+  matchDeviceId,
+  getVideoInputDevices,
+  findDeviceByLabel,
+  createVirtualMediaDevice,
+  buildMediaStreamConstraints,
+  generateRandomDeviceId,
+} from "./media-device-utils";
 
 // Configuartions ----------------------------------------------------------------------
 
@@ -16,36 +25,6 @@ const getUserMediaFn = MediaDevices.prototype.getUserMedia;
 
 // Helpers ----------------------------------------------------------------------
 
-const getMediaTrackWidth = (video: MediaTrackConstraints) => {
-  if (typeof video.width === "object") {
-    return video.width.ideal || video.width.exact;
-  }
-  return video.width;
-};
-
-const getMediaTrackHeight = (video: MediaTrackConstraints) => {
-  if (typeof video.height === "object") {
-    return video.height.ideal || video.height.exact;
-  }
-  return video.height;
-};
-
-const matchDeviceId = (
-  deviceId: ConstrainDOMString,
-  targetDeviceId: string
-) => {
-  if (Array.isArray(deviceId)) {
-    return deviceId.includes(targetDeviceId);
-  }
-
-  if (typeof deviceId === "object" && "exact" in deviceId) {
-    return (
-      deviceId.exact === targetDeviceId || deviceId.ideal === targetDeviceId
-    );
-  }
-
-  return deviceId === targetDeviceId;
-};
 
 // Main Function ----------------------------------------------------------------------
 
@@ -55,30 +34,24 @@ export function mediaDevicePatcher(
   config: StreamPatcherConfig
 ) {
   let sourceDeviceId: undefined | string;
-  const randDeviceId = `${MEDIA_DEVICE_ID}_${Date.now()}`; // random device id makes sure realtime updates
+  const randDeviceId = generateRandomDeviceId(MEDIA_DEVICE_ID); // random device id makes sure realtime updates
 
   MediaDevices.prototype.enumerateDevices = async function () {
     Logger.dev("Intercepting enumerateDevices...");
     const res = await enumerateDevicesFn.call(navigator.mediaDevices);
 
     // Include virtual cam only if there is already a real camera
-    const videoInputs = res.filter((item) => item.kind === "videoinput");
-    const sourceDevice = videoInputs.find(
-      (item) => item.label === sourceDeviceLabel
-    );
+    const videoInputs = getVideoInputDevices(res);
+    const sourceDevice = findDeviceByLabel(videoInputs, sourceDeviceLabel);
     sourceDeviceId = sourceDevice?.deviceId;
 
     if (videoInputs.length > 0 || !!sourceDeviceId) {
-      const mediaDevice: Omit<MediaDeviceInfo, "toJSON"> = {
-        deviceId: randDeviceId,
-        groupId: MEDIA_GROUP_ID,
-        kind: "videoinput",
-        label: MEDIA_LABEL,
-      };
-      res.push({
-        ...mediaDevice,
-        toJSON: () => JSON.stringify(mediaDevice),
-      });
+      const virtualDevice = createVirtualMediaDevice(
+        randDeviceId,
+        MEDIA_GROUP_ID,
+        MEDIA_LABEL
+      );
+      res.push(virtualDevice);
       Logger.dev("Virtual webcam added to device list.");
     }
 
@@ -93,19 +66,15 @@ export function mediaDevicePatcher(
         if (video.deviceId && matchDeviceId(video.deviceId, randDeviceId)) {
           Logger.dev(`${MEDIA_LABEL} requested`);
 
-          const width = getMediaTrackWidth(video) ?? 1280;
-          const height = getMediaTrackHeight(video) ?? 720;
+          const width = getMediaTrackDimension(video, 'width') ?? 1280;
+          const height = getMediaTrackDimension(video, 'height') ?? 720;
 
-          const constraints: MediaStreamConstraints = {
-            ...arg,
-            video: {
-              facingMode: video?.facingMode,
-              advanced: video?.advanced,
-              width,
-              height,
-              deviceId: sourceDeviceId,
-            },
-          };
+          const constraints = buildMediaStreamConstraints(
+            arg,
+            width,
+            height,
+            sourceDeviceId
+          );
 
           const stream = await getUserMediaFn.call(
             navigator.mediaDevices,
@@ -126,7 +95,7 @@ export function mediaDevicePatcher(
 
       return await getUserMediaFn.call(navigator.mediaDevices, arg);
     } catch (error) {
-      console.error("Error accessing media devices:", error);
+      Logger.error("Error accessing media devices:", error);
       throw error;
     }
   };

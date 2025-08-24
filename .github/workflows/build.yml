@@ -1,0 +1,108 @@
+name: Build Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (optional, will use tag if available)"
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=dev-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for ${{ matrix.browser }}
+        run: pnpm run build:${{ matrix.browser }}
+
+      - name: Create extension package
+        run: |
+          if [ -d "dist" ]; then
+            cd dist
+            zip -r ../cam-tuner-${{ matrix.browser }}-${{ steps.version.outputs.VERSION }}.zip .
+          else
+            echo "Error: dist directory not found"
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cam-tuner-${{ matrix.browser }}-${{ steps.version.outputs.VERSION }}
+          path: cam-tuner-${{ matrix.browser }}-${{ steps.version.outputs.VERSION }}.zip
+          retention-days: 30
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Download Chrome build
+        uses: actions/download-artifact@v4
+        with:
+          name: cam-tuner-chrome-${{ steps.version.outputs.VERSION }}
+
+      - name: Download Firefox build
+        uses: actions/download-artifact@v4
+        with:
+          name: cam-tuner-firefox-${{ steps.version.outputs.VERSION }}
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            cam-tuner-chrome-${{ steps.version.outputs.VERSION }}.zip
+            cam-tuner-firefox-${{ steps.version.outputs.VERSION }}.zip
+          generate_release_notes: true
+          name: Cam Tuner ${{ steps.version.outputs.VERSION }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

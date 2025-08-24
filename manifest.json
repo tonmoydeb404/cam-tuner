@@ -1,6 +1,6 @@
 {
   "name": "CamTuner",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "{{chrome}}.manifest_version": 3,
   "{{firefox}}.manifest_version": 2,
   "description": "Customize your webcam configuration.",
@@ -16,9 +16,13 @@
   "{{firefox}}.browser_action": {
     "default_popup": "src/pages/popup/index.html"
   },
+  "{{chrome}}.side_panel": {
+    "default_path": "src/pages/sidepanel/index.html"
+  },
   "options_page": "src/pages/options/index.html",
   "permissions": [
-    "storage"
+    "storage",
+    "{{chrome}}.sidePanel"
   ],
   "content_scripts": [
     {

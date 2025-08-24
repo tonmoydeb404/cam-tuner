@@ -37,6 +37,8 @@ const PreferenceTab = (props: Props) => {
 
   return (
     <div className="space-y-4">
+      <GifSection />
+
       {/* Digital Effects Section */}
       <FeatureCard
         title="Digital Effects"
@@ -160,8 +162,6 @@ const PreferenceTab = (props: Props) => {
           performance.
         </div>
       </FeatureCard>
-
-      <GifSection />
     </div>
   );
 };

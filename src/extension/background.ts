@@ -11,8 +11,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     message &&
     typeof message === "object" &&
     "type" in message &&
-    (message.type === MessageTypeEnum.UPDATE ||
-      message.type === MessageTypeEnum.GIF_OVERLAY)
+    message.type === MessageTypeEnum.UPDATE
   ) {
     browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
       if (tabs[0]?.id) {

@@ -1,4 +1,4 @@
-import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
+import { MessageTypeEnum, SettingsUpdateMessage } from "@/types/window-message";
 import { Logger } from "@/utils/log";
 import {
   createContext,
@@ -102,64 +102,59 @@ export const AppContextProvider = (props: Props) => {
     saveSettings(enable, cameraSource, newConfig);
   };
 
-  const saveSettings = (
-    enable: boolean,
-    cameraSource: IAppCameraSource | null,
-    config: IAppConfig
-  ) => {
-    Browser.storage?.sync.set({
-      enable,
-      cameraSource,
-      config,
-    });
-
-    // Try to send message to content scripts (only works on web pages)
-    try {
-      const message: WindowMessage = {
-        type: MessageTypeEnum.UPDATE,
-        payload: {
-          cameraSource,
-          config,
-          enable,
-        },
-      };
-      Browser.runtime.sendMessage(message).catch(() => {
-        // Ignore error - no content script to receive
+  const saveSettings = useCallback(
+    (
+      enable: boolean,
+      cameraSource: IAppCameraSource | null,
+      config: IAppConfig
+    ) => {
+      Browser.storage.sync.set({
+        enable,
+        cameraSource,
+        config,
       });
-    } catch (error) {
-      // Extension pages don't have content scripts - this is normal
-      Logger.dev("No content script to receive message (extension page)");
-    }
-  };
+      try {
+        const message: SettingsUpdateMessage = {
+          type: MessageTypeEnum.UPDATE,
+          payload: { overlay: overlay, cameraSource, config, enable },
+        };
+        Browser.runtime.sendMessage(message);
+      } catch (error) {
+        Logger.dev(
+          "No content script to receive overlay message (extension page)"
+        );
+      }
+    },
+    [overlay]
+  );
 
-  const saveOverlay = (overlay: IGifOverlay) => {
-    // Send overlay separately as background message
-    try {
-      Browser.runtime
-        .sendMessage({
-          type: MessageTypeEnum.GIF_OVERLAY,
-          payload: { gifOverlay: overlay },
-        })
-        .catch(() => {
-          // Ignore error - no content script to receive
-        });
-    } catch (error) {
-      Logger.dev(
-        "No content script to receive overlay message (extension page)"
-      );
-    }
-  };
+  const saveOverlay = useCallback(
+    (overlay: IGifOverlay) => {
+      try {
+        const message: SettingsUpdateMessage = {
+          type: MessageTypeEnum.UPDATE,
+          payload: { overlay: overlay, cameraSource, config, enable },
+        };
+        Browser.runtime.sendMessage(message);
+      } catch (error) {
+        Logger.dev(
+          "No content script to receive overlay message (extension page)"
+        );
+      }
+    },
+    [cameraSource, config, enable]
+  );
 
   const applySettings = useCallback(() => {
     saveSettings(enable, cameraSource, config);
-  }, [enable, cameraSource, config]);
+  }, [saveSettings, enable, cameraSource, config]);
 
   const updateEnable: IAppContext["setEnable"] = useCallback(
     (checked) => {
       setEnable(checked);
       saveSettings(checked, cameraSource, config);
     },
-    [cameraSource, config]
+    [cameraSource, config, saveSettings]
   );
 
   const initCameraSource: IAppContext["initCameraSource"] = (value) => {
@@ -189,7 +184,7 @@ export const AppContextProvider = (props: Props) => {
     const newOverlay = { ...defaultOverlay };
     setOverlay(newOverlay);
     saveOverlay(newOverlay);
-  }, []);
+  }, [saveOverlay]);
 
   const setSelectedGif = useCallback(
     (gifUrl: string, mp4Url: string, gifId: string) => {
@@ -203,7 +198,7 @@ export const AppContextProvider = (props: Props) => {
       setOverlay(newOverlay);
       saveOverlay(newOverlay);
     },
-    [overlay]
+    [overlay, saveOverlay]
   );
 
   // ----------------------------------------------------------------------

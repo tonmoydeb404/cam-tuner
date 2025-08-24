@@ -1,4 +1,8 @@
-import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
+import {
+  StreamPatcherConfig,
+  StreamPatcherOverlay,
+  StreamPatcherSize,
+} from "@/types/stream-patcher";
 import { Logger } from "./log";
 
 function normalizeFilterValue(value?: number): number {
@@ -81,13 +85,13 @@ function applyCanvasProcessing({
   crop,
   filters,
   config,
-  gifOverlay,
+  overlay: gifOverlay,
 }: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   filters: string;
   config: StreamPatcherConfig;
-  gifOverlay?: StreamPatcherConfig["gifOverlay"];
+  overlay?: StreamPatcherOverlay;
 }): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -151,15 +155,19 @@ function applyCanvasProcessing({
     gifVisible = elapsedTime >= 0 && elapsedTime <= gifOverlay.duration;
 
     if (gifVisible) {
-      // Calculate GIF position and size
-      const gifWidth = gifVideo.videoWidth * gifOverlay.scale;
-      const gifHeight = gifVideo.videoHeight * gifOverlay.scale;
+      // Calculate GIF position and size relative to canvas
+      const gifAspectRatio = gifVideo.videoWidth / gifVideo.videoHeight;
+      const baseSize = Math.min(crop.width, crop.height) * 0.2; // Base size as 20% of smaller canvas dimension
+      const gifWidth = baseSize * gifAspectRatio * gifOverlay.scale;
+      const gifHeight = baseSize * gifOverlay.scale;
       const gifX = (crop.width * gifOverlay.position.x) / 100 - gifWidth / 2;
       const gifY = (crop.height * gifOverlay.position.y) / 100 - gifHeight / 2;
 
-      // Apply opacity
+      console.log({ gifWidth, gifHeight, gifX, gifY });
+
+      // Apply opacity (convert percentage to decimal)
       const previousAlpha = ctx.globalAlpha;
-      ctx.globalAlpha = gifOverlay.opacity / 100;
+      ctx.globalAlpha = (gifOverlay.opacity || 100) / 100;
 
       // Draw animated GIF (video element)
       ctx.drawImage(gifVideo, gifX, gifY, gifWidth, gifHeight);
@@ -221,6 +229,7 @@ export function streamPatcher(
   stream: MediaStream,
   size: StreamPatcherSize,
   config: StreamPatcherConfig = {},
+  overlay: StreamPatcherOverlay | undefined = undefined,
   stopOriginalStream = false
 ): MediaStream {
   try {
@@ -241,7 +250,7 @@ export function streamPatcher(
       },
       filters,
       config,
-      gifOverlay: config.gifOverlay,
+      overlay: overlay,
     });
 
     const outputStream = canvas.captureStream();

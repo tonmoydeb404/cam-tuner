@@ -6,7 +6,12 @@ import useDebounce from "@/hooks/use-debounce";
 import { Logger } from "@/utils/log";
 import { Eye, Power, Settings } from "lucide-react";
 
-const Header = () => {
+type Props = {
+  showPreviewBtn?: boolean;
+};
+
+const Header = (props: Props) => {
+  const { showPreviewBtn } = props;
   const { enable, setEnable, cameraSource } = useAppContext();
   const { webcams } = useWebcamsContext();
 
@@ -78,15 +83,17 @@ const Header = () => {
         {/* Controls */}
         <div className="flex items-center gap-2">
           {/* Live Preview Button */}
-          <Button
-            onClick={openLivePreview}
-            variant="outline"
-            size="icon"
-            className="rounded-sm"
-            title="Open Live Preview"
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
+          {showPreviewBtn && (
+            <Button
+              onClick={openLivePreview}
+              variant="outline"
+              size="icon"
+              className="rounded-sm"
+              title="Open Live Preview"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+          )}
 
           {/* Enable/Disable Toggle Button */}
           <Button

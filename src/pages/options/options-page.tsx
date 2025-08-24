@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Logger } from "@/utils/log";
-import { cleanupMediaStream } from "@/utils/stream-utils";
 import {
   Card,
   CardContent,
@@ -12,6 +10,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { LoadingState } from "@/components/ui/loading-state";
 import useWebcamPermission from "@/hooks/use-webcam-permission";
+import { Logger } from "@/utils/log";
+import { cleanupMediaStream } from "@/utils/stream-utils";
 import {
   Camera,
   CameraOff,
@@ -149,15 +149,15 @@ const LivePreviewCard = () => {
     };
 
     const handleDeviceChange = async () => {
-      Logger.dev('Camera devices changed, refreshing stream...');
-      
+      Logger.dev("Camera devices changed, refreshing stream...");
+
       // Stop current stream
       if (streamRef.current) {
         cleanupMediaStream(streamRef.current);
         streamRef.current = null;
         setStream(null);
       }
-      
+
       // Restart camera with new device list
       await getDefaultCamera();
     };
@@ -166,12 +166,15 @@ const LivePreviewCard = () => {
     getDefaultCamera();
 
     // Listen for device changes
-    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+    navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
 
     return () => {
       // Remove device change listener
-      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
-      
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        handleDeviceChange
+      );
+
       // Stop stream
       if (streamRef.current) {
         streamRef.current
@@ -273,45 +276,6 @@ const OptionsPageContent = () => {
 };
 
 const OptionsPage = () => {
-  useEffect(() => {
-    const messageListener = (message: unknown, _sender: chrome.runtime.MessageSender, sendResponse: (response?: unknown) => void) => {
-      Logger.dev('Options page received message:', message);
-      
-      // Handle different message types
-      const msg = message as { type?: string };
-      switch (msg.type) {
-        case 'EXAMPLE_MESSAGE':
-          // Handle your message here
-          sendResponse({ success: true });
-          break;
-        default:
-          Logger.warn('Unknown message type:', msg.type);
-      }
-    };
-
-    const storageChangeListener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      Logger.dev('Storage changes:', changes);
-      
-      // Handle specific key changes
-      Object.keys(changes).forEach((key) => {
-        const change = changes[key];
-        Logger.dev(`Key "${key}" changed from`, change.oldValue, 'to', change.newValue);
-      });
-    };
-
-    // Add the message listener
-    chrome.runtime.onMessage.addListener(messageListener);
-    
-    // Add the storage change listener
-    chrome.storage.sync.onChanged.addListener(storageChangeListener);
-
-    // Cleanup listeners on unmount
-    return () => {
-      chrome.runtime.onMessage.removeListener(messageListener);
-      chrome.storage.sync.onChanged.removeListener(storageChangeListener);
-    };
-  }, []);
-
   return <OptionsPageContent />;
 };
 

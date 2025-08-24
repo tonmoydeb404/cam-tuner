@@ -1,3 +1,4 @@
+import PreviewPlayer from "@/components/preview-player";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context/app";
 import EnableGuard from "@/guards/enable-guard";
@@ -10,7 +11,7 @@ import TroubleshootTab from "../tabs/troubleshoot-tab";
 
 type Props = {};
 
-const PopupContent = (props: Props) => {
+const SidepanelContent = (props: Props) => {
   const [tab, setTab] = useState<string>("common");
   const { enable, setEnable } = useAppContext();
 
@@ -44,8 +45,12 @@ const PopupContent = (props: Props) => {
 
   return (
     <>
-      <Header showPreviewBtn />
+      <Header />
       <EnableGuard>
+        <div className="px-4 mb-5">
+          <PreviewPlayer />
+        </div>
+
         <Tabs
           value={tab}
           onValueChange={setTab}
@@ -64,13 +69,13 @@ const PopupContent = (props: Props) => {
           </TabsList>
 
           <div className="">
-            <TabsContent value="common" className="mt-0 h-full">
-              <CommonTab />
+            <TabsContent value="common">
+              <CommonTab showCameraSelection />
             </TabsContent>
-            <TabsContent value="preference" className="mt-0 h-full">
+            <TabsContent value="preference">
               <PreferenceTab />
             </TabsContent>
-            <TabsContent value="troubleshoot" className="mt-0 h-full">
+            <TabsContent value="troubleshoot">
               <TroubleshootTab />
             </TabsContent>
           </div>
@@ -80,4 +85,4 @@ const PopupContent = (props: Props) => {
   );
 };
 
-export default PopupContent;
+export default SidepanelContent;

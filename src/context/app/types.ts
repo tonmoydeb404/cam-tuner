@@ -23,7 +23,6 @@ export interface IAppConfig {
   saturation: number;
   mirror: boolean;
   align: StreamPatcherConfig["align"];
-  gifOverlay: IGifOverlay;
 }
 
 export interface IAppCameraSource {
@@ -45,10 +44,12 @@ export interface IAppContext {
     key: K
   ) => (value: IAppContext["config"][K]) => void;
 
-  updateGifOverlay: <K extends keyof IGifOverlay>(
+  overlay: IGifOverlay;
+  setOverlay: React.Dispatch<React.SetStateAction<IGifOverlay>>;
+  updateOverlay: <K extends keyof IGifOverlay>(
     key: K
   ) => (value: IGifOverlay[K]) => void;
-  resetGifOverlay: () => void;
+  resetOverlay: () => void;
   setSelectedGif: (gifUrl: string, gifId: string) => void;
 
   applySettings: () => void;

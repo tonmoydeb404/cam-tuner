@@ -81,11 +81,13 @@ function applyCanvasProcessing({
   crop,
   filters,
   config,
+  gifOverlay,
 }: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   filters: string;
   config: StreamPatcherConfig;
+  gifOverlay?: StreamPatcherConfig["gifOverlay"];
 }): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -103,8 +105,23 @@ function applyCanvasProcessing({
     ctx.translate(-crop.width, 0); // Adjust the position to match the flip
   }
 
-  function draw() {
+  // GIF overlay setup
+  let gifElement: HTMLImageElement | null = null;
+  let gifStartTime = 0;
+  let gifVisible = false;
+
+  if (gifOverlay?.enabled && gifOverlay.gifUrl) {
+    gifElement = new Image();
+    gifElement.crossOrigin = "anonymous";
+    gifElement.src = gifOverlay.gifUrl;
+    gifElement.onload = () => {
+      Logger.dev("GIF loaded for overlay");
+    };
+  }
+
+  function draw(ctx: CanvasRenderingContext2D) {
     try {
+      // Draw main video
       ctx?.drawImage(
         video,
         crop.offsetX,
@@ -116,13 +133,58 @@ function applyCanvasProcessing({
         crop.width,
         crop.height
       );
+
+      // Draw GIF overlay if enabled and loaded
+      if (
+        gifOverlay?.enabled &&
+        gifElement?.complete &&
+        gifElement.naturalWidth > 0
+      ) {
+        const currentTime = Date.now();
+
+        // Initialize start time on first draw
+        if (gifStartTime === 0) {
+          gifStartTime = currentTime + gifOverlay.delay * 1000;
+        }
+
+        // Check if we're within the display duration
+        const elapsedTime = (currentTime - gifStartTime) / 1000;
+        gifVisible = elapsedTime >= 0 && elapsedTime <= gifOverlay.duration;
+
+        if (gifVisible) {
+          // Calculate GIF position and size
+          const gifWidth = gifElement.naturalWidth * gifOverlay.scale;
+          const gifHeight = gifElement.naturalHeight * gifOverlay.scale;
+          const gifX =
+            (crop.width * gifOverlay.position.x) / 100 - gifWidth / 2;
+          const gifY =
+            (crop.height * gifOverlay.position.y) / 100 - gifHeight / 2;
+
+          // Apply opacity
+          const previousAlpha = ctx.globalAlpha;
+          ctx.globalAlpha = gifOverlay.opacity / 100;
+
+          // Draw GIF
+          ctx.drawImage(gifElement, gifX, gifY, gifWidth, gifHeight);
+
+          // Restore opacity
+          ctx.globalAlpha = previousAlpha;
+        }
+
+        // Reset timer after duration completes
+        if (elapsedTime > gifOverlay.duration + 1) {
+          gifStartTime = 0; // Reset for next cycle
+        }
+      }
     } catch (err) {
       Logger.dev("Draw failed:", err);
     }
-    requestAnimationFrame(draw);
+    requestAnimationFrame(() => {
+      draw(ctx);
+    });
   }
 
-  draw();
+  draw(ctx);
   return canvas;
 }
 
@@ -162,6 +224,7 @@ export function streamPatcher(
       },
       filters,
       config,
+      gifOverlay: config.gifOverlay,
     });
 
     const outputStream = canvas.captureStream();

@@ -7,8 +7,7 @@ import { ImageIcon, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const GifSection = () => {
-  const { config, setSelectedGif } = useAppContext();
-  const { gifOverlay } = config;
+  const { overlay, setSelectedGif } = useAppContext();
 
   const [gifs, setGifs] = useState<KlipyGif[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,8 +93,8 @@ const GifSection = () => {
       title="GIF Overlays"
       description="Add animated GIFs to your video recordings"
       icon={ImageIcon}
-      badge={gifOverlay.enabled ? "Active" : undefined}
-      badgeVariant={gifOverlay.enabled ? "success" : "default"}
+      badge={overlay.enabled ? "Active" : undefined}
+      badgeVariant={overlay.enabled ? "success" : "default"}
     >
       {/* Search Bar */}
       <form onSubmit={handleSearch} className="space-y-3">
@@ -182,7 +181,7 @@ const GifSection = () => {
             <div
               key={gif.id}
               className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all hover:border-primary/50 ${
-                gifOverlay.gifId === gif.id.toString()
+                overlay.gifId === gif.id.toString()
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-border/60"
               }`}
@@ -194,7 +193,7 @@ const GifSection = () => {
                 className="w-full h-24 object-cover"
                 loading="lazy"
               />
-              {gifOverlay.gifId === gif.id.toString() && (
+              {overlay.gifId === gif.id.toString() && (
                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                   <div className="bg-primary text-primary-foreground rounded-full px-2 py-1 text-xs font-medium">
                     Selected
@@ -232,22 +231,22 @@ const GifSection = () => {
       )}
 
       {/* Selected GIF Info */}
-      {gifOverlay.enabled && gifOverlay.gifUrl && (
+      {overlay.enabled && overlay.gifUrl && (
         <div className="pt-3 border-t border-border/30">
           <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
             Selected GIF
           </div>
           <div className="flex items-center gap-3 p-2 bg-accent/20 rounded-md border border-border/20">
             <img
-              src={gifOverlay.gifUrl}
+              src={overlay.gifUrl}
               alt="Selected GIF"
               className="w-12 h-12 object-cover rounded"
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">Active Overlay</p>
               <p className="text-xs text-muted-foreground">
-                Position: {gifOverlay.position.x}%, {gifOverlay.position.y}% •
-                Scale: {gifOverlay.scale}x • Duration: {gifOverlay.duration}s
+                Position: {overlay.position.x}%, {overlay.position.y}% •
+                Scale: {overlay.scale}x • Duration: {overlay.duration}s
               </p>
             </div>
           </div>

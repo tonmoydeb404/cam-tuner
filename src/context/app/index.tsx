@@ -1,4 +1,5 @@
 import { MessageTypeEnum, WindowMessage } from "@/types/window-message";
+import { Logger } from "@/utils/log";
 import {
   createContext,
   ReactNode,
@@ -9,7 +10,23 @@ import {
 } from "react";
 import Browser from "webextension-polyfill";
 import ratioOptions from "./ratio-options";
-import { IAppCameraSource, IAppConfig, IAppContext } from "./types";
+import {
+  IAppCameraSource,
+  IAppConfig,
+  IAppContext,
+  IGifOverlay,
+} from "./types";
+
+const defaultOverlay: IGifOverlay = {
+  enabled: false,
+  gifUrl: "",
+  gifId: "",
+  position: { x: 50, y: 50 },
+  scale: 1,
+  duration: 3,
+  delay: 0,
+  opacity: 100,
+};
 
 const defaultValue: IAppContext = {
   cameraSource: null,
@@ -27,21 +44,14 @@ const defaultValue: IAppContext = {
     saturation: 100,
     mirror: false,
     align: "center",
-    gifOverlay: {
-      enabled: false,
-      gifUrl: "",
-      gifId: "",
-      position: { x: 50, y: 50 },
-      scale: 1,
-      duration: 3,
-      delay: 0,
-      opacity: 100,
-    },
   },
   setConfig: () => {},
   updateConfig: () => () => {},
-  updateGifOverlay: () => () => {},
-  resetGifOverlay: () => {},
+
+  overlay: defaultOverlay,
+  setOverlay: () => {},
+  updateOverlay: () => () => {},
+  resetOverlay: () => {},
   setSelectedGif: () => {},
   applySettings: () => {},
 };
@@ -63,6 +73,7 @@ export const AppContextProvider = (props: Props) => {
   const [enable, setEnable] = useState(defaultValue.enable);
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
   const [config, setConfig] = useState(defaultValue.config);
+  const [overlay, setOverlay] = useState(defaultValue.overlay);
 
   // ----------------------------------------------------------------------
 
@@ -100,15 +111,42 @@ export const AppContextProvider = (props: Props) => {
       cameraSource,
       config,
     });
-    const message: WindowMessage = {
-      type: MessageTypeEnum.UPDATE,
-      payload: {
-        cameraSource,
-        config,
-        enable,
-      },
-    };
-    Browser.runtime.sendMessage(message);
+
+    // Try to send message to content scripts (only works on web pages)
+    try {
+      const message: WindowMessage = {
+        type: MessageTypeEnum.UPDATE,
+        payload: {
+          cameraSource,
+          config,
+          enable,
+        },
+      };
+      Browser.runtime.sendMessage(message).catch(() => {
+        // Ignore error - no content script to receive
+      });
+    } catch (error) {
+      // Extension pages don't have content scripts - this is normal
+      Logger.dev("No content script to receive message (extension page)");
+    }
+  };
+
+  const saveOverlay = (overlay: IGifOverlay) => {
+    // Send overlay separately as background message
+    try {
+      Browser.runtime
+        .sendMessage({
+          type: MessageTypeEnum.GIF_OVERLAY,
+          payload: { gifOverlay: overlay },
+        })
+        .catch(() => {
+          // Ignore error - no content script to receive
+        });
+    } catch (error) {
+      Logger.dev(
+        "No content script to receive overlay message (extension page)"
+      );
+    }
   };
 
   const applySettings = useCallback(() => {
@@ -140,48 +178,30 @@ export const AppContextProvider = (props: Props) => {
 
   // ----------------------------------------------------------------------
 
-  const updateGifOverlay: IAppContext["updateGifOverlay"] = (key) => (value) => {
-    const newConfig = {
-      ...config,
-      gifOverlay: { ...config.gifOverlay, [key]: value },
-    };
-    setConfig(newConfig);
-    saveSettings(enable, cameraSource, newConfig);
+  const updateOverlay: IAppContext["updateOverlay"] = (key) => (value) => {
+    const newOverlay = { ...overlay, [key]: value };
+    setOverlay(newOverlay);
+    saveOverlay(newOverlay);
   };
 
-  const resetGifOverlay = useCallback(() => {
-    const newConfig = {
-      ...config,
-      gifOverlay: {
-        enabled: false,
-        gifUrl: "",
-        gifId: "",
-        position: { x: 50, y: 50 },
-        scale: 1,
-        duration: 3,
-        delay: 0,
-        opacity: 100,
-      },
-    };
-    setConfig(newConfig);
-    saveSettings(enable, cameraSource, newConfig);
-  }, [config, enable, cameraSource]);
+  const resetOverlay = useCallback(() => {
+    const newOverlay = { ...defaultOverlay };
+    setOverlay(newOverlay);
+    saveOverlay(newOverlay);
+  }, []);
 
   const setSelectedGif = useCallback(
     (gifUrl: string, gifId: string) => {
-      const newConfig = {
-        ...config,
-        gifOverlay: {
-          ...config.gifOverlay,
-          gifUrl,
-          gifId,
-          enabled: true,
-        },
+      const newOverlay = {
+        ...overlay,
+        gifUrl,
+        gifId,
+        enabled: true,
       };
-      setConfig(newConfig);
-      saveSettings(enable, cameraSource, newConfig);
+      setOverlay(newOverlay);
+      saveOverlay(newOverlay);
     },
-    [config, enable, cameraSource]
+    [overlay]
   );
 
   // ----------------------------------------------------------------------
@@ -195,8 +215,10 @@ export const AppContextProvider = (props: Props) => {
     config,
     setConfig,
     updateConfig,
-    updateGifOverlay,
-    resetGifOverlay,
+    overlay,
+    setOverlay,
+    updateOverlay,
+    resetOverlay,
     setSelectedGif,
     applySettings,
     changesPending: false,

@@ -1,6 +1,20 @@
 import { StreamPatcherConfig } from "@/types/stream-patcher";
 import React from "react";
 
+export interface IGifOverlay {
+  enabled: boolean;
+  gifUrl: string;
+  gifId: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  scale: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
+
 export interface IAppConfig {
   aspectRatio: number;
   zoom: number;
@@ -9,6 +23,7 @@ export interface IAppConfig {
   saturation: number;
   mirror: boolean;
   align: StreamPatcherConfig["align"];
+  gifOverlay: IGifOverlay;
 }
 
 export interface IAppCameraSource {
@@ -29,6 +44,12 @@ export interface IAppContext {
   updateConfig: <K extends keyof IAppContext["config"]>(
     key: K
   ) => (value: IAppContext["config"][K]) => void;
+
+  updateGifOverlay: <K extends keyof IGifOverlay>(
+    key: K
+  ) => (value: IGifOverlay[K]) => void;
+  resetGifOverlay: () => void;
+  setSelectedGif: (gifUrl: string, gifId: string) => void;
 
   applySettings: () => void;
 

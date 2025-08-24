@@ -27,9 +27,22 @@ const defaultValue: IAppContext = {
     saturation: 100,
     mirror: false,
     align: "center",
+    gifOverlay: {
+      enabled: false,
+      gifUrl: "",
+      gifId: "",
+      position: { x: 50, y: 50 },
+      scale: 1,
+      duration: 3,
+      delay: 0,
+      opacity: 100,
+    },
   },
   setConfig: () => {},
   updateConfig: () => () => {},
+  updateGifOverlay: () => () => {},
+  resetGifOverlay: () => {},
+  setSelectedGif: () => {},
   applySettings: () => {},
 };
 const AppContext = createContext(defaultValue);
@@ -127,6 +140,52 @@ export const AppContextProvider = (props: Props) => {
 
   // ----------------------------------------------------------------------
 
+  const updateGifOverlay: IAppContext["updateGifOverlay"] = (key) => (value) => {
+    const newConfig = {
+      ...config,
+      gifOverlay: { ...config.gifOverlay, [key]: value },
+    };
+    setConfig(newConfig);
+    saveSettings(enable, cameraSource, newConfig);
+  };
+
+  const resetGifOverlay = useCallback(() => {
+    const newConfig = {
+      ...config,
+      gifOverlay: {
+        enabled: false,
+        gifUrl: "",
+        gifId: "",
+        position: { x: 50, y: 50 },
+        scale: 1,
+        duration: 3,
+        delay: 0,
+        opacity: 100,
+      },
+    };
+    setConfig(newConfig);
+    saveSettings(enable, cameraSource, newConfig);
+  }, [config, enable, cameraSource]);
+
+  const setSelectedGif = useCallback(
+    (gifUrl: string, gifId: string) => {
+      const newConfig = {
+        ...config,
+        gifOverlay: {
+          ...config.gifOverlay,
+          gifUrl,
+          gifId,
+          enabled: true,
+        },
+      };
+      setConfig(newConfig);
+      saveSettings(enable, cameraSource, newConfig);
+    },
+    [config, enable, cameraSource]
+  );
+
+  // ----------------------------------------------------------------------
+
   const value: IAppContext = {
     enable,
     setEnable: updateEnable,
@@ -136,6 +195,9 @@ export const AppContextProvider = (props: Props) => {
     config,
     setConfig,
     updateConfig,
+    updateGifOverlay,
+    resetGifOverlay,
+    setSelectedGif,
     applySettings,
     changesPending: false,
   };

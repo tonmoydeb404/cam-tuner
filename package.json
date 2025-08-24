@@ -10,7 +10,8 @@
     "prebuild": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:firefox": "TARGET=firefox pnpm build"
+    "build:firefox": "TARGET=firefox pnpm build",
+    "build:chrome": "TARGET=firefox pnpm build"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",

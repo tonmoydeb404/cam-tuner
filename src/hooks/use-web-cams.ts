@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { Logger } from "@/utils/log";
 import { cleanupMediaStream } from "@/utils/stream-utils";
+import { useEffect, useState } from "react";
 
 type WebcamDevice = {
   deviceId: string;
@@ -23,7 +23,12 @@ const useWebcams = () => {
 
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices
-          .filter((device) => device.kind === "videoinput" && !!device.deviceId)
+          .filter(
+            (device) =>
+              device.kind === "videoinput" &&
+              !!device.deviceId &&
+              !device.label.toLowerCase().includes("camtuner")
+          )
           .map((device) => ({
             deviceId: device.deviceId,
             label: device.label,

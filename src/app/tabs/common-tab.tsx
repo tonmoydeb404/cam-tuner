@@ -21,7 +21,7 @@ const CommonTab = (props: Props) => {
   return (
     <div className="space-y-4">
       {/* Camera Selection Section */}
-      {showCameraSelection && (
+      {showCameraSelection && webcams?.length > 0 && (
         <FeatureCard
           title="Camera Source"
           icon={Camera}

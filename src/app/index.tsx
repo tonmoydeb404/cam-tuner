@@ -15,29 +15,32 @@ const App = (props: Props) => {
   const { enable, setEnable } = useAppContext();
 
   // Keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: '1',
-      action: () => setTab('common'),
-      description: 'Switch to Camera tab'
-    },
-    {
-      key: '2', 
-      action: () => setTab('preference'),
-      description: 'Switch to Effects tab'
-    },
-    {
-      key: '3',
-      action: () => setTab('troubleshoot'),
-      description: 'Switch to Help tab'
-    },
-    {
-      key: ' ',
-      ctrlKey: true,
-      action: () => setEnable(!enable),
-      description: 'Toggle extension on/off'
-    }
-  ], true);
+  useKeyboardShortcuts(
+    [
+      {
+        key: "1",
+        action: () => setTab("common"),
+        description: "Switch to Camera tab",
+      },
+      {
+        key: "2",
+        action: () => setTab("preference"),
+        description: "Switch to Effects tab",
+      },
+      {
+        key: "3",
+        action: () => setTab("troubleshoot"),
+        description: "Switch to Help tab",
+      },
+      {
+        key: " ",
+        ctrlKey: true,
+        action: () => setEnable(!enable),
+        description: "Toggle extension on/off",
+      },
+    ],
+    true
+  );
 
   return (
     <div className="h-screen flex flex-col">
@@ -48,18 +51,30 @@ const App = (props: Props) => {
 
       <EnableGuard>
         <div className="flex-1 flex flex-col min-h-0">
-
           {/* Controls Section */}
           <div className="flex-1 min-h-0 flex flex-col px-4 pt-4">
-            <Tabs value={tab} onValueChange={setTab} className="h-full flex flex-col">
+            <Tabs
+              value={tab}
+              onValueChange={setTab}
+              className="h-full flex flex-col"
+            >
               <TabsList className="grid w-full grid-cols-3 mb-4 h-9 bg-muted/30">
-                <TabsTrigger value="common" className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <TabsTrigger
+                  value="common"
+                  className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Camera
                 </TabsTrigger>
-                <TabsTrigger value="preference" className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <TabsTrigger
+                  value="preference"
+                  className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Effects
                 </TabsTrigger>
-                <TabsTrigger value="troubleshoot" className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <TabsTrigger
+                  value="troubleshoot"
+                  className="text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Help
                 </TabsTrigger>
               </TabsList>

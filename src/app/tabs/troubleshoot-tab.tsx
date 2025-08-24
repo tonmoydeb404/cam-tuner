@@ -38,8 +38,13 @@ const TroubleshootTab = (props: Props) => {
       >
         <div className="space-y-2">
           {shortcuts.map((shortcut) => (
-            <div key={shortcut.keys.join('+') + shortcut.description} className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{shortcut.description}</span>
+            <div
+              key={shortcut.keys.join("+") + shortcut.description}
+              className="flex items-center justify-between text-sm"
+            >
+              <span className="text-muted-foreground">
+                {shortcut.description}
+              </span>
               <KeyboardShortcut keys={shortcut.keys} />
             </div>
           ))}
@@ -52,7 +57,7 @@ const TroubleshootTab = (props: Props) => {
         icon={AlertCircle}
         description="Solutions for frequent problems"
       >
-        <div className="space-y-3">
+        <div className="space-y-1">
           {commonIssues.map((issue) => (
             <details key={issue.problem} className="group">
               <summary className="text-sm font-medium cursor-pointer hover:text-foreground text-muted-foreground list-none flex items-center gap-2 py-1">
@@ -91,27 +96,31 @@ const setupSteps = [
 ];
 
 const shortcuts = [
-  { keys: ['1'], description: 'Switch to Camera tab' },
-  { keys: ['2'], description: 'Switch to Effects tab' },
-  { keys: ['3'], description: 'Switch to Help tab' },
-  { keys: ['Ctrl', 'Space'], description: 'Toggle extension on/off' },
+  { keys: ["1"], description: "Switch to Camera tab" },
+  { keys: ["2"], description: "Switch to Effects tab" },
+  { keys: ["3"], description: "Switch to Help tab" },
+  { keys: ["Ctrl", "Space"], description: "Toggle extension on/off" },
 ];
 
 const commonIssues = [
   {
     problem: "Camera not appearing in video apps",
-    solution: "Make sure the extension is enabled and you've applied your settings. Refresh your video app and look for 'CamTuner' in camera options."
+    solution:
+      "Make sure the extension is enabled and you've applied your settings. Refresh your video app and look for 'CamTuner' in camera options.",
   },
   {
     problem: "Changes not visible in video calls",
-    solution: "Turn your camera off and on again in the video app. Some apps need to restart the camera feed to pick up changes."
+    solution:
+      "Turn your camera off and on again in the video app. Some apps need to restart the camera feed to pick up changes.",
   },
   {
     problem: "Poor performance or lag",
-    solution: "Reduce extreme brightness/contrast/saturation values. High zoom levels and heavy effects can impact performance on older devices."
+    solution:
+      "Reduce extreme brightness/contrast/saturation values. High zoom levels and heavy effects can impact performance on older devices.",
   },
   {
     problem: "Extension appears disabled",
-    solution: "Check the toggle switch in the header. Make sure you have granted camera permissions to the extension."
-  }
+    solution:
+      "Check the toggle switch in the header. Make sure you have granted camera permissions to the extension.",
+  },
 ];

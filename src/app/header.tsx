@@ -55,7 +55,7 @@ const Header = () => {
   };
 
   return (
-    <div className="p-3">
+    <div className="p-3 border-b mb-5">
       <div className="flex items-center justify-between">
         {/* App Title with Status */}
         <div className="flex items-center gap-2">

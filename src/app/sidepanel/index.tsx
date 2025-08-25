@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context/app";
 import EnableGuard from "@/guards/enable-guard";
 import useKeyboardShortcuts from "@/hooks/use-keyboard-shortcuts";
+import { LucideSparkles } from "lucide-react";
 import { useState } from "react";
 import Header from "../header";
 import CommonTab from "../tabs/common-tab";
@@ -61,7 +62,7 @@ const SidepanelContent = (props: Props) => {
               Camera
             </TabsTrigger>
             <TabsTrigger value="preference" className="text-sm">
-              Effects
+              Effects <LucideSparkles className="text-primary" />
             </TabsTrigger>
             <TabsTrigger value="troubleshoot" className="text-sm">
               Help

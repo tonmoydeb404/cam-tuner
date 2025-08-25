@@ -80,8 +80,8 @@ export const AppContextProvider = (props: Props) => {
   // ----------------------------------------------------------------------
 
   useEffect(() => {
-    Browser.storage?.sync
-      .get(["enable", "cameraSource", "config"])
+    Browser.storage?.local
+      .get(["enable", "cameraSource", "config", "overlay"])
       .then((result) => {
         if (typeof result.enable === "boolean") {
           setEnable(result.enable);
@@ -92,6 +92,15 @@ export const AppContextProvider = (props: Props) => {
         if (typeof result.config === "object") {
           setConfig((prev) => ({ ...prev, ...(result.config as IAppConfig) }));
         }
+        if (typeof result.overlay === "object") {
+          // Load overlay data but preserve the default enabled state
+          const savedOverlay = result.overlay as IGifOverlay;
+          setOverlay((prev) => ({
+            ...prev,
+            ...savedOverlay,
+            enabled: defaultOverlay.enabled, // Don't restore enabled state
+          }));
+        }
       });
   }, []);
 
@@ -100,25 +109,34 @@ export const AppContextProvider = (props: Props) => {
   const updateConfig: IAppContext["updateConfig"] = (key) => (value) => {
     const newConfig = { ...config, [key]: value };
     setConfig(newConfig);
-    saveSettings(enable, cameraSource, newConfig);
+    saveSettings(enable, cameraSource, newConfig, overlay);
   };
 
   const saveSettings = useCallback(
     (
       enable: boolean,
       cameraSource: IAppCameraSource | null,
-      config: IAppConfig
+      config: IAppConfig,
+      overlayData?: IGifOverlay
     ) => {
-      Browser.storage.sync.set({
+      const storageData: any = {
         enable,
         cameraSource,
         config,
-      });
+      };
+
+      // Save overlay data excluding enabled field
+      if (overlayData) {
+        const { enabled, ...overlayWithoutEnabled } = overlayData;
+        storageData.overlay = overlayWithoutEnabled;
+      }
+
+      Browser.storage.sync.set(storageData);
       try {
         const message: SettingsUpdateMessage = {
           type: MessageTypeEnum.UPDATE,
           payload: {
-            overlay: defaultValue.overlay,
+            overlay: overlayData || defaultValue.overlay,
             cameraSource,
             config,
             enable,
@@ -136,24 +154,14 @@ export const AppContextProvider = (props: Props) => {
 
   const saveOverlay = useCallback(
     (overlay: IGifOverlay) => {
-      try {
-        const message: SettingsUpdateMessage = {
-          type: MessageTypeEnum.UPDATE,
-          payload: { overlay: overlay, cameraSource, config, enable },
-        };
-        Browser.runtime.sendMessage(message);
-      } catch (error) {
-        Logger.dev(
-          "No content script to receive overlay message (extension page)"
-        );
-      }
+      saveSettings(enable, cameraSource, config, overlay);
     },
-    [cameraSource, config, enable]
+    [cameraSource, config, enable, saveSettings]
   );
 
   const applySettings = useCallback(() => {
-    saveSettings(enable, cameraSource, config);
-  }, [saveSettings, enable, cameraSource, config]);
+    saveSettings(enable, cameraSource, config, overlay);
+  }, [saveSettings, enable, cameraSource, config, overlay]);
 
   const updateEnable: IAppContext["setEnable"] = useCallback(
     (checked) => {
@@ -189,7 +197,10 @@ export const AppContextProvider = (props: Props) => {
     const newOverlay = { ...defaultOverlay };
     setOverlay(newOverlay);
     saveOverlay(newOverlay);
-  }, [saveOverlay]);
+
+    // Save reset overlay data (excluding enabled) to localStorage
+    saveSettings(enable, cameraSource, config, newOverlay);
+  }, [saveOverlay, enable, cameraSource, config, saveSettings]);
 
   const setSelectedGif = useCallback(
     (gifUrl: string, mp4Url: string, gifId: string) => {
@@ -200,8 +211,11 @@ export const AppContextProvider = (props: Props) => {
         gifId,
       };
       setOverlay(newOverlay);
+
+      // Save overlay data (excluding enabled) to localStorage
+      saveSettings(enable, cameraSource, config, newOverlay);
     },
-    [overlay]
+    [overlay, enable, cameraSource, config, saveSettings]
   );
 
   const setOverlayEnable = useCallback(

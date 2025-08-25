@@ -1,13 +1,8 @@
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/app";
 import { KlipyGif } from "@/types/klipy-api";
 import { getKlipyAPI } from "@/utils/klipy-api";
-import { Image, ImageIcon, Search, X } from "lucide-react";
+import { ImageIcon, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const GifBrowser = () => {
@@ -95,14 +90,7 @@ const GifBrowser = () => {
   }, [loadTrendingGifs]);
 
   return (
-    <AccordionItem value="gif">
-      <AccordionTrigger>
-        <div className="flex items-center gap-2">
-          <Image className="h-4 w-4" />
-          GIF
-        </div>
-      </AccordionTrigger>
-      <AccordionContent>
+    <div className="space-y-3 pt-4">
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="space-y-3">
           <div className="flex gap-2">
@@ -251,8 +239,7 @@ const GifBrowser = () => {
             </p>
           </div>
         )}
-      </AccordionContent>
-    </AccordionItem>
+    </div>
   );
 };
 

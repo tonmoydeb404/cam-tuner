@@ -156,14 +156,16 @@ function applyCanvasProcessing({
 
     if (gifVisible) {
       // Calculate GIF position and size relative to canvas
+      // This logic matches the position-picker component behavior
       const gifAspectRatio = gifVideo.videoWidth / gifVideo.videoHeight;
       const baseSize = Math.min(crop.width, crop.height) * 0.2; // Base size as 20% of smaller canvas dimension
       const gifWidth = baseSize * gifAspectRatio * gifOverlay.scale;
       const gifHeight = baseSize * gifOverlay.scale;
-      const gifX = (crop.width * gifOverlay.position.x) / 100 - gifWidth / 2;
-      const gifY = (crop.height * gifOverlay.position.y) / 100 - gifHeight / 2;
 
-      console.log({ gifWidth, gifHeight, gifX, gifY });
+      // Position calculation matches position-picker:
+      // (position% / 100) * containerDimension - boxSize / 2
+      const gifX = (gifOverlay.position.x / 100) * crop.width - gifWidth / 2;
+      const gifY = (gifOverlay.position.y / 100) * crop.height - gifHeight / 2;
 
       // Apply opacity (convert percentage to decimal)
       const previousAlpha = ctx.globalAlpha;

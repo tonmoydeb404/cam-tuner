@@ -1,8 +1,8 @@
-import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppContext } from "@/context/app";
-import { ImageIcon, Play, X } from "lucide-react";
+import { Image, ImageIcon, Play, Settings, X } from "lucide-react";
 import GifBrowser from "./gif-browser";
 import PositioningSizing from "./positioning-sizing";
 
@@ -24,8 +24,6 @@ const GifSection = () => {
       title="GIF Overlays"
       description="Add animated GIFs to your video recordings"
       icon={ImageIcon}
-      badge={overlay.enabled ? "Active" : undefined}
-      badgeVariant={overlay.enabled ? "success" : "default"}
     >
       {/* GIF Preview */}
       {isOverlayValid && (
@@ -47,7 +45,7 @@ const GifSection = () => {
           <div className="flex gap-2">
             <Button
               onClick={handlePlay}
-              variant="outline"
+              variant="default"
               size="sm"
               className="flex items-center gap-2"
               disabled={!isOverlayValid}
@@ -68,15 +66,26 @@ const GifSection = () => {
         </div>
       )}
 
-      <Accordion
-        type="single"
-        collapsible
-        defaultValue="gif"
-        className="w-full"
-      >
-        <PositioningSizing />
-        <GifBrowser />
-      </Accordion>
+      <Tabs defaultValue="gif" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="gif" className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            GIF
+          </TabsTrigger>
+          <TabsTrigger value="positioning" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Positioning
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="gif">
+          <GifBrowser />
+        </TabsContent>
+
+        <TabsContent value="positioning">
+          <PositioningSizing />
+        </TabsContent>
+      </Tabs>
     </FeatureCard>
   );
 };

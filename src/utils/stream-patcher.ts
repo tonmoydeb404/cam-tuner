@@ -5,6 +5,7 @@ import {
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
 import { ConfettiOverlayManager } from "./confetti-overlay";
 import { Logger } from "./log";
+import { MediaOverlayManager } from "./media-overlay";
 import { GlobalPerformanceMonitor } from "./performance-monitor";
 
 function normalizeFilterValue(value?: number): number {
@@ -258,6 +259,7 @@ class StreamProcessor {
   private canvasResource: CanvasResource;
   private frameController: FrameRateController;
   private confettiManagers: Map<string, ConfettiOverlayManager> = new Map();
+  private mediaOverlayManagers: Map<string, MediaOverlayManager> = new Map();
   private configCache = new ConfigCache();
   private isDisposed = false;
   private performanceMonitor = GlobalPerformanceMonitor.getInstance();
@@ -298,6 +300,9 @@ class StreamProcessor {
 
       // Register with global confetti manager
       GlobalConfettiManager.getInstance().registerProcessor(this);
+
+      // Register with global media overlay manager
+      GlobalMediaOverlayManager.getInstance().registerProcessor(this);
 
       Logger.dev(`StreamProcessor initialized: ${this.streamId}`);
     } catch (error) {
@@ -375,6 +380,28 @@ class StreamProcessor {
           if (confettiManager) {
             confettiManager.cleanup();
             this.confettiManagers.delete(confettiId);
+          }
+        }
+      }
+
+      // Media overlay rendering
+      if (this.mediaOverlayManagers.size > 0) {
+        const finishedOverlays: string[] = [];
+        
+        for (const [overlayId, overlayManager] of this.mediaOverlayManagers) {
+          if (overlayManager.shouldRender(currentTime)) {
+            overlayManager.render(ctx, currentTime);
+          } else {
+            finishedOverlays.push(overlayId);
+          }
+        }
+        
+        // Clean up finished overlays
+        for (const overlayId of finishedOverlays) {
+          const overlayManager = this.mediaOverlayManagers.get(overlayId);
+          if (overlayManager) {
+            overlayManager.cleanup();
+            this.mediaOverlayManagers.delete(overlayId);
           }
         }
       }
@@ -496,6 +523,50 @@ class StreamProcessor {
     Logger.dev(`All confetti cleared in ${this.streamId}`);
   }
 
+  startMediaOverlay(
+    overlayId: string,
+    config: {
+      mediaUrl: string;
+      mediaType: "video" | "image";
+      position: { x: number; y: number };
+      scale: number;
+      duration: number;
+      opacity: number;
+      delay: number;
+    }
+  ): void {
+    if (this.isDisposed) return;
+
+    const mediaOverlayManager = new MediaOverlayManager(config, {
+      width: this.crop.width,
+      height: this.crop.height,
+    });
+
+    mediaOverlayManager.start();
+    this.mediaOverlayManagers.set(overlayId, mediaOverlayManager);
+
+    Logger.dev(`Media overlay started in ${this.streamId}: ${overlayId}`);
+  }
+
+  stopMediaOverlay(overlayId: string): void {
+    const mediaOverlayManager = this.mediaOverlayManagers.get(overlayId);
+    if (mediaOverlayManager) {
+      mediaOverlayManager.stop();
+      mediaOverlayManager.cleanup();
+      this.mediaOverlayManagers.delete(overlayId);
+      Logger.dev(`Media overlay stopped in ${this.streamId}: ${overlayId}`);
+    }
+  }
+
+  clearAllMediaOverlays(): void {
+    this.mediaOverlayManagers.forEach((mediaOverlayManager) => {
+      mediaOverlayManager.stop();
+      mediaOverlayManager.cleanup();
+    });
+    this.mediaOverlayManagers.clear();
+    Logger.dev(`All media overlays cleared in ${this.streamId}`);
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -538,8 +609,17 @@ class StreamProcessor {
       });
       this.confettiManagers.clear();
 
+      // Cleanup all media overlays
+      this.mediaOverlayManagers.forEach((mediaOverlayManager) => {
+        mediaOverlayManager.cleanup();
+      });
+      this.mediaOverlayManagers.clear();
+
       // Unregister from global confetti manager
       GlobalConfettiManager.getInstance().unregisterProcessor(this);
+
+      // Unregister from global media overlay manager
+      GlobalMediaOverlayManager.getInstance().unregisterProcessor(this);
 
       // Clear configuration cache
       this.configCache.invalidate();
@@ -635,6 +715,59 @@ class GlobalConfettiManager {
         processor.stopConfetti(confettiId);
       });
     }, config.duration * 1000 + 1000);
+  }
+}
+
+/**
+ * Global media overlay manager for handling media overlay triggers across all streams
+ */
+class GlobalMediaOverlayManager {
+  private static instance: GlobalMediaOverlayManager;
+  private processors: Set<StreamProcessor> = new Set();
+
+  static getInstance(): GlobalMediaOverlayManager {
+    if (!GlobalMediaOverlayManager.instance) {
+      GlobalMediaOverlayManager.instance = new GlobalMediaOverlayManager();
+    }
+    return GlobalMediaOverlayManager.instance;
+  }
+
+  registerProcessor(processor: StreamProcessor): void {
+    this.processors.add(processor);
+  }
+
+  unregisterProcessor(processor: StreamProcessor): void {
+    this.processors.delete(processor);
+  }
+
+  triggerMediaOverlay(config: {
+    mediaUrl: string;
+    mediaType: "video" | "image";
+    position: { x: number; y: number };
+    scale: number;
+    duration: number;
+    opacity: number;
+    delay: number;
+  }): void {
+    const overlayId = `media_overlay_${Date.now()}`;
+    Logger.dev("Triggering media overlay for all active streams:", config);
+
+    // Clear all existing media overlays first to prevent stacking
+    this.processors.forEach((processor) => {
+      processor.clearAllMediaOverlays();
+    });
+
+    // Start new media overlay
+    this.processors.forEach((processor) => {
+      processor.startMediaOverlay(overlayId, config);
+    });
+
+    // Auto-cleanup after duration + delay
+    setTimeout(() => {
+      this.processors.forEach((processor) => {
+        processor.stopMediaOverlay(overlayId);
+      });
+    }, (config.duration + config.delay) * 1000 + 1000);
   }
 }
 
@@ -754,4 +887,19 @@ export function triggerGlobalConfetti(config: {
   duration: number;
 }): void {
   GlobalConfettiManager.getInstance().triggerConfetti(config);
+}
+
+/**
+ * Function to trigger media overlay across all active video streams
+ */
+export function triggerGlobalMediaOverlay(config: {
+  mediaUrl: string;
+  mediaType: "video" | "image";
+  position: { x: number; y: number };
+  scale: number;
+  duration: number;
+  opacity: number;
+  delay: number;
+}): void {
+  GlobalMediaOverlayManager.getInstance().triggerMediaOverlay(config);
 }

@@ -43,6 +43,12 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
       window.postMessage(message, "*");
       sendResponse({ success: true });
     }
+
+    if (message?.type === MessageTypeEnum.MEDIA_OVERLAY) {
+      Logger.dev("Media overlay message received from background");
+      window.postMessage(message, "*");
+      sendResponse({ success: true });
+    }
   }
 
   return true;

@@ -1,7 +1,6 @@
 import { env } from "@/config";
 import {
   StreamPatcherConfig,
-  StreamPatcherOverlay,
 } from "@/types/stream-patcher";
 import { Logger } from "./log";
 import {
@@ -33,8 +32,7 @@ const getUserMediaFn = MediaDevices.prototype.getUserMedia;
 export function mediaDevicePatcher(
   enable: boolean,
   sourceDeviceLabel: string,
-  config: StreamPatcherConfig,
-  overlay: StreamPatcherOverlay
+  config: StreamPatcherConfig
 ) {
   let sourceDeviceId: undefined | string;
   const randDeviceId = generateRandomDeviceId(MEDIA_DEVICE_ID); // random device id makes sure realtime updates
@@ -93,7 +91,6 @@ export function mediaDevicePatcher(
             stream,
             { height, width },
             config,
-            overlay,
             true
           );
         }

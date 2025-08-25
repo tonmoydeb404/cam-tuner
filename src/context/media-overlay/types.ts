@@ -1,11 +1,11 @@
 import React from "react";
 
 export interface IMediaOverlay {
-  position: { x: number; y: number };
-  scale: number;
-  duration: number;
-  opacity: number;
-  delay: number;
+  position: { x: number; y: number }; // Position as percentage (0-100)
+  scale: number; // Scale multiplier (0.1-5)
+  duration: number; // Duration in seconds
+  opacity: number; // Opacity as percentage (0-100)
+  delay: number; // Delay in seconds
 }
 
 export interface IMediaOverlayContext {

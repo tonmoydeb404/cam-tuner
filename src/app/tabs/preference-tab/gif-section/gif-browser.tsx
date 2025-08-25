@@ -77,9 +77,17 @@ const GifBrowser = () => {
   const handleGifSelect = useCallback(
     async (gif: KlipyGif) => {
       try {
+        const media =
+          gif.file.sm?.mp4?.url ??
+          gif.file?.md?.mp4?.url ??
+          gif.file?.hd?.mp4?.url ??
+          gif?.file?.xs?.mp4?.url;
+
+        if (!media) return;
+
         await triggerMediaOverlay(
-          gif.file.hd.gif.url,
-          "image",
+          media,
+          "video",
           mediaOverlay.position,
           mediaOverlay.scale,
           mediaOverlay.duration,

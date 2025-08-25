@@ -118,10 +118,10 @@ export class MediaOverlayManager {
 
     ctx.save();
 
-    // Apply opacity
-    ctx.globalAlpha = this.config.opacity;
+    // Apply opacity (convert from percentage to decimal)
+    ctx.globalAlpha = this.config.opacity / 100;
 
-    // Calculate position and size
+    // Get original media dimensions
     const mediaWidth = this.config.mediaType === "image" 
       ? (this.mediaElement as HTMLImageElement).naturalWidth 
       : (this.mediaElement as HTMLVideoElement).videoWidth;
@@ -134,10 +134,26 @@ export class MediaOverlayManager {
       return;
     }
 
-    const scaledWidth = mediaWidth * this.config.scale;
-    const scaledHeight = mediaHeight * this.config.scale;
+    // Calculate size based on stream dimensions, similar to position-picker
+    // Use a base size relative to the smaller dimension of the canvas (like position-picker)
+    const baseSize = Math.min(this.canvasSize.width, this.canvasSize.height) * 0.2; // 20% of smaller dimension
+    
+    // Maintain aspect ratio while scaling
+    const aspectRatio = mediaWidth / mediaHeight;
+    let scaledWidth: number;
+    let scaledHeight: number;
+    
+    if (aspectRatio >= 1) {
+      // Landscape or square
+      scaledWidth = baseSize * this.config.scale * aspectRatio;
+      scaledHeight = baseSize * this.config.scale;
+    } else {
+      // Portrait
+      scaledWidth = baseSize * this.config.scale;
+      scaledHeight = baseSize * this.config.scale / aspectRatio;
+    }
 
-    // Convert percentage position to canvas coordinates
+    // Convert percentage position to canvas coordinates (centered)
     const x = (this.config.position.x / 100) * this.canvasSize.width - scaledWidth / 2;
     const y = (this.config.position.y / 100) * this.canvasSize.height - scaledHeight / 2;
 

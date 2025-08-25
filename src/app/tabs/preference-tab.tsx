@@ -11,10 +11,10 @@ type Props = {};
 
 const PreferenceTab = (props: Props) => {
   const { config, updateConfig } = useAppContext();
-  const { brightness, contrast, saturation, zoom } = config;
+  const { brightness, contrast, saturation } = config;
 
   const isDefaultSettings =
-    brightness === 100 && contrast === 100 && saturation === 100 && zoom === 1;
+    brightness === 100 && contrast === 100 && saturation === 100;
 
   // Throttle expensive operations to improve performance
   const throttledUpdateBrightness = useThrottle(
@@ -26,13 +26,11 @@ const PreferenceTab = (props: Props) => {
     updateConfig("saturation"),
     100
   );
-  const throttledUpdateZoom = useThrottle(updateConfig("zoom"), 50);
 
   const resetToDefaults = useCallback(() => {
     updateConfig("brightness")(100);
     updateConfig("contrast")(100);
     updateConfig("saturation")(100);
-    updateConfig("zoom")(1);
   }, [updateConfig]);
 
   return (
@@ -41,25 +39,13 @@ const PreferenceTab = (props: Props) => {
 
       {/* Digital Effects Section */}
       <FeatureCard
-        title="Digital Effects"
-        description="Adjust zoom and color properties in real-time"
+        title="Color Effects"
+        description="Adjust color properties in real-time"
         icon={Sliders}
         badge={!isDefaultSettings ? "Modified" : undefined}
         badgeVariant={!isDefaultSettings ? "warning" : "default"}
       >
-        <FormSlider
-          label="Digital Zoom"
-          id="zoom"
-          value={zoom}
-          min={1}
-          max={3}
-          step={0.1}
-          onChange={throttledUpdateZoom}
-          unit="x"
-          formatValue={(val) => val.toFixed(1)}
-        />
-
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3">
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Color Adjustments
           </h4>
@@ -158,7 +144,7 @@ const PreferenceTab = (props: Props) => {
 
         {/* Real-time feedback */}
         <div className="text-xs text-muted-foreground italic p-3 bg-accent/20 rounded-md border border-border/20">
-          All adjustments are applied in real-time. Extreme values may affect
+          All color adjustments are applied in real-time. Extreme values may affect
           performance.
         </div>
       </FeatureCard>

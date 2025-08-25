@@ -21,7 +21,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 110,
       saturation: 110,
     },
-    description: "Enhanced colors and brightness"
+    description: "Enhanced colors and brightness",
   },
   {
     name: "Moody",
@@ -30,7 +30,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 120,
       saturation: 80,
     },
-    description: "Dramatic, high-contrast look"
+    description: "Dramatic, high-contrast look",
   },
   {
     name: "Natural",
@@ -39,7 +39,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 95,
       saturation: 95,
     },
-    description: "Subtle, natural enhancement"
+    description: "Subtle, natural enhancement",
   },
   {
     name: "Warm",
@@ -48,7 +48,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 102,
       saturation: 115,
     },
-    description: "Warm, cozy feeling"
+    description: "Warm, cozy feeling",
   },
   {
     name: "Cool",
@@ -57,7 +57,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 110,
       saturation: 85,
     },
-    description: "Cool, professional tone"
+    description: "Cool, professional tone",
   },
   {
     name: "Portrait",
@@ -66,7 +66,7 @@ const QUICK_PRESETS: QuickPreset[] = [
       contrast: 98,
       saturation: 105,
     },
-    description: "Optimized for faces"
+    description: "Optimized for faces",
   },
 ];
 
@@ -105,6 +105,8 @@ const DigitalEffects = (props: Props) => {
       icon={Sliders}
       badge={!isDefaultSettings ? "Modified" : undefined}
       badgeVariant={!isDefaultSettings ? "warning" : "default"}
+      type="accordion-item"
+      value="effects"
     >
       <div className="space-y-3">
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">

@@ -24,6 +24,8 @@ const GifSection = () => {
       title="GIF Overlays"
       description="Add animated GIFs to your video recordings"
       icon={ImageIcon}
+      type="accordion-item"
+      value="gif"
     >
       {/* GIF Preview */}
       {isOverlayValid && (

@@ -1,12 +1,18 @@
+import { Accordion } from "@/components/ui/accordion";
 import DigitalEffects from "./digital-effects";
 import GifSection from "./gif-section";
 
 const PreferenceTab = () => {
   return (
-    <div className="space-y-4">
+    <Accordion
+      type="single"
+      collapsible
+      defaultValue="gif"
+      className="space-y-4"
+    >
       <GifSection />
       <DigitalEffects />
-    </div>
+    </Accordion>
   );
 };
 

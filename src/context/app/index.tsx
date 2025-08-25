@@ -80,7 +80,7 @@ export const AppContextProvider = (props: Props) => {
   // ----------------------------------------------------------------------
 
   useEffect(() => {
-    Browser.storage?.local
+    Browser.storage?.sync
       .get(["enable", "cameraSource", "config", "overlay"])
       .then((result) => {
         if (typeof result.enable === "boolean") {

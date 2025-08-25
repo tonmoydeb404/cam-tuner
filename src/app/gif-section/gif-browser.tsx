@@ -1,9 +1,13 @@
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useAppContext } from "@/context/app";
 import { KlipyGif } from "@/types/klipy-api";
 import { getKlipyAPI } from "@/utils/klipy-api";
-import { ImageIcon, Search, X, Image } from "lucide-react";
+import { Image, ImageIcon, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const GifBrowser = () => {
@@ -24,8 +28,6 @@ const GifBrowser = () => {
 
       const api = getKlipyAPI(KLIPY_API_KEY);
       const response = await api.trending({ per_page: 20 });
-
-      console.log(response);
 
       setGifs(response?.data?.data);
       setIsSearchMode(false);
@@ -78,7 +80,11 @@ const GifBrowser = () => {
 
   const handleGifSelect = useCallback(
     (gif: KlipyGif) => {
-      setSelectedGif(gif.file.hd.gif.url, gif.file.hd.mp4.url, gif.id.toString());
+      setSelectedGif(
+        gif.file.hd.gif.url,
+        gif.file.hd.mp4.url,
+        gif.id.toString()
+      );
     },
     [setSelectedGif]
   );
@@ -189,7 +195,7 @@ const GifBrowser = () => {
                 onClick={() => handleGifSelect(gif)}
               >
                 <img
-                  src={gif.file.sm.jpg.url}
+                  src={gif.file?.sm?.gif?.url}
                   alt={gif.title}
                   className="w-full h-24 object-cover"
                   loading="lazy"
@@ -201,9 +207,6 @@ const GifBrowser = () => {
                     </div>
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                  <p className="text-xs text-white truncate">{gif.title}</p>
-                </div>
               </div>
             ))}
           </div>

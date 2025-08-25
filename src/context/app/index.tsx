@@ -51,6 +51,7 @@ const defaultValue: IAppContext = {
 
   overlay: defaultOverlay,
   setOverlay: () => {},
+  setOverlayEnable: () => {},
   updateOverlay: () => () => {},
   resetOverlay: () => {},
   setSelectedGif: () => {},
@@ -116,7 +117,12 @@ export const AppContextProvider = (props: Props) => {
       try {
         const message: SettingsUpdateMessage = {
           type: MessageTypeEnum.UPDATE,
-          payload: { overlay: overlay, cameraSource, config, enable },
+          payload: {
+            overlay: defaultValue.overlay,
+            cameraSource,
+            config,
+            enable,
+          },
         };
         Browser.runtime.sendMessage(message);
       } catch (error) {
@@ -125,25 +131,22 @@ export const AppContextProvider = (props: Props) => {
         );
       }
     },
-    [overlay]
+    []
   );
 
-  const saveOverlay = useCallback(
-    (overlay: IGifOverlay) => {
-      try {
-        const message: SettingsUpdateMessage = {
-          type: MessageTypeEnum.UPDATE,
-          payload: { overlay: overlay, cameraSource, config, enable },
-        };
-        Browser.runtime.sendMessage(message);
-      } catch (error) {
-        Logger.dev(
-          "No content script to receive overlay message (extension page)"
-        );
-      }
-    },
-    [cameraSource, config, enable]
-  );
+  const saveOverlay = useCallback(() => {
+    try {
+      const message: SettingsUpdateMessage = {
+        type: MessageTypeEnum.UPDATE,
+        payload: { overlay: overlay, cameraSource, config, enable },
+      };
+      Browser.runtime.sendMessage(message);
+    } catch (error) {
+      Logger.dev(
+        "No content script to receive overlay message (extension page)"
+      );
+    }
+  }, [cameraSource, config, enable, overlay]);
 
   const applySettings = useCallback(() => {
     saveSettings(enable, cameraSource, config);
@@ -177,13 +180,12 @@ export const AppContextProvider = (props: Props) => {
   const updateOverlay: IAppContext["updateOverlay"] = (key) => (value) => {
     const newOverlay = { ...overlay, [key]: value };
     setOverlay(newOverlay);
-    saveOverlay(newOverlay);
   };
 
   const resetOverlay = useCallback(() => {
     const newOverlay = { ...defaultOverlay };
     setOverlay(newOverlay);
-    saveOverlay(newOverlay);
+    saveOverlay();
   }, [saveOverlay]);
 
   const setSelectedGif = useCallback(
@@ -196,9 +198,16 @@ export const AppContextProvider = (props: Props) => {
         enabled: true,
       };
       setOverlay(newOverlay);
-      saveOverlay(newOverlay);
     },
-    [overlay, saveOverlay]
+    [overlay]
+  );
+
+  const setOverlayEnable = useCallback(
+    (enabled: boolean) => {
+      setOverlay((prev) => ({ ...prev, enabled }));
+      saveOverlay();
+    },
+    [saveOverlay]
   );
 
   // ----------------------------------------------------------------------
@@ -217,6 +226,7 @@ export const AppContextProvider = (props: Props) => {
     updateOverlay,
     resetOverlay,
     setSelectedGif,
+    setOverlayEnable,
     applySettings,
     changesPending: false,
   };

@@ -52,6 +52,7 @@ export interface IAppContext {
   ) => (value: IGifOverlay[K]) => void;
   resetOverlay: () => void;
   setSelectedGif: (gifUrl: string, mp4Url: string, gifId: string) => void;
+  setOverlayEnable: (enabled: boolean) => void;
 
   applySettings: () => void;
 

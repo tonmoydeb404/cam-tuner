@@ -484,10 +484,10 @@ class StreamProcessor {
     if (this.isDisposed) return;
 
     const { ctx } = this.canvasResource;
-    // Performance timing handled by FrameRateController
+    const currentTime = performance.now();
 
     try {
-      // Clear previous frame
+      // Clear previous frame efficiently
       ctx.clearRect(0, 0, this.crop.width, this.crop.height);
 
       // Draw main video
@@ -505,20 +505,35 @@ class StreamProcessor {
 
       // Draw GIF overlay if applicable
       if (this.gifManager) {
-        this.gifManager.render(ctx, performance.now());
+        this.gifManager.render(ctx, currentTime);
       }
 
-      // Draw confetti overlays
-      const currentTime = performance.now();
-      this.confettiManagers.forEach((confettiManager, confettiId) => {
-        if (confettiManager.shouldRender(currentTime)) {
-          confettiManager.render(ctx, currentTime);
-        } else {
-          // Remove finished confetti
-          confettiManager.cleanup();
-          this.confettiManagers.delete(confettiId);
+      // Optimized confetti rendering - batch all confetti operations
+      if (this.confettiManagers.size > 0) {
+        const finishedConfetti: string[] = [];
+        
+        // Render all active confetti in one batch
+        ctx.save(); // Single save for all confetti
+        
+        for (const [confettiId, confettiManager] of this.confettiManagers) {
+          if (confettiManager.shouldRender(currentTime)) {
+            confettiManager.render(ctx, currentTime);
+          } else {
+            finishedConfetti.push(confettiId);
+          }
         }
-      });
+        
+        ctx.restore(); // Single restore for all confetti
+        
+        // Clean up finished confetti
+        for (const confettiId of finishedConfetti) {
+          const confettiManager = this.confettiManagers.get(confettiId);
+          if (confettiManager) {
+            confettiManager.cleanup();
+            this.confettiManagers.delete(confettiId);
+          }
+        }
+      }
 
       // Reset error count on successful render
       this.errorCount = 0;
@@ -628,6 +643,15 @@ class StreamProcessor {
     }
   }
 
+  clearAllConfetti(): void {
+    this.confettiManagers.forEach((confettiManager) => {
+      confettiManager.stop();
+      confettiManager.cleanup();
+    });
+    this.confettiManagers.clear();
+    Logger.dev(`All confetti cleared in ${this.streamId}`);
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -729,7 +753,6 @@ function setupVideoElement(track: MediaStreamTrack): HTMLVideoElement {
  */
 class GlobalConfettiManager {
   private static instance: GlobalConfettiManager;
-  private activeConfetti: Map<string, ConfettiOverlayManager> = new Map();
   private processors: Set<StreamProcessor> = new Set();
 
   static getInstance(): GlobalConfettiManager {
@@ -756,7 +779,12 @@ class GlobalConfettiManager {
     const confettiId = `confetti_${Date.now()}`;
     Logger.dev("Triggering confetti for all active streams:", config);
 
-    // Notify all active processors to start confetti
+    // Clear all existing confetti first to prevent stacking
+    this.processors.forEach((processor) => {
+      processor.clearAllConfetti();
+    });
+
+    // Start new confetti
     this.processors.forEach((processor) => {
       processor.startConfetti(confettiId, config);
     });
@@ -766,7 +794,7 @@ class GlobalConfettiManager {
       this.processors.forEach((processor) => {
         processor.stopConfetti(confettiId);
       });
-    }, config.duration * 1000 + 1000); // Add 1 second buffer
+    }, config.duration * 1000 + 1000);
   }
 }
 

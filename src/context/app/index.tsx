@@ -11,6 +11,7 @@ import {
 import Browser from "webextension-polyfill";
 import ratioOptions from "./ratio-options";
 import {
+  ColorPreset,
   IAppCameraSource,
   IAppConfig,
   IAppContext,
@@ -48,6 +49,7 @@ const defaultValue: IAppContext = {
   },
   setConfig: () => {},
   updateConfig: () => () => {},
+  applyPreset: () => {},
 
   overlay: defaultOverlay,
   setOverlay: () => {},
@@ -159,6 +161,20 @@ export const AppContextProvider = (props: Props) => {
     [cameraSource, config, enable, saveSettings]
   );
 
+  const applyPreset = useCallback(
+    (preset: ColorPreset) => {
+      const newConfig = {
+        ...config,
+        brightness: preset.brightness,
+        contrast: preset.contrast,
+        saturation: preset.saturation,
+      };
+      setConfig(newConfig);
+      saveSettings(enable, cameraSource, newConfig);
+    },
+    [config, enable, cameraSource, saveSettings]
+  );
+
   const applySettings = useCallback(() => {
     saveSettings(enable, cameraSource, config, overlay);
   }, [saveSettings, enable, cameraSource, config, overlay]);
@@ -241,6 +257,7 @@ export const AppContextProvider = (props: Props) => {
     config,
     setConfig,
     updateConfig,
+    applyPreset,
     overlay,
     setOverlay,
     updateOverlay,

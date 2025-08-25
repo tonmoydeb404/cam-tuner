@@ -1,4 +1,5 @@
 import { Accordion } from "@/components/ui/accordion";
+import ConfettiSection from "./confetti-section";
 import DigitalEffects from "./digital-effects";
 import GifSection from "./gif-section";
 
@@ -7,10 +8,11 @@ const PreferenceTab = () => {
     <Accordion
       type="single"
       collapsible
-      defaultValue="gif"
+      defaultValue="confetti"
       className="space-y-4"
     >
       <GifSection />
+      <ConfettiSection />
       <DigitalEffects />
     </Accordion>
   );

@@ -27,18 +27,22 @@ initializeExtension();
 
 // Handle runtime messages ----------------------------------------------------------------------
 chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
-  if (
-    !sender?.tab &&
-    !sender?.url &&
-    message?.type === MessageTypeEnum.UPDATE
-  ) {
-    Logger.dev("Settings update message received");
-    const settingsMessage = {
-      type: MessageTypeEnum.SETTINGS,
-      payload: message.payload,
-    };
-    window.postMessage(settingsMessage, "*");
-    sendResponse({ success: true });
+  if (!sender?.tab && !sender?.url) {
+    if (message?.type === MessageTypeEnum.UPDATE) {
+      Logger.dev("Settings update message received");
+      const settingsMessage = {
+        type: MessageTypeEnum.SETTINGS,
+        payload: message.payload,
+      };
+      window.postMessage(settingsMessage, "*");
+      sendResponse({ success: true });
+    }
+
+    if (message?.type === MessageTypeEnum.CONFETTI) {
+      Logger.dev("Confetti message received from background");
+      window.postMessage(message, "*");
+      sendResponse({ success: true });
+    }
   }
 
   return true;

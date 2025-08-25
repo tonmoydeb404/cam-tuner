@@ -4,6 +4,7 @@ import {
   StreamPatcherSize,
 } from "@/types/stream-patcher";
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
+import { ConfettiOverlayManager } from "./confetti-overlay";
 import { Logger } from "./log";
 import { GlobalPerformanceMonitor } from "./performance-monitor";
 
@@ -398,6 +399,7 @@ class StreamProcessor {
   private canvasResource: CanvasResource;
   private frameController: FrameRateController;
   private gifManager: GifOverlayManager | null = null;
+  private confettiManagers: Map<string, ConfettiOverlayManager> = new Map();
   private configCache = new ConfigCache();
   private isDisposed = false;
   private performanceMonitor = GlobalPerformanceMonitor.getInstance();
@@ -437,6 +439,9 @@ class StreamProcessor {
         maxRenderTime: 0,
         activeStreams: 1,
       });
+
+      // Register with global confetti manager
+      GlobalConfettiManager.getInstance().registerProcessor(this);
 
       Logger.dev(`StreamProcessor initialized: ${this.streamId}`);
     } catch (error) {
@@ -502,6 +507,18 @@ class StreamProcessor {
       if (this.gifManager) {
         this.gifManager.render(ctx, performance.now());
       }
+
+      // Draw confetti overlays
+      const currentTime = performance.now();
+      this.confettiManagers.forEach((confettiManager, confettiId) => {
+        if (confettiManager.shouldRender(currentTime)) {
+          confettiManager.render(ctx, currentTime);
+        } else {
+          // Remove finished confetti
+          confettiManager.cleanup();
+          this.confettiManagers.delete(confettiId);
+        }
+      });
 
       // Reset error count on successful render
       this.errorCount = 0;
@@ -579,6 +596,38 @@ class StreamProcessor {
     }
   }
 
+  startConfetti(
+    confettiId: string,
+    config: {
+      confettiType: string;
+      colors: string[];
+      intensity: number;
+      duration: number;
+    }
+  ): void {
+    if (this.isDisposed) return;
+
+    const confettiManager = new ConfettiOverlayManager(config, {
+      width: this.crop.width,
+      height: this.crop.height,
+    });
+
+    confettiManager.start();
+    this.confettiManagers.set(confettiId, confettiManager);
+
+    Logger.dev(`Confetti started in ${this.streamId}: ${confettiId}`);
+  }
+
+  stopConfetti(confettiId: string): void {
+    const confettiManager = this.confettiManagers.get(confettiId);
+    if (confettiManager) {
+      confettiManager.stop();
+      confettiManager.cleanup();
+      this.confettiManagers.delete(confettiId);
+      Logger.dev(`Confetti stopped in ${this.streamId}: ${confettiId}`);
+    }
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -616,6 +665,15 @@ class StreamProcessor {
 
       // Cleanup GIF overlay
       this.gifManager?.cleanup();
+
+      // Cleanup all confetti overlays
+      this.confettiManagers.forEach((confettiManager) => {
+        confettiManager.cleanup();
+      });
+      this.confettiManagers.clear();
+
+      // Unregister from global confetti manager
+      GlobalConfettiManager.getInstance().unregisterProcessor(this);
 
       // Clear configuration cache
       this.configCache.invalidate();
@@ -664,6 +722,52 @@ function setupVideoElement(track: MediaStreamTrack): HTMLVideoElement {
     Logger.dev("Video play error:", err);
   });
   return video;
+}
+
+/**
+ * Global confetti manager for handling confetti triggers across all streams
+ */
+class GlobalConfettiManager {
+  private static instance: GlobalConfettiManager;
+  private activeConfetti: Map<string, ConfettiOverlayManager> = new Map();
+  private processors: Set<StreamProcessor> = new Set();
+
+  static getInstance(): GlobalConfettiManager {
+    if (!GlobalConfettiManager.instance) {
+      GlobalConfettiManager.instance = new GlobalConfettiManager();
+    }
+    return GlobalConfettiManager.instance;
+  }
+
+  registerProcessor(processor: StreamProcessor): void {
+    this.processors.add(processor);
+  }
+
+  unregisterProcessor(processor: StreamProcessor): void {
+    this.processors.delete(processor);
+  }
+
+  triggerConfetti(config: {
+    confettiType: string;
+    colors: string[];
+    intensity: number;
+    duration: number;
+  }): void {
+    const confettiId = `confetti_${Date.now()}`;
+    Logger.dev("Triggering confetti for all active streams:", config);
+
+    // Notify all active processors to start confetti
+    this.processors.forEach((processor) => {
+      processor.startConfetti(confettiId, config);
+    });
+
+    // Auto-cleanup after duration
+    setTimeout(() => {
+      this.processors.forEach((processor) => {
+        processor.stopConfetti(confettiId);
+      });
+    }, config.duration * 1000 + 1000); // Add 1 second buffer
+  }
 }
 
 /**
@@ -772,4 +876,16 @@ export function cleanupAllProcessors(): void {
   const canvasManager = CanvasManager.getInstance();
   canvasManager.dispose();
   Logger.dev("All stream processors cleanup initiated");
+}
+
+/**
+ * Function to trigger confetti across all active video streams
+ */
+export function triggerGlobalConfetti(config: {
+  confettiType: string;
+  colors: string[];
+  intensity: number;
+  duration: number;
+}): void {
+  GlobalConfettiManager.getInstance().triggerConfetti(config);
 }

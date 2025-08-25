@@ -1,6 +1,7 @@
 import { MessageTypeEnum } from "@/types/window-message";
 import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
+import { triggerGlobalConfetti } from "../utils/stream-patcher";
 
 window.addEventListener("message", (event) => {
   if (event?.data?.type === MessageTypeEnum.SETTINGS) {
@@ -20,5 +21,18 @@ window.addEventListener("message", (event) => {
     });
 
     mediaDevicePatcher(enable, label || "", config, overlay);
+  }
+
+  if (event?.data?.type === MessageTypeEnum.CONFETTI) {
+    const payload = event.data?.payload;
+    if (payload) {
+      Logger.dev("Received confetti message:", payload);
+      triggerGlobalConfetti({
+        confettiType: payload.confettiType,
+        colors: payload.colors,
+        intensity: payload.intensity,
+        duration: payload.duration,
+      });
+    }
   }
 });

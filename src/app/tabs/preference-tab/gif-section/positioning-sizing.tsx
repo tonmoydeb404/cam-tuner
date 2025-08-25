@@ -1,9 +1,9 @@
 import { Slider } from "@/components/ui/slider";
-import { useAppContext } from "@/context/app";
+import { useMediaOverlayContext } from "@/context/media-overlay";
 import PositionPicker from "./position-picker";
 
 const PositioningSizing = () => {
-  const { overlay, updateOverlay } = useAppContext();
+  const { mediaOverlay, updateMediaOverlay } = useMediaOverlayContext();
 
   return (
     <div className="pt-4">
@@ -20,17 +20,17 @@ const PositioningSizing = () => {
               min={0}
               max={100}
               step={1}
-              value={[overlay.position.x]}
+              value={[mediaOverlay.position.x]}
               onValueChange={(value) => {
-                updateOverlay("position")({
-                  ...overlay.position,
+                updateMediaOverlay("position")({
+                  ...mediaOverlay.position,
                   x: value[0],
                 });
               }}
               className="w-full"
             />
             <div className="text-xs text-center mt-1">
-              {overlay.position.x}%
+              {mediaOverlay.position.x}%
             </div>
           </div>
           <div>
@@ -41,17 +41,17 @@ const PositioningSizing = () => {
               min={0}
               max={100}
               step={1}
-              value={[overlay.position.y]}
+              value={[mediaOverlay.position.y]}
               onValueChange={(value) => {
-                updateOverlay("position")({
-                  ...overlay.position,
+                updateMediaOverlay("position")({
+                  ...mediaOverlay.position,
                   y: value[0],
                 });
               }}
               className="w-full"
             />
             <div className="text-xs text-center mt-1">
-              {overlay.position.y}%
+              {mediaOverlay.position.y}%
             </div>
           </div>
         </div>
@@ -62,13 +62,13 @@ const PositioningSizing = () => {
             min={0.1}
             max={5}
             step={0.05}
-            value={[overlay.scale]}
+            value={[mediaOverlay.scale]}
             onValueChange={(value) => {
-              updateOverlay("scale")(value[0]);
+              updateMediaOverlay("scale")(value[0]);
             }}
             className="w-full"
           />
-          <div className="text-xs text-center mt-1">{overlay.scale}x</div>
+          <div className="text-xs text-center mt-1">{mediaOverlay.scale}x</div>
         </div>
 
         <div className="text-sm font-medium">Duration</div>
@@ -77,13 +77,15 @@ const PositioningSizing = () => {
             min={0.5}
             max={10}
             step={0.25}
-            value={[overlay.duration]}
+            value={[mediaOverlay.duration]}
             onValueChange={(value) => {
-              updateOverlay("duration")(value[0]);
+              updateMediaOverlay("duration")(value[0]);
             }}
             className="w-full"
           />
-          <div className="text-xs text-center mt-1">{overlay.duration}s</div>
+          <div className="text-xs text-center mt-1">
+            {mediaOverlay.duration}s
+          </div>
         </div>
 
         <div className="text-sm font-medium">Opacity</div>
@@ -92,13 +94,15 @@ const PositioningSizing = () => {
             min={0}
             max={100}
             step={5}
-            value={[overlay.opacity]}
+            value={[mediaOverlay.opacity]}
             onValueChange={(value) => {
-              updateOverlay("opacity")(value[0]);
+              updateMediaOverlay("opacity")(value[0]);
             }}
             className="w-full"
           />
-          <div className="text-xs text-center mt-1">{overlay.opacity}%</div>
+          <div className="text-xs text-center mt-1">
+            {mediaOverlay.opacity}%
+          </div>
         </div>
 
         <div className="text-sm font-medium">Delay</div>
@@ -107,13 +111,13 @@ const PositioningSizing = () => {
             min={0}
             max={5}
             step={0.25}
-            value={[overlay.delay]}
+            value={[mediaOverlay.delay]}
             onValueChange={(value) => {
-              updateOverlay("delay")(value[0]);
+              updateMediaOverlay("delay")(value[0]);
             }}
             className="w-full"
           />
-          <div className="text-xs text-center mt-1">{overlay.delay}s</div>
+          <div className="text-xs text-center mt-1">{mediaOverlay.delay}s</div>
         </div>
       </div>
     </div>

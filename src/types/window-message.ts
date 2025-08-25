@@ -1,9 +1,10 @@
-import { IAppCameraSource, IAppConfig, IGifOverlay } from "@/context/app/types";
+import { IAppCameraSource, IAppConfig } from "@/context/app/types";
 
 export enum MessageTypeEnum {
   SETTINGS = "cam_tuner-settings",
   UPDATE = "cam_tuner-update",
   CONFETTI = "cam_tuner-confetti",
+  MEDIA_OVERLAY = "cam_tuner-media-overlay",
 }
 
 export type SettingsUpdateMessage = {
@@ -12,7 +13,7 @@ export type SettingsUpdateMessage = {
     enable: boolean;
     cameraSource: IAppCameraSource | null;
     config: IAppConfig;
-    overlay: IGifOverlay;
+    overlay?: any;
   };
 };
 
@@ -23,5 +24,18 @@ export type ConfettiMessage = {
     colors: string[];
     intensity: number;
     duration: number;
+  };
+};
+
+export type MediaOverlayMessage = {
+  type: MessageTypeEnum.MEDIA_OVERLAY;
+  payload: {
+    mediaUrl: string;
+    mediaType: "video" | "image";
+    position: { x: number; y: number };
+    scale: number;
+    duration: number;
+    opacity: number;
+    delay: number;
   };
 };

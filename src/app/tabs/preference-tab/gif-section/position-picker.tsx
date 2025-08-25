@@ -1,8 +1,10 @@
 import { useAppContext } from "@/context/app";
+import { useMediaOverlayContext } from "@/context/media-overlay";
 import { useCallback, useRef, useState } from "react";
 
 const PositionPicker = () => {
-  const { overlay, updateOverlay, config } = useAppContext();
+  const { config } = useAppContext();
+  const { mediaOverlay, updateMediaOverlay } = useMediaOverlayContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -26,12 +28,12 @@ const PositionPicker = () => {
       );
 
       // Update immediately for smooth dragging, debounce for context updates
-      updateOverlay("position")({
+      updateMediaOverlay("position")({
         x: Math.round(x),
         y: Math.round(y),
       });
     },
-    [isDragging, updateOverlay]
+    [isDragging, updateMediaOverlay]
   );
 
   const handleMouseUp = useCallback(() => {
@@ -51,13 +53,13 @@ const PositionPicker = () => {
           Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)
         );
 
-        updateOverlay("position")({
+        updateMediaOverlay("position")({
           x: Math.round(x),
           y: Math.round(y),
         });
       }
     },
-    [updateOverlay]
+    [updateMediaOverlay]
   );
 
   // Calculate container dimensions based on aspect ratio
@@ -69,10 +71,10 @@ const PositionPicker = () => {
   const actualWidth = containerHeight * aspectRatio;
 
   // Calculate draggable box size based on scale
-  const boxSize = Math.max(8, 20 * overlay.scale); // Minimum 8px, scales with overlay scale
-  
+  const boxSize = Math.max(8, 20 * mediaOverlay.scale); // Minimum 8px, scales with overlay scale
+
   // Use overlay position directly
-  const displayPosition = overlay.position;
+  const displayPosition = mediaOverlay.position;
 
   return (
     <div className="space-y-2 mb-4">
@@ -116,7 +118,7 @@ const PositionPicker = () => {
               top: `${
                 (displayPosition.y / 100) * containerHeight - boxSize / 2
               }px`,
-              opacity: overlay.opacity / 100,
+              opacity: mediaOverlay.opacity / 100,
             }}
             onMouseDown={handleMouseDown}
           >
@@ -138,7 +140,7 @@ const PositionPicker = () => {
 
       <div className="text-xs text-center text-muted-foreground">
         Position: {displayPosition.x}%, {displayPosition.y}% • Scale:{" "}
-        {overlay.scale}x
+        {mediaOverlay.scale}x
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import {
   StreamPatcherConfig,
-  StreamPatcherOverlay,
   StreamPatcherSize,
 } from "@/types/stream-patcher";
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
@@ -250,146 +249,6 @@ function calculateZoomedSize(size: StreamPatcherSize, zoom?: number) {
   };
 }
 
-/**
- * Optimized GIF Overlay Manager
- * Pre-calculates positioning and manages GIF lifecycle efficiently
- */
-class GifOverlayManager {
-  private gifVideo: HTMLVideoElement | null = null;
-  private startTime = 0;
-  private isCompleted = false;
-  private cachedDimensions: {
-    width: number;
-    height: number;
-    x: number;
-    y: number;
-  } | null = null;
-
-  constructor(
-    private overlay: StreamPatcherOverlay,
-    private canvasSize: { width: number; height: number }
-  ) {
-    this.initializeGif();
-  }
-
-  private async initializeGif(): Promise<void> {
-    if (!this.overlay.enabled || !this.overlay.mp4Url) return;
-
-    this.gifVideo = document.createElement("video");
-    this.gifVideo.crossOrigin = "anonymous";
-    this.gifVideo.loop = true;
-    this.gifVideo.muted = true;
-    this.gifVideo.playsInline = true;
-    this.gifVideo.autoplay = true;
-    this.gifVideo.src = this.overlay.mp4Url;
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(
-          () => reject(new Error("GIF load timeout")),
-          5000
-        );
-
-        this.gifVideo!.addEventListener(
-          "loadeddata",
-          () => {
-            clearTimeout(timeout);
-            this.preCalculateDimensions();
-            this.gifVideo!.play().catch(Logger.dev);
-            resolve();
-          },
-          { once: true }
-        );
-
-        this.gifVideo!.addEventListener(
-          "error",
-          () => {
-            clearTimeout(timeout);
-            reject(new Error("GIF load failed"));
-          },
-          { once: true }
-        );
-      });
-    } catch (error) {
-      Logger.dev("GIF initialization failed:", error);
-      this.cleanup();
-    }
-  }
-
-  private preCalculateDimensions(): void {
-    if (!this.gifVideo || !this.overlay.enabled) return;
-
-    const aspectRatio = this.gifVideo.videoWidth / this.gifVideo.videoHeight;
-    const baseSize =
-      Math.min(this.canvasSize.width, this.canvasSize.height) * 0.2;
-
-    const width = baseSize * aspectRatio * this.overlay.scale;
-    const height = baseSize * this.overlay.scale;
-    const x =
-      (this.overlay.position.x / 100) * this.canvasSize.width - width / 2;
-    const y =
-      (this.overlay.position.y / 100) * this.canvasSize.height - height / 2;
-
-    this.cachedDimensions = { width, height, x, y };
-  }
-
-  shouldRender(currentTime: number): boolean {
-    if (!this.overlay.enabled || !this.gifVideo || this.isCompleted) {
-      return false;
-    }
-
-    if (this.startTime === 0) {
-      this.startTime = currentTime + this.overlay.delay * 1000;
-    }
-
-    const elapsed = (currentTime - this.startTime) / 1000;
-    const isVisible = elapsed >= 0 && elapsed <= this.overlay.duration;
-
-    if (elapsed > this.overlay.duration && !this.isCompleted) {
-      this.isCompleted = true;
-      this.gifVideo.pause();
-      Logger.dev("GIF overlay completed");
-    }
-
-    return isVisible && this.gifVideo.readyState >= 2;
-  }
-
-  render(ctx: CanvasRenderingContext2D, currentTime: number): void {
-    if (
-      !this.shouldRender(currentTime) ||
-      !this.cachedDimensions ||
-      !this.gifVideo
-    ) {
-      return;
-    }
-
-    const previousAlpha = ctx.globalAlpha;
-    ctx.globalAlpha = (this.overlay.opacity || 100) / 100;
-
-    try {
-      ctx.drawImage(
-        this.gifVideo,
-        this.cachedDimensions.x,
-        this.cachedDimensions.y,
-        this.cachedDimensions.width,
-        this.cachedDimensions.height
-      );
-    } catch (error) {
-      Logger.dev("GIF render error:", error);
-    }
-
-    ctx.globalAlpha = previousAlpha;
-  }
-
-  cleanup(): void {
-    if (this.gifVideo) {
-      this.gifVideo.pause();
-      this.gifVideo.src = "";
-      this.gifVideo = null;
-    }
-    this.cachedDimensions = null;
-  }
-}
 
 /**
  * Stream Processing Context
@@ -398,7 +257,6 @@ class GifOverlayManager {
 class StreamProcessor {
   private canvasResource: CanvasResource;
   private frameController: FrameRateController;
-  private gifManager: GifOverlayManager | null = null;
   private confettiManagers: Map<string, ConfettiOverlayManager> = new Map();
   private configCache = new ConfigCache();
   private isDisposed = false;
@@ -417,8 +275,7 @@ class StreamProcessor {
       offsetX: number;
       offsetY: number;
     },
-    private config: StreamPatcherConfig,
-    private overlay?: StreamPatcherOverlay
+    private config: StreamPatcherConfig
   ) {
     this.streamId = `stream_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -427,7 +284,6 @@ class StreamProcessor {
       this.canvasResource = canvasManager.getCanvas(crop.width, crop.height);
 
       this.setupCanvas();
-      this.setupGifOverlay();
 
       this.frameController = new FrameRateController(video, this.renderFrame);
 
@@ -471,14 +327,6 @@ class StreamProcessor {
     }
   }
 
-  private setupGifOverlay(): void {
-    if (this.overlay?.enabled) {
-      this.gifManager = new GifOverlayManager(this.overlay, {
-        width: this.crop.width,
-        height: this.crop.height,
-      });
-    }
-  }
 
   private renderFrame = (): void => {
     if (this.isDisposed) return;
@@ -503,10 +351,6 @@ class StreamProcessor {
         this.crop.height
       );
 
-      // Draw GIF overlay if applicable
-      if (this.gifManager) {
-        this.gifManager.render(ctx, currentTime);
-      }
 
       // Optimized confetti rendering - batch all confetti operations
       if (this.confettiManagers.size > 0) {
@@ -687,8 +531,6 @@ class StreamProcessor {
       // Stop frame controller
       this.frameController.stop();
 
-      // Cleanup GIF overlay
-      this.gifManager?.cleanup();
 
       // Cleanup all confetti overlays
       this.confettiManagers.forEach((confettiManager) => {
@@ -723,14 +565,12 @@ function applyCanvasProcessing({
   video,
   crop,
   config,
-  overlay: gifOverlay,
 }: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   config: StreamPatcherConfig;
-  overlay?: StreamPatcherOverlay;
 }): { canvas: HTMLCanvasElement; processor: StreamProcessor } {
-  const processor = new StreamProcessor(video, crop, config, gifOverlay);
+  const processor = new StreamProcessor(video, crop, config);
   const canvas = processor.start();
 
   return { canvas, processor };
@@ -807,7 +647,6 @@ export function streamPatcher(
   stream: MediaStream,
   size: StreamPatcherSize,
   config: StreamPatcherConfig = {},
-  overlay: StreamPatcherOverlay | undefined = undefined,
   stopOriginalStream = false
 ): MediaStream {
   try {
@@ -828,7 +667,6 @@ export function streamPatcher(
         offsetY: offset.y,
       },
       config,
-      overlay: overlay,
     });
 
     // Create output stream with explicit framerate for better performance

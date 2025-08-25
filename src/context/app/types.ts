@@ -31,6 +31,12 @@ export interface IAppCameraSource {
   deviceId: string;
 }
 
+export type ColorPreset = {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+};
+
 export interface IAppContext {
   enable: boolean;
   setEnable: (v: boolean) => void;
@@ -44,6 +50,7 @@ export interface IAppContext {
   updateConfig: <K extends keyof IAppContext["config"]>(
     key: K
   ) => (value: IAppContext["config"][K]) => void;
+  applyPreset: (preset: ColorPreset) => void;
 
   overlay: IGifOverlay;
   setOverlay: React.Dispatch<React.SetStateAction<IGifOverlay>>;

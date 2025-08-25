@@ -5,6 +5,7 @@ import { useAppContext } from "@/context/app";
 import useThrottle from "@/hooks/use-throttle";
 import { Sliders } from "lucide-react";
 import { useCallback } from "react";
+import GifSection from "../gif-section";
 
 type Props = {};
 
@@ -12,12 +13,19 @@ const PreferenceTab = (props: Props) => {
   const { config, updateConfig } = useAppContext();
   const { brightness, contrast, saturation, zoom } = config;
 
-  const isDefaultSettings = brightness === 100 && contrast === 100 && saturation === 100 && zoom === 1;
+  const isDefaultSettings =
+    brightness === 100 && contrast === 100 && saturation === 100 && zoom === 1;
 
   // Throttle expensive operations to improve performance
-  const throttledUpdateBrightness = useThrottle(updateConfig("brightness"), 100);
+  const throttledUpdateBrightness = useThrottle(
+    updateConfig("brightness"),
+    100
+  );
   const throttledUpdateContrast = useThrottle(updateConfig("contrast"), 100);
-  const throttledUpdateSaturation = useThrottle(updateConfig("saturation"), 100);
+  const throttledUpdateSaturation = useThrottle(
+    updateConfig("saturation"),
+    100
+  );
   const throttledUpdateZoom = useThrottle(updateConfig("zoom"), 50);
 
   const resetToDefaults = useCallback(() => {
@@ -26,9 +34,11 @@ const PreferenceTab = (props: Props) => {
     updateConfig("saturation")(100);
     updateConfig("zoom")(1);
   }, [updateConfig]);
-  
+
   return (
     <div className="space-y-4">
+      <GifSection />
+
       {/* Digital Effects Section */}
       <FeatureCard
         title="Digital Effects"
@@ -37,7 +47,6 @@ const PreferenceTab = (props: Props) => {
         badge={!isDefaultSettings ? "Modified" : undefined}
         badgeVariant={!isDefaultSettings ? "warning" : "default"}
       >
-
         <FormSlider
           label="Digital Zoom"
           id="zoom"
@@ -54,7 +63,7 @@ const PreferenceTab = (props: Props) => {
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Color Adjustments
           </h4>
-          
+
           <FormSlider
             label="Brightness"
             id="brightness"
@@ -94,7 +103,7 @@ const PreferenceTab = (props: Props) => {
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
             Quick Presets
           </h4>
-          
+
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
@@ -108,9 +117,9 @@ const PreferenceTab = (props: Props) => {
             >
               Vivid
             </Button>
-            
+
             <Button
-              variant="outline" 
+              variant="outline"
               size="sm"
               onClick={() => {
                 updateConfig("brightness")(90);
@@ -121,10 +130,10 @@ const PreferenceTab = (props: Props) => {
             >
               Moody
             </Button>
-            
+
             <Button
               variant="outline"
-              size="sm" 
+              size="sm"
               onClick={() => {
                 updateConfig("brightness")(105);
                 updateConfig("contrast")(95);
@@ -134,7 +143,7 @@ const PreferenceTab = (props: Props) => {
             >
               Natural
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -149,7 +158,8 @@ const PreferenceTab = (props: Props) => {
 
         {/* Real-time feedback */}
         <div className="text-xs text-muted-foreground italic p-3 bg-accent/20 rounded-md border border-border/20">
-          All adjustments are applied in real-time. Extreme values may affect performance.
+          All adjustments are applied in real-time. Extreme values may affect
+          performance.
         </div>
       </FeatureCard>
     </div>

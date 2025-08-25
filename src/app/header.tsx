@@ -27,7 +27,7 @@ const Header = (props: Props) => {
 
   const getStatusText = () => {
     if (!enable) return "Disabled";
-    return hasActiveCamera ? "Active & Connected" : "Active - No Camera";
+    return "Active";
   };
 
   const openLivePreview = async () => {
@@ -57,7 +57,7 @@ const Header = (props: Props) => {
               <StatusIndicator
                 status={getStatus()}
                 size="sm"
-                showPulse={enable && !!hasActiveCamera}
+                showPulse={enable}
               />
               <span className="text-xs">{getStatusText()}</span>
             </div>

@@ -1,16 +1,19 @@
 import { env } from "@/config";
-import { StreamPatcherConfig } from "@/types/stream-patcher";
-import { Logger } from "./log";
-import { streamPatcher } from "./stream-patcher";
 import {
-  getMediaTrackDimension,
-  matchDeviceId,
-  getVideoInputDevices,
-  findDeviceByLabel,
-  createVirtualMediaDevice,
+  StreamPatcherConfig,
+  StreamPatcherOverlay,
+} from "@/types/stream-patcher";
+import { Logger } from "./log";
+import {
   buildMediaStreamConstraints,
+  createVirtualMediaDevice,
+  findDeviceByLabel,
   generateRandomDeviceId,
+  getMediaTrackDimension,
+  getVideoInputDevices,
+  matchDeviceId,
 } from "./media-device-utils";
+import { streamPatcher } from "./stream-patcher";
 
 // Configuartions ----------------------------------------------------------------------
 
@@ -25,13 +28,13 @@ const getUserMediaFn = MediaDevices.prototype.getUserMedia;
 
 // Helpers ----------------------------------------------------------------------
 
-
 // Main Function ----------------------------------------------------------------------
 
 export function mediaDevicePatcher(
   enable: boolean,
   sourceDeviceLabel: string,
-  config: StreamPatcherConfig
+  config: StreamPatcherConfig,
+  overlay: StreamPatcherOverlay
 ) {
   let sourceDeviceId: undefined | string;
   const randDeviceId = generateRandomDeviceId(MEDIA_DEVICE_ID); // random device id makes sure realtime updates
@@ -66,8 +69,8 @@ export function mediaDevicePatcher(
         if (video.deviceId && matchDeviceId(video.deviceId, randDeviceId)) {
           Logger.dev(`${MEDIA_LABEL} requested`);
 
-          const width = getMediaTrackDimension(video, 'width') ?? 1280;
-          const height = getMediaTrackDimension(video, 'height') ?? 720;
+          const width = getMediaTrackDimension(video, "width") ?? 1280;
+          const height = getMediaTrackDimension(video, "height") ?? 720;
 
           const constraints = buildMediaStreamConstraints(
             arg,
@@ -86,7 +89,13 @@ export function mediaDevicePatcher(
             return stream;
           }
 
-          return streamPatcher(stream, { height, width }, config, true);
+          return streamPatcher(
+            stream,
+            { height, width },
+            config,
+            overlay,
+            true
+          );
         }
       }
 

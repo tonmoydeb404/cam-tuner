@@ -8,20 +8,17 @@ window.addEventListener("message", (event) => {
       typeof event.data?.payload?.enable === "boolean"
         ? event.data?.payload?.enable
         : true;
-    const sourceDeviceLabel = event.data?.payload?.cameraSource?.label;
+    const label = event.data?.payload?.cameraSource?.label;
     const config = event.data?.payload?.config;
+    const overlay = event.data?.payload?.overlay;
 
     Logger.dev("Received settings:", {
-      enable,
-      sourceDeviceLabel,
-      config,
+      enable: enable,
+      sourceDeviceLabel: label,
+      config: config,
+      overlay: overlay,
     });
 
-    mediaDevicePatcher(enable, sourceDeviceLabel, config);
+    mediaDevicePatcher(enable, label || "", config, overlay);
   }
-
-  // Floating preview feature disabled
-  // if (event?.data?.type === MessageTypeEnum.FLOATING_PREVIEW) {
-  //   // Floating preview functionality temporarily disabled
-  // }
 });

@@ -1,12 +1,15 @@
 import { MessageTypeEnum } from "@/types/window-message";
-import { IAppContext } from "../context/app/types";
+import {
+  browserStorage,
+  messageUtils,
+  scriptInjection,
+} from "../utils/browser-api";
 import { Logger } from "../utils/log";
-import { browserStorage, scriptInjection, messageUtils } from "../utils/browser-api";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
 const initializeExtension = async () => {
   const result = await browserStorage.get(["cameraSource", "config", "enable"]);
-  
+
   const scriptLoaded = await scriptInjection.inject(
     "src/extension/inject.js",
     () => {
@@ -14,7 +17,7 @@ const initializeExtension = async () => {
       messageUtils.postToWindow(MessageTypeEnum.SETTINGS, result ?? {});
     }
   );
-  
+
   if (!scriptLoaded) {
     Logger.error("Failed to inject extension script");
   }
@@ -22,35 +25,21 @@ const initializeExtension = async () => {
 
 initializeExtension();
 
-// Listen for storage changes and update web page ----------------------------------------------------------------------
-const relevantKeys = ["cameraSource", "config", "enable"] as (keyof IAppContext)[];
-
-browserStorage.onChange((changes, result) => {
-  Logger.dev("Storage changed:", changes);
-  if (result) {
-    messageUtils.postToWindow(MessageTypeEnum.SETTINGS, result);
-    Logger.dev("Settings updated via storage change:", result);
+// Handle runtime messages ----------------------------------------------------------------------
+chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
+  if (
+    !sender?.tab &&
+    !sender?.url &&
+    message?.type === MessageTypeEnum.UPDATE
+  ) {
+    Logger.dev("Settings update message received");
+    const settingsMessage = {
+      type: MessageTypeEnum.SETTINGS,
+      payload: message.payload,
+    };
+    window.postMessage(settingsMessage, "*");
+    sendResponse({ success: true });
   }
-}, relevantKeys);
 
-// Update Settings to the web page ----------------------------------------------------------------------
-// Browser.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
-//   if (message?.type === MessageTypeEnum.UPDATE) {
-//     Logger.dev("Settings Updated...");
-//     const settingsMessage = {
-//       type: MessageTypeEnum.SETTINGS,
-//       payload: message.payload,
-//     };
-//     window.postMessage(settingsMessage, "*");
-//     sendResponse({ success: true });
-//   }
-
-//   // Floating preview feature disabled
-//   // if (message?.type === MessageTypeEnum.FLOATING_PREVIEW) {
-//   //   Logger.dev("Floating Preview Command...");
-//   //   window.postMessage(message, "*");
-//   //   sendResponse({ success: true });
-//   // }
-
-//   return true;
-// });
+  return true;
+});

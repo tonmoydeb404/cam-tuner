@@ -12,3 +12,18 @@ export type StreamPatcherSize = {
   width: number;
   height: number;
 };
+
+export type StreamPatcherOverlay = {
+  enabled: boolean;
+  gifUrl: string;
+  mp4Url: string;
+  gifId: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  scale: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+};

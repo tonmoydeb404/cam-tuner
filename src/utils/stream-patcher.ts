@@ -1,4 +1,8 @@
-import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
+import {
+  StreamPatcherConfig,
+  StreamPatcherOverlay,
+  StreamPatcherSize,
+} from "@/types/stream-patcher";
 import { Logger } from "./log";
 
 function normalizeFilterValue(value?: number): number {
@@ -81,11 +85,13 @@ function applyCanvasProcessing({
   crop,
   filters,
   config,
+  overlay: gifOverlay,
 }: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
   filters: string;
   config: StreamPatcherConfig;
+  overlay?: StreamPatcherOverlay;
 }): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -103,8 +109,86 @@ function applyCanvasProcessing({
     ctx.translate(-crop.width, 0); // Adjust the position to match the flip
   }
 
-  function draw() {
+  // GIF overlay setup
+  let gifVideo: HTMLVideoElement | null = null;
+  let gifStartTime = 0;
+  let gifVisible = false;
+  let gifCompleted = false; // Track if GIF display period has completed
+
+  if (gifOverlay?.enabled && gifOverlay.mp4Url) {
+    // Create video element for animated GIF playback
+    gifVideo = document.createElement("video");
+    gifVideo.crossOrigin = "anonymous";
+    gifVideo.loop = true;
+    gifVideo.muted = true;
+    gifVideo.playsInline = true;
+    gifVideo.autoplay = true;
+    gifVideo.src = gifOverlay.mp4Url;
+
+    gifVideo.addEventListener("loadeddata", () => {
+      Logger.dev("Animated GIF loaded for overlay");
+      gifVideo?.play().catch((err) => {
+        Logger.dev("GIF video play error:", err);
+      });
+    });
+  }
+
+  function drawGifOverlay(ctx: CanvasRenderingContext2D) {
+    if (
+      !gifOverlay?.enabled ||
+      !gifVideo ||
+      gifVideo.readyState < 2 || // HAVE_CURRENT_DATA or higher
+      gifCompleted
+    ) {
+      return;
+    }
+
+    const currentTime = Date.now();
+
+    // Initialize start time on first draw
+    if (gifStartTime === 0) {
+      gifStartTime = currentTime + gifOverlay.delay * 1000;
+    }
+
+    // Check if we're within the display duration
+    const elapsedTime = (currentTime - gifStartTime) / 1000;
+    gifVisible = elapsedTime >= 0 && elapsedTime <= gifOverlay.duration;
+
+    if (gifVisible) {
+      // Calculate GIF position and size relative to canvas
+      // This logic matches the position-picker component behavior
+      const gifAspectRatio = gifVideo.videoWidth / gifVideo.videoHeight;
+      const baseSize = Math.min(crop.width, crop.height) * 0.2; // Base size as 20% of smaller canvas dimension
+      const gifWidth = baseSize * gifAspectRatio * gifOverlay.scale;
+      const gifHeight = baseSize * gifOverlay.scale;
+
+      // Position calculation matches position-picker:
+      // (position% / 100) * containerDimension - boxSize / 2
+      const gifX = (gifOverlay.position.x / 100) * crop.width - gifWidth / 2;
+      const gifY = (gifOverlay.position.y / 100) * crop.height - gifHeight / 2;
+
+      // Apply opacity (convert percentage to decimal)
+      const previousAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = (gifOverlay.opacity || 100) / 100;
+
+      // Draw animated GIF (video element)
+      ctx.drawImage(gifVideo, gifX, gifY, gifWidth, gifHeight);
+
+      // Restore opacity
+      ctx.globalAlpha = previousAlpha;
+    }
+
+    // Mark as completed after duration ends (no more looping)
+    if (elapsedTime > gifOverlay.duration) {
+      gifCompleted = true;
+      gifVideo.pause(); // Stop playing the GIF
+      Logger.dev("GIF overlay completed, hiding permanently");
+    }
+  }
+
+  function draw(ctx: CanvasRenderingContext2D) {
     try {
+      // Draw main video
       ctx?.drawImage(
         video,
         crop.offsetX,
@@ -116,13 +200,18 @@ function applyCanvasProcessing({
         crop.width,
         crop.height
       );
+
+      // Draw GIF overlay
+      drawGifOverlay(ctx);
     } catch (err) {
       Logger.dev("Draw failed:", err);
     }
-    requestAnimationFrame(draw);
+    requestAnimationFrame(() => {
+      draw(ctx);
+    });
   }
 
-  draw();
+  draw(ctx);
   return canvas;
 }
 
@@ -142,6 +231,7 @@ export function streamPatcher(
   stream: MediaStream,
   size: StreamPatcherSize,
   config: StreamPatcherConfig = {},
+  overlay: StreamPatcherOverlay | undefined = undefined,
   stopOriginalStream = false
 ): MediaStream {
   try {
@@ -162,6 +252,7 @@ export function streamPatcher(
       },
       filters,
       config,
+      overlay: overlay,
     });
 
     const outputStream = canvas.captureStream();

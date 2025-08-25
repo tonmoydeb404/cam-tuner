@@ -1,6 +1,21 @@
 import { StreamPatcherConfig } from "@/types/stream-patcher";
 import React from "react";
 
+export interface IGifOverlay {
+  enabled: boolean;
+  gifUrl: string;
+  mp4Url: string;
+  gifId: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  scale: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
+
 export interface IAppConfig {
   aspectRatio: number;
   zoom: number;
@@ -29,6 +44,15 @@ export interface IAppContext {
   updateConfig: <K extends keyof IAppContext["config"]>(
     key: K
   ) => (value: IAppContext["config"][K]) => void;
+
+  overlay: IGifOverlay;
+  setOverlay: React.Dispatch<React.SetStateAction<IGifOverlay>>;
+  updateOverlay: <K extends keyof IGifOverlay>(
+    key: K
+  ) => (value: IGifOverlay[K]) => void;
+  resetOverlay: () => void;
+  setSelectedGif: (gifUrl: string, mp4Url: string, gifId: string) => void;
+  setOverlayEnable: (enabled: boolean) => void;
 
   applySettings: () => void;
 

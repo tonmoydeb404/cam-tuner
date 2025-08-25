@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useAppContext } from "@/context/app";
-import { useWebcamsContext } from "@/context/webcams";
 import useDebounce from "@/hooks/use-debounce";
 import { Eye, Power, Settings } from "lucide-react";
 import Browser from "webextension-polyfill";
@@ -12,17 +11,15 @@ type Props = {
 
 const Header = (props: Props) => {
   const { showPreviewBtn } = props;
-  const { enable, setEnable, cameraSource } = useAppContext();
-  const { webcams } = useWebcamsContext();
+  const { enable, setEnable } = useAppContext();
 
   const debouncedSetEnable = useDebounce((checked: boolean) => {
     setEnable(checked);
   }, 100);
 
-  const hasActiveCamera = cameraSource && webcams.length > 0;
   const getStatus = () => {
     if (!enable) return "inactive";
-    return hasActiveCamera ? "active" : "warning";
+    return "active";
   };
 
   const getStatusText = () => {

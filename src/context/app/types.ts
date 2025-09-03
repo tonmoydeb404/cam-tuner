@@ -1,27 +1,7 @@
-import { StreamPatcherConfig } from "@/types/stream-patcher";
-import React from "react";
-
-
-export interface IAppConfig {
-  aspectRatio: number;
-  zoom: number;
-  brightness: number;
-  contrast: number;
-  saturation: number;
-  mirror: boolean;
-  align: StreamPatcherConfig["align"];
-}
-
 export interface IAppCameraSource {
   label: string;
   deviceId: string;
 }
-
-export type ColorPreset = {
-  brightness: number;
-  contrast: number;
-  saturation: number;
-};
 
 export interface IAppContext {
   enable: boolean;
@@ -30,16 +10,4 @@ export interface IAppContext {
   cameraSource: IAppCameraSource | null;
   initCameraSource: (v: IAppCameraSource) => void;
   setCameraSource: (v: IAppCameraSource | null) => void;
-
-  config: IAppConfig;
-  setConfig: React.Dispatch<React.SetStateAction<IAppConfig>>;
-  updateConfig: <K extends keyof IAppContext["config"]>(
-    key: K
-  ) => (value: IAppContext["config"][K]) => void;
-  applyPreset: (preset: ColorPreset) => void;
-
-
-  applySettings: () => void;
-
-  changesPending: boolean;
 }

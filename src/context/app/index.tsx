@@ -9,37 +9,15 @@ import {
   useState,
 } from "react";
 import Browser from "webextension-polyfill";
-import ratioOptions from "./ratio-options";
-import {
-  ColorPreset,
-  IAppCameraSource,
-  IAppConfig,
-  IAppContext,
-} from "./types";
-
+import { IAppCameraSource, IAppContext } from "./types";
 
 const defaultValue: IAppContext = {
   cameraSource: null,
-  changesPending: false,
+
   setCameraSource: () => {},
   initCameraSource: () => {},
   enable: true,
   setEnable: () => {},
-
-  config: {
-    aspectRatio: ratioOptions[0].value,
-    zoom: 1,
-    brightness: 100,
-    contrast: 100,
-    saturation: 100,
-    mirror: false,
-    align: "center",
-  },
-  setConfig: () => {},
-  updateConfig: () => () => {},
-  applyPreset: () => {},
-
-  applySettings: () => {},
 };
 const AppContext = createContext(defaultValue);
 
@@ -58,44 +36,27 @@ export const AppContextProvider = (props: Props) => {
 
   const [enable, setEnable] = useState(defaultValue.enable);
   const [cameraSource, setCameraSource] = useState(defaultValue.cameraSource);
-  const [config, setConfig] = useState(defaultValue.config);
 
   // ----------------------------------------------------------------------
 
   useEffect(() => {
-    Browser.storage?.sync
-      .get(["enable", "cameraSource", "config"])
-      .then((result) => {
-        if (typeof result.enable === "boolean") {
-          setEnable(result.enable);
-        }
-        if (typeof result.cameraSource === "object") {
-          setCameraSource(result.cameraSource as IAppCameraSource);
-        }
-        if (typeof result.config === "object") {
-          setConfig((prev) => ({ ...prev, ...(result.config as IAppConfig) }));
-        }
-      });
+    Browser.storage?.sync.get(["enable", "cameraSource"]).then((result) => {
+      if (typeof result.enable === "boolean") {
+        setEnable(result.enable);
+      }
+      if (typeof result.cameraSource === "object") {
+        setCameraSource(result.cameraSource as IAppCameraSource);
+      }
+    });
   }, []);
 
   // ----------------------------------------------------------------------
 
-  const updateConfig: IAppContext["updateConfig"] = (key) => (value) => {
-    const newConfig = { ...config, [key]: value };
-    setConfig(newConfig);
-    saveSettings(enable, cameraSource, newConfig);
-  };
-
   const saveSettings = useCallback(
-    (
-      enable: boolean,
-      cameraSource: IAppCameraSource | null,
-      config: IAppConfig
-    ) => {
+    (enable: boolean, cameraSource: IAppCameraSource | null) => {
       const storageData = {
         enable,
         cameraSource,
-        config,
       };
 
       Browser.storage.sync.set(storageData);
@@ -103,47 +64,24 @@ export const AppContextProvider = (props: Props) => {
         const message: SettingsUpdateMessage = {
           type: MessageTypeEnum.UPDATE,
           payload: {
-            overlay: {},
             cameraSource,
-            config,
             enable,
           },
         };
         Browser.runtime.sendMessage(message);
       } catch (error) {
-        Logger.dev(
-          "No content script to receive message (extension page)"
-        );
+        Logger.dev("No content script to receive message (extension page)");
       }
     },
     []
   );
 
-
-  const applyPreset = useCallback(
-    (preset: ColorPreset) => {
-      const newConfig = {
-        ...config,
-        brightness: preset.brightness,
-        contrast: preset.contrast,
-        saturation: preset.saturation,
-      };
-      setConfig(newConfig);
-      saveSettings(enable, cameraSource, newConfig);
-    },
-    [config, enable, cameraSource, saveSettings]
-  );
-
-  const applySettings = useCallback(() => {
-    saveSettings(enable, cameraSource, config);
-  }, [saveSettings, enable, cameraSource, config]);
-
   const updateEnable: IAppContext["setEnable"] = useCallback(
     (checked) => {
       setEnable(checked);
-      saveSettings(checked, cameraSource, config);
+      saveSettings(checked, cameraSource);
     },
-    [cameraSource, config, saveSettings]
+    [cameraSource, saveSettings]
   );
 
   const initCameraSource: IAppContext["initCameraSource"] = (value) => {
@@ -152,15 +90,14 @@ export const AppContextProvider = (props: Props) => {
       return value;
     });
     if (!cameraSource) {
-      saveSettings(enable, value, config);
+      saveSettings(enable, value);
     }
   };
 
   const updateCameraSource: IAppContext["setCameraSource"] = (value) => {
     setCameraSource(value);
-    saveSettings(enable, value, config);
+    saveSettings(enable, value);
   };
-
 
   // ----------------------------------------------------------------------
 
@@ -170,12 +107,6 @@ export const AppContextProvider = (props: Props) => {
     cameraSource,
     setCameraSource: updateCameraSource,
     initCameraSource,
-    config,
-    setConfig,
-    updateConfig,
-    applyPreset,
-    applySettings,
-    changesPending: false,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

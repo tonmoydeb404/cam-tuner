@@ -29,7 +29,7 @@ export class CanvasManager {
       maxPoolSize: 3,
       maxIdleTime: 30000, // 30 seconds
       cleanupInterval: 15000, // 15 seconds
-      ...config
+      ...config,
     };
 
     this.startCleanupTimer();
@@ -48,9 +48,9 @@ export class CanvasManager {
   getCanvas(width: number, height: number): CanvasResource {
     const key = `${width}x${height}`;
     const poolArray = this.pool.get(key) || [];
-    
+
     // Try to reuse an available canvas
-    const available = poolArray.find(resource => !resource.inUse);
+    const available = poolArray.find((resource) => !resource.inUse);
     if (available) {
       available.inUse = true;
       available.lastUsed = performance.now();
@@ -59,18 +59,18 @@ export class CanvasManager {
 
     // Create new canvas if pool not full
     if (poolArray.length < this.config.maxPoolSize) {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      
-      const ctx = canvas.getContext('2d', {
+
+      const ctx = canvas.getContext("2d", {
         alpha: true,
         desynchronized: true, // Performance optimization
-        willReadFrequently: false
+        willReadFrequently: false,
       });
 
       if (!ctx) {
-        throw new Error('Failed to get 2D context from canvas');
+        throw new Error("Failed to get 2D context from canvas");
       }
 
       const resource: CanvasResource = {
@@ -79,20 +79,20 @@ export class CanvasManager {
         width,
         height,
         lastUsed: performance.now(),
-        inUse: true
+        inUse: true,
       };
 
       poolArray.push(resource);
       this.pool.set(key, poolArray);
-      
+
       return resource;
     }
 
     // Pool is full, force reuse oldest canvas
-    const oldest = poolArray.reduce((prev, curr) => 
+    const oldest = poolArray.reduce((prev, curr) =>
       prev.lastUsed < curr.lastUsed ? prev : curr
     );
-    
+
     oldest.inUse = true;
     oldest.lastUsed = performance.now();
     return oldest;
@@ -104,7 +104,7 @@ export class CanvasManager {
   releaseCanvas(resource: CanvasResource): void {
     resource.inUse = false;
     resource.lastUsed = performance.now();
-    
+
     // Clear the canvas for reuse
     resource.ctx.clearRect(0, 0, resource.width, resource.height);
     resource.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transforms
@@ -115,14 +115,14 @@ export class CanvasManager {
    */
   private cleanup(): void {
     const now = performance.now();
-    
+
     for (const [key, poolArray] of this.pool.entries()) {
-      const activeResources = poolArray.filter(resource => {
-        const isIdle = !resource.inUse && 
-                      (now - resource.lastUsed) > this.config.maxIdleTime;
+      const activeResources = poolArray.filter((resource) => {
+        const isIdle =
+          !resource.inUse && now - resource.lastUsed > this.config.maxIdleTime;
         return !isIdle;
       });
-      
+
       if (activeResources.length === 0) {
         this.pool.delete(key);
       } else if (activeResources.length !== poolArray.length) {
@@ -133,9 +133,9 @@ export class CanvasManager {
 
   private startCleanupTimer(): void {
     if (this.cleanupTimer) return;
-    
+
     this.cleanupTimer = window.setInterval(
-      () => this.cleanup(), 
+      () => this.cleanup(),
       this.config.cleanupInterval
     );
   }
@@ -148,7 +148,7 @@ export class CanvasManager {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
-    
+
     this.pool.clear();
   }
 
@@ -160,16 +160,16 @@ export class CanvasManager {
       totalPools: this.pool.size,
       totalCanvases: 0,
       inUseCanvases: 0,
-      poolDetails: {} as Record<string, { total: number; inUse: number }>
+      poolDetails: {} as Record<string, { total: number; inUse: number }>,
     };
 
     for (const [key, poolArray] of this.pool.entries()) {
-      const inUse = poolArray.filter(r => r.inUse).length;
+      const inUse = poolArray.filter((r) => r.inUse).length;
       stats.totalCanvases += poolArray.length;
       stats.inUseCanvases += inUse;
       stats.poolDetails[key] = {
         total: poolArray.length,
-        inUse
+        inUse,
       };
     }
 

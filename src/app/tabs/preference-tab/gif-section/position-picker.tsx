@@ -1,9 +1,9 @@
-import { useAppContext } from "@/context/app";
+import { useCrop } from "@/context/crop";
 import { useMediaOverlayContext } from "@/context/media-overlay";
 import { useCallback, useRef, useState } from "react";
 
 const PositionPicker = () => {
-  const { config } = useAppContext();
+  const { cropConfig } = useCrop();
   const { mediaOverlay, updateMediaOverlay } = useMediaOverlayContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -63,7 +63,7 @@ const PositionPicker = () => {
   );
 
   // Calculate container dimensions based on aspect ratio
-  const aspectRatio = config.aspectRatio;
+  const aspectRatio = cropConfig.aspectRatio;
   const containerWidth = 240; // Fixed width
   const maxHeight = 200; // Max height constraint
   const calculatedHeight = containerWidth / aspectRatio;

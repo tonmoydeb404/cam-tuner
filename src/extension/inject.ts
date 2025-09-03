@@ -1,7 +1,16 @@
-import { MessageTypeEnum } from "@/types/window-message";
+import {
+  CropMessage,
+  FilterMessage,
+  MessageTypeEnum,
+} from "@/types/window-message";
 import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
-import { triggerGlobalConfetti, triggerGlobalMediaOverlay } from "../utils/stream-patcher";
+import {
+  applyGlobalCrop,
+  applyGlobalFilters,
+  triggerGlobalConfetti,
+  triggerGlobalMediaOverlay,
+} from "../utils/stream-patcher";
 
 window.addEventListener("message", (event) => {
   if (event?.data?.type === MessageTypeEnum.SETTINGS) {
@@ -10,15 +19,38 @@ window.addEventListener("message", (event) => {
         ? event.data?.payload?.enable
         : true;
     const label = event.data?.payload?.cameraSource?.label;
-    const config = event.data?.payload?.config;
+    const filterConfig = event.data?.payload?.filterConfig;
+    const cropConfig = event.data?.payload?.cropConfig;
 
     Logger.dev("Received settings:", {
       enable: enable,
       sourceDeviceLabel: label,
-      config: config,
+      filterConfig: filterConfig,
+      cropConfig: cropConfig,
     });
 
-    mediaDevicePatcher(enable, label || "", config);
+    mediaDevicePatcher({
+      enable,
+      sourceDeviceLabel: label || "",
+      filterConfig: filterConfig ?? {},
+      cropConfig: cropConfig ?? {},
+    });
+  }
+
+  if (event?.data?.type === MessageTypeEnum.CROP) {
+    const payload = event.data?.payload as CropMessage["payload"];
+    if (payload) {
+      Logger.dev("Received crop message:", payload);
+      applyGlobalCrop(payload);
+    }
+  }
+
+  if (event?.data?.type === MessageTypeEnum.FILTER) {
+    const payload = event.data?.payload as FilterMessage["payload"];
+    if (payload) {
+      Logger.dev("Received filter message:", payload);
+      applyGlobalFilters(payload);
+    }
   }
 
   if (event?.data?.type === MessageTypeEnum.CONFETTI) {

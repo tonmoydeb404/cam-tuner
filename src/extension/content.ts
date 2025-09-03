@@ -8,7 +8,12 @@ import { Logger } from "../utils/log";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
 const initializeExtension = async () => {
-  const result = await browserStorage.get(["cameraSource", "config", "enable"]);
+  const result = await browserStorage.get([
+    "cameraSource",
+    "filterConfig",
+    "enable",
+    "cropConfig",
+  ]);
 
   const scriptLoaded = await scriptInjection.inject(
     "src/extension/inject.js",
@@ -35,6 +40,18 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
         payload: message.payload,
       };
       window.postMessage(settingsMessage, "*");
+      sendResponse({ success: true });
+    }
+
+    if (message?.type === MessageTypeEnum.CROP) {
+      Logger.dev("Crop message received from background");
+      window.postMessage(message, "*");
+      sendResponse({ success: true });
+    }
+
+    if (message?.type === MessageTypeEnum.FILTER) {
+      Logger.dev("Filter message received from background");
+      window.postMessage(message, "*");
       sendResponse({ success: true });
     }
 

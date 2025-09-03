@@ -1,7 +1,5 @@
 import { env } from "@/config";
-import {
-  StreamPatcherConfig,
-} from "@/types/stream-patcher";
+import { MediaPatcherSettings } from "@/utils/stream-patcher/types";
 import { Logger } from "./log";
 import {
   buildMediaStreamConstraints,
@@ -29,11 +27,9 @@ const getUserMediaFn = MediaDevices.prototype.getUserMedia;
 
 // Main Function ----------------------------------------------------------------------
 
-export function mediaDevicePatcher(
-  enable: boolean,
-  sourceDeviceLabel: string,
-  config: StreamPatcherConfig
-) {
+export function mediaDevicePatcher(settings: MediaPatcherSettings) {
+  const { filterConfig, cropConfig, enable, sourceDeviceLabel } = settings;
+
   let sourceDeviceId: undefined | string;
   const randDeviceId = generateRandomDeviceId(MEDIA_DEVICE_ID); // random device id makes sure realtime updates
 
@@ -88,9 +84,7 @@ export function mediaDevicePatcher(
           }
 
           return streamPatcher(
-            stream,
-            { height, width },
-            config,
+            { stream, size: { height, width }, filterConfig, cropConfig },
             true
           );
         }

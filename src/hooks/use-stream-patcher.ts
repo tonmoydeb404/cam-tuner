@@ -1,4 +1,4 @@
-import { StreamPatcherConfig, StreamPatcherSize } from "@/types/stream-patcher";
+import { StreamFilterConfig, StreamPatcherSize } from "@/types/stream-patcher";
 import { streamPatcher } from "@/utils/stream-patcher";
 import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -23,7 +23,7 @@ const cancelIdle =
 function useStreamPatcher(
   stream: MediaStream | null,
   size: StreamPatcherSize | null,
-  config: StreamPatcherConfig = {} // Set default empty object if undefined
+  config: StreamFilterConfig = {} // Set default empty object if undefined
 ) {
   const [patchedStream, setPatchedStream] = useState<MediaStream | null>(null);
   const previousPatchedStreamRef = useRef<MediaStream | null>(null);

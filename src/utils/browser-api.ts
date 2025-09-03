@@ -7,7 +7,12 @@ import { Logger } from "./log";
  * Centralizes browser extension API interactions to reduce code duplication
  */
 
-export type StorageKeys = (keyof IAppContext)[];
+export type StorageKeys = (
+  | "config"
+  | "cameraSource"
+  | "enable"
+  | "cropConfig"
+)[];
 
 /**
  * Browser storage wrapper for consistent API access

@@ -1,7 +1,11 @@
-import { MessageTypeEnum } from "@/types/window-message";
+import { CropMessage, MessageTypeEnum } from "@/types/window-message";
 import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
-import { triggerGlobalConfetti, triggerGlobalMediaOverlay } from "../utils/stream-patcher";
+import {
+  applyGlobalCrop,
+  triggerGlobalConfetti,
+  triggerGlobalMediaOverlay,
+} from "../utils/stream-patcher";
 
 window.addEventListener("message", (event) => {
   if (event?.data?.type === MessageTypeEnum.SETTINGS) {
@@ -11,14 +15,29 @@ window.addEventListener("message", (event) => {
         : true;
     const label = event.data?.payload?.cameraSource?.label;
     const config = event.data?.payload?.config;
+    const cropConfig = event.data?.payload?.cropConfig;
 
     Logger.dev("Received settings:", {
       enable: enable,
       sourceDeviceLabel: label,
       config: config,
+      cropConfig: cropConfig,
     });
 
-    mediaDevicePatcher(enable, label || "", config);
+    mediaDevicePatcher({
+      enable,
+      sourceDeviceLabel: label || "",
+      filterConfig: config ?? {},
+      cropConfig: cropConfig ?? {},
+    });
+  }
+
+  if (event?.data?.type === MessageTypeEnum.CROP) {
+    const payload = event.data?.payload as CropMessage["payload"];
+    if (payload) {
+      Logger.dev("Received confetti message:", payload);
+      applyGlobalCrop(payload);
+    }
   }
 
   if (event?.data?.type === MessageTypeEnum.CONFETTI) {

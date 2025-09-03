@@ -1,6 +1,5 @@
-import { StreamPatcherConfig } from "@/types/stream-patcher";
+import { StreamFilterConfig } from "@/types/stream-patcher";
 import React from "react";
-
 
 export interface IAppConfig {
   aspectRatio: number;
@@ -9,7 +8,7 @@ export interface IAppConfig {
   contrast: number;
   saturation: number;
   mirror: boolean;
-  align: StreamPatcherConfig["align"];
+  align: StreamFilterConfig["align"];
 }
 
 export interface IAppCameraSource {
@@ -37,7 +36,6 @@ export interface IAppContext {
     key: K
   ) => (value: IAppContext["config"][K]) => void;
   applyPreset: (preset: ColorPreset) => void;
-
 
   applySettings: () => void;
 

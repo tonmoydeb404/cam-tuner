@@ -1,5 +1,7 @@
 import {
-  StreamPatcherConfig,
+  StreamCropConfig,
+  StreamFilterConfig,
+  StreamPatcherSettings,
   StreamPatcherSize,
 } from "@/types/stream-patcher";
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
@@ -180,76 +182,13 @@ class ConfigCache {
   }
 }
 
-function generateFilterString(config: StreamPatcherConfig): string {
+function generateFilterString(config: StreamFilterConfig): string {
   const brightness = normalizeFilterValue(config.brightness);
   const saturation = normalizeFilterValue(config.saturation);
   const contrast = normalizeFilterValue(config.contrast);
 
   return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
 }
-
-function calculateOffest(
-  original: StreamPatcherSize,
-  modified: StreamPatcherSize,
-  align: StreamPatcherConfig["align"] = "center"
-) {
-  let x = 0;
-
-  if (align === "left") {
-    x = 0;
-  } else if (align === "right") {
-    x = original.width - modified.width;
-  } else {
-    x = Math.floor((original.width - modified.width) / 2);
-  }
-
-  const y = Math.floor((original.height - modified.height) / 2);
-
-  return { x, y };
-}
-
-function calculateCrop(size: StreamPatcherSize, aspectRatio?: number) {
-  const { width, height } = size;
-
-  if (typeof aspectRatio !== "number") {
-    return {
-      width: width,
-      height: height,
-      offsetX: 0,
-      offsetY: 0,
-    };
-  }
-
-  const originalAspect = width / height;
-  let cropWidth = width;
-  let cropHeight = height;
-
-  if (originalAspect > aspectRatio) {
-    cropWidth = Math.floor(height * aspectRatio);
-  } else {
-    cropHeight = Math.floor(width / aspectRatio);
-  }
-
-  Logger.dev(`Crop: ${cropWidth}x${cropHeight}`);
-  return { width: cropWidth, height: cropHeight };
-}
-
-function calculateZoomedSize(size: StreamPatcherSize, zoom?: number) {
-  if (typeof zoom !== "number" || zoom <= 1) {
-    return { ...size };
-  }
-
-  const zoomWidth = Math.floor(size.width / zoom);
-  const zoomHeight = Math.floor(size.height / zoom);
-
-  Logger.dev(`zoom: ${zoomWidth}x${zoomHeight}`);
-
-  return {
-    width: zoomWidth,
-    height: zoomHeight,
-  };
-}
-
 
 /**
  * Stream Processing Context
@@ -277,7 +216,8 @@ class StreamProcessor {
       offsetX: number;
       offsetY: number;
     },
-    private config: StreamPatcherConfig
+    private filterConfig: StreamFilterConfig,
+    private cropConfig: StreamCropConfig
   ) {
     this.streamId = `stream_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -304,6 +244,9 @@ class StreamProcessor {
       // Register with global media overlay manager
       GlobalMediaOverlayManager.getInstance().registerProcessor(this);
 
+      // Register with global crop manager
+      GlobalCropManager.getInstance().registerProcessor(this);
+
       Logger.dev(`StreamProcessor initialized: ${this.streamId}`);
     } catch (error) {
       Logger.dev("StreamProcessor construction failed:", error);
@@ -316,22 +259,23 @@ class StreamProcessor {
 
     // Apply cached filter string
     const filterKey = `filter_${JSON.stringify({
-      b: this.config.brightness,
-      s: this.config.saturation,
-      c: this.config.contrast,
+      b: this.filterConfig.brightness,
+      s: this.filterConfig.saturation,
+      c: this.filterConfig.contrast,
     })}`;
 
     ctx.filter = this.configCache.get(filterKey, () =>
-      generateFilterString(this.config)
+      generateFilterString(this.filterConfig)
     );
 
-    // Apply mirror transformation
-    if (this.config.mirror) {
-      ctx.scale(-1, 1);
-      ctx.translate(-this.crop.width, 0);
-    }
+    // Apply mirror transformation using GlobalCropManager
+    const cropManager = GlobalCropManager.getInstance();
+    cropManager.applyMirrorTransform(
+      ctx,
+      this.crop.width,
+      this.cropConfig.mirror
+    );
   }
-
 
   private renderFrame = (): void => {
     if (this.isDisposed) return;
@@ -356,14 +300,13 @@ class StreamProcessor {
         this.crop.height
       );
 
-
       // Optimized confetti rendering - batch all confetti operations
       if (this.confettiManagers.size > 0) {
         const finishedConfetti: string[] = [];
-        
+
         // Render all active confetti in one batch
         ctx.save(); // Single save for all confetti
-        
+
         for (const [confettiId, confettiManager] of this.confettiManagers) {
           if (confettiManager.shouldRender(currentTime)) {
             confettiManager.render(ctx, currentTime);
@@ -371,9 +314,9 @@ class StreamProcessor {
             finishedConfetti.push(confettiId);
           }
         }
-        
+
         ctx.restore(); // Single restore for all confetti
-        
+
         // Clean up finished confetti
         for (const confettiId of finishedConfetti) {
           const confettiManager = this.confettiManagers.get(confettiId);
@@ -387,7 +330,7 @@ class StreamProcessor {
       // Media overlay rendering
       if (this.mediaOverlayManagers.size > 0) {
         const finishedOverlays: string[] = [];
-        
+
         for (const [overlayId, overlayManager] of this.mediaOverlayManagers) {
           if (overlayManager.shouldRender(currentTime)) {
             overlayManager.render(ctx, currentTime);
@@ -395,7 +338,7 @@ class StreamProcessor {
             finishedOverlays.push(overlayId);
           }
         }
-        
+
         // Clean up finished overlays
         for (const overlayId of finishedOverlays) {
           const overlayManager = this.mediaOverlayManagers.get(overlayId);
@@ -567,6 +510,56 @@ class StreamProcessor {
     Logger.dev(`All media overlays cleared in ${this.streamId}`);
   }
 
+  updateCropSettings(config: {
+    aspectRatio?: number;
+    zoom?: number;
+    align?: "left" | "center" | "right";
+    mirror?: boolean;
+  }): void {
+    if (this.isDisposed) return;
+
+    // Update config with new crop settings
+    this.filterConfig = { ...this.filterConfig, ...config };
+
+    // Recalculate crop dimensions
+    const cropManager = GlobalCropManager.getInstance();
+    const newCrop = cropManager.calculateCrop(
+      {
+        width: this.canvasResource.canvas.width,
+        height: this.canvasResource.canvas.height,
+      },
+      config.aspectRatio
+    );
+    const newZoom = cropManager.calculateZoomedSize(newCrop, config.zoom);
+    const newOffset = cropManager.calculateOffset(
+      {
+        width: this.canvasResource.canvas.width,
+        height: this.canvasResource.canvas.height,
+      },
+      newZoom,
+      config.align
+    );
+
+    // Update crop settings
+    this.crop = {
+      ...newZoom,
+      offsetX: newOffset.x,
+      offsetY: newOffset.y,
+    };
+
+    // Clear configuration cache to force recalculation
+    this.configCache.invalidate();
+
+    // If mirror setting changed, we need to reset the canvas transform
+    if (config.mirror !== undefined) {
+      const { ctx } = this.canvasResource;
+      ctx.resetTransform(); // Reset all transforms
+      this.setupCanvas(); // Reapply all canvas settings including mirror
+    }
+
+    Logger.dev(`Crop settings updated for ${this.streamId}:`, this.crop);
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -602,7 +595,6 @@ class StreamProcessor {
       // Stop frame controller
       this.frameController.stop();
 
-
       // Cleanup all confetti overlays
       this.confettiManagers.forEach((confettiManager) => {
         confettiManager.cleanup();
@@ -620,6 +612,9 @@ class StreamProcessor {
 
       // Unregister from global media overlay manager
       GlobalMediaOverlayManager.getInstance().unregisterProcessor(this);
+
+      // Unregister from global crop manager
+      GlobalCropManager.getInstance().unregisterProcessor(this);
 
       // Clear configuration cache
       this.configCache.invalidate();
@@ -641,16 +636,15 @@ class StreamProcessor {
   }
 }
 
-function applyCanvasProcessing({
-  video,
-  crop,
-  config,
-}: {
+function applyCanvasProcessing(settings: {
   video: HTMLVideoElement;
   crop: { width: number; height: number; offsetX: number; offsetY: number };
-  config: StreamPatcherConfig;
+  filterConfig: StreamFilterConfig;
+  cropConfig: StreamCropConfig;
 }): { canvas: HTMLCanvasElement; processor: StreamProcessor } {
-  const processor = new StreamProcessor(video, crop, config);
+  const { video, crop, filterConfig, cropConfig } = settings;
+
+  const processor = new StreamProcessor(video, crop, filterConfig, cropConfig);
   const canvas = processor.start();
 
   return { canvas, processor };
@@ -772,38 +766,193 @@ class GlobalMediaOverlayManager {
 }
 
 /**
- * Stream processors registry for cleanup management
+ * Global crop manager for handling crop settings across all streams
  */
-const activeProcessors = new WeakMap<MediaStream, StreamProcessor>();
+class GlobalCropManager {
+  private static instance: GlobalCropManager;
+  private processors: Set<StreamProcessor> = new Set();
+  private currentCropConfig: {
+    aspectRatio?: number;
+    zoom?: number;
+    align?: "left" | "center" | "right";
+    mirror?: boolean;
+  } = {};
 
-export function streamPatcher(
-  stream: MediaStream,
-  size: StreamPatcherSize,
-  config: StreamPatcherConfig = {},
-  stopOriginalStream = false
-): MediaStream {
-  try {
-    const videoTrack = stream.getVideoTracks()[0];
-    if (!videoTrack) throw new Error("No video track found in stream.");
+  static getInstance(): GlobalCropManager {
+    if (!GlobalCropManager.instance) {
+      GlobalCropManager.instance = new GlobalCropManager();
+    }
+    return GlobalCropManager.instance;
+  }
 
-    const video = setupVideoElement(videoTrack);
-    const crop = calculateCrop(size, config.aspectRatio);
-    const zoom = calculateZoomedSize(crop, config.zoom);
-    const offset = calculateOffest(size, zoom, config.align);
-    // Filters are applied during canvas setup
+  registerProcessor(processor: StreamProcessor): void {
+    this.processors.add(processor);
+  }
 
-    const { canvas, processor } = applyCanvasProcessing({
-      video,
+  unregisterProcessor(processor: StreamProcessor): void {
+    this.processors.delete(processor);
+  }
+
+  calculateCrop(size: StreamPatcherSize, aspectRatio?: number) {
+    const { width, height } = size;
+
+    if (typeof aspectRatio !== "number") {
+      return {
+        width: width,
+        height: height,
+        offsetX: 0,
+        offsetY: 0,
+      };
+    }
+
+    const originalAspect = width / height;
+    let cropWidth = width;
+    let cropHeight = height;
+
+    if (originalAspect > aspectRatio) {
+      cropWidth = Math.floor(height * aspectRatio);
+    } else {
+      cropHeight = Math.floor(width / aspectRatio);
+    }
+
+    Logger.dev(`Crop: ${cropWidth}x${cropHeight}`);
+    return { width: cropWidth, height: cropHeight };
+  }
+
+  calculateZoomedSize(size: StreamPatcherSize, zoom?: number) {
+    if (typeof zoom !== "number" || zoom <= 1) {
+      return { ...size };
+    }
+
+    const zoomWidth = Math.floor(size.width / zoom);
+    const zoomHeight = Math.floor(size.height / zoom);
+
+    Logger.dev(`zoom: ${zoomWidth}x${zoomHeight}`);
+
+    return {
+      width: zoomWidth,
+      height: zoomHeight,
+    };
+  }
+
+  calculateOffset(
+    original: StreamPatcherSize,
+    modified: StreamPatcherSize,
+    align: StreamCropConfig["align"] = "center"
+  ) {
+    let x = 0;
+
+    if (align === "left") {
+      x = 0;
+    } else if (align === "right") {
+      x = original.width - modified.width;
+    } else {
+      x = Math.floor((original.width - modified.width) / 2);
+    }
+
+    const y = Math.floor((original.height - modified.height) / 2);
+
+    return { x, y };
+  }
+
+  applyMirrorTransform(
+    ctx: CanvasRenderingContext2D,
+    cropWidth: number,
+    mirror?: boolean
+  ): void {
+    if (mirror) {
+      ctx.scale(-1, 1);
+      ctx.translate(-cropWidth, 0);
+    }
+  }
+
+  initProcessor(
+    size: StreamPatcherSize,
+    config: StreamCropConfig
+  ): {
+    crop: { width: number; height: number; offsetX: number; offsetY: number };
+    cropConfig: {
+      aspectRatio?: number;
+      zoom?: number;
+      align?: "left" | "center" | "right";
+      mirror?: boolean;
+    };
+  } {
+    const crop = this.calculateCrop(size, config.aspectRatio);
+    const zoom = this.calculateZoomedSize(crop, config.zoom);
+    const offset = this.calculateOffset(size, zoom, config.align);
+
+    const cropConfig = {
+      aspectRatio: config.aspectRatio,
+      zoom: config.zoom,
+      align: config.align,
+      mirror: config.mirror,
+    };
+
+    // Store current config
+    this.currentCropConfig = { ...cropConfig };
+
+    return {
       crop: {
         ...zoom,
         offsetX: offset.x,
         offsetY: offset.y,
       },
-      config,
+      cropConfig,
+    };
+  }
+
+  applyCrop(config: {
+    aspectRatio?: number;
+    zoom?: number;
+    align?: "left" | "center" | "right";
+    mirror?: boolean;
+  }): void {
+    this.currentCropConfig = { ...this.currentCropConfig, ...config };
+    Logger.dev("Applying crop settings to all active streams:", config);
+
+    // Apply crop settings to all processors
+    this.processors.forEach((processor) => {
+      processor.updateCropSettings(config);
+    });
+  }
+
+  getCurrentCropConfig() {
+    return { ...this.currentCropConfig };
+  }
+}
+
+/**
+ * Stream processors registry for cleanup management
+ */
+const activeProcessors = new WeakMap<MediaStream, StreamProcessor>();
+
+export function streamPatcher(
+  settings: StreamPatcherSettings,
+  stopOriginalStream = false
+): MediaStream {
+  const { cropConfig, filterConfig, size, stream } = settings;
+
+  try {
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) throw new Error("No video track found in stream.");
+
+    const video = setupVideoElement(videoTrack);
+
+    // Use GlobalCropManager for initialization
+    const cropManager = GlobalCropManager.getInstance();
+    const { crop } = cropManager.initProcessor(size, cropConfig);
+    // Filters are applied during canvas setup
+
+    const { canvas, processor } = applyCanvasProcessing({
+      video,
+      crop,
+      filterConfig,
+      cropConfig,
     });
 
     // Create output stream with explicit framerate for better performance
-    const targetFps = Math.min(30, (config as any).maxFps || 30);
+    const targetFps = Math.min(30, (filterConfig as any).maxFps || 30);
     const outputStream = canvas.captureStream(targetFps);
 
     // Store processor reference for cleanup
@@ -902,4 +1051,16 @@ export function triggerGlobalMediaOverlay(config: {
   delay: number;
 }): void {
   GlobalMediaOverlayManager.getInstance().triggerMediaOverlay(config);
+}
+
+/**
+ * Function to apply crop settings across all active video streams
+ */
+export function applyGlobalCrop(config: {
+  aspectRatio?: number;
+  zoom?: number;
+  align?: "left" | "center" | "right";
+  mirror?: boolean;
+}): void {
+  GlobalCropManager.getInstance().applyCrop(config);
 }

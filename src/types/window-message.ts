@@ -2,6 +2,7 @@ import { IAppCameraSource } from "@/context/app/types";
 import {
   StreamCropConfig,
   StreamFilterConfig,
+  StreamPlaceholderConfig,
 } from "../utils/stream-patcher/types";
 
 export enum MessageTypeEnum {
@@ -11,6 +12,7 @@ export enum MessageTypeEnum {
   FILTER = "cam_tuner-filter",
   CONFETTI = "cam_tuner-confetti",
   MEDIA_OVERLAY = "cam_tuner-media-overlay",
+  PLACEHOLDER = "cam_tuner-placeholder",
 }
 
 export type SettingsUpdateMessage = {
@@ -52,4 +54,9 @@ export type MediaOverlayMessage = {
     opacity: number;
     delay: number;
   };
+};
+
+export type PlaceholderMessage = {
+  type: MessageTypeEnum.PLACEHOLDER;
+  payload: StreamPlaceholderConfig;
 };

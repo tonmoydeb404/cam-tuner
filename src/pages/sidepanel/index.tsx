@@ -6,6 +6,7 @@ import { ConfettiContextProvider } from "@/context/confetti";
 import { CropProvider } from "@/context/crop";
 import { FilterProvider } from "@/context/filter";
 import { MediaOverlayContextProvider } from "@/context/media-overlay";
+import { PlaceholderProvider } from "@/context/placeholder";
 import { WebcamsContextProvider } from "@/context/webcams";
 import { createRoot } from "react-dom/client";
 import "../../styles/index.css";
@@ -18,13 +19,15 @@ root.render(
       <AppContextProvider>
         <CropProvider>
           <FilterProvider>
-            <MediaOverlayContextProvider>
-              <ConfettiContextProvider>
-                <WebcamsContextProvider>
-                  <SidepanelContent />
-                </WebcamsContextProvider>
-              </ConfettiContextProvider>
-            </MediaOverlayContextProvider>
+            <PlaceholderProvider>
+              <MediaOverlayContextProvider>
+                <ConfettiContextProvider>
+                  <WebcamsContextProvider>
+                    <SidepanelContent />
+                  </WebcamsContextProvider>
+                </ConfettiContextProvider>
+              </MediaOverlayContextProvider>
+            </PlaceholderProvider>
           </FilterProvider>
         </CropProvider>
       </AppContextProvider>

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { AppContextProvider } from "@/context/app";
 import { MediaOverlayContextProvider } from "@/context/media-overlay";
+import { PlaceholderProvider } from "@/context/placeholder";
 import { WebcamsContextProvider } from "@/context/webcams";
 import PermissionGuard from "@/guards/permission-guard";
 import WebcamsGuard from "@/guards/webcams-guard";
@@ -25,13 +26,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <ThemeProvider>
         <AppContextProvider>
           <MediaOverlayContextProvider>
-            <WebcamsContextProvider>
-              <PermissionGuard>
-                <WebcamsGuard>
-                  {children}
-                </WebcamsGuard>
-              </PermissionGuard>
-            </WebcamsContextProvider>
+            <PlaceholderProvider>
+              <WebcamsContextProvider>
+                <PermissionGuard>
+                  <WebcamsGuard>
+                    {children}
+                  </WebcamsGuard>
+                </PermissionGuard>
+              </WebcamsContextProvider>
+            </PlaceholderProvider>
           </MediaOverlayContextProvider>
         </AppContextProvider>
       </ThemeProvider>

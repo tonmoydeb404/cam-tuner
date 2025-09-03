@@ -13,6 +13,7 @@ const initializeExtension = async () => {
     "filterConfig",
     "enable",
     "cropConfig",
+    "placeholderConfig",
   ]);
 
   const scriptLoaded = await scriptInjection.inject(
@@ -63,6 +64,12 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
 
     if (message?.type === MessageTypeEnum.MEDIA_OVERLAY) {
       Logger.dev("Media overlay message received from background");
+      window.postMessage(message, "*");
+      sendResponse({ success: true });
+    }
+
+    if (message?.type === MessageTypeEnum.PLACEHOLDER) {
+      Logger.dev("Placeholder message received from background");
       window.postMessage(message, "*");
       sendResponse({ success: true });
     }

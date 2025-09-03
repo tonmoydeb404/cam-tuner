@@ -48,3 +48,30 @@ export type StreamConfettiConfig = {
   intensity: number;
   duration: number;
 };
+
+export type StreamPlaceholderConfig = {
+  enabled: boolean;
+  position: {
+    x: number;
+    y: number;
+  };
+  background: {
+    mode: "color" | "image" | "video";
+    colorCode: string | null;
+    imageUrl: string | null;
+    videoUrl: string | null;
+  };
+  foreground: {
+    mode: "text" | "image" | "video";
+    text: {
+      content: string | null;
+      bgColorCode: string | null;
+      fontColorCode: string | null;
+      fontSize: number;
+    };
+    imageUrl: string | null;
+    videoUrl: string | null;
+    scale: number;
+    radius: number;
+  };
+};

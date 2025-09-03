@@ -5,6 +5,7 @@ import {
   StreamFilterConfig,
   StreamMediaOverlayConfig,
   StreamPatcherSize,
+  StreamPlaceholderConfig,
 } from "@/utils/stream-patcher/types";
 import { normalizeFilterValue } from "./config-cache";
 
@@ -18,6 +19,9 @@ interface IStreamProcessor {
   clearAllMediaOverlays(): void;
   updateCropSettings(config: StreamCropConfig): void;
   updateFilterSettings(config: StreamFilterConfig): void;
+  enablePlaceholder(config: StreamPlaceholderConfig): void;
+  disablePlaceholder(): void;
+  updatePlaceholderSettings(config: Partial<StreamPlaceholderConfig>): void;
 }
 
 export class GlobalConfettiManager {
@@ -314,5 +318,70 @@ export class GlobalFilterManager {
 
   getCurrentFilterConfig() {
     return { ...this.currentFilterConfig };
+  }
+}
+
+export class GlobalPlaceholderManager {
+  private static instance: GlobalPlaceholderManager;
+  private processors: Set<IStreamProcessor> = new Set();
+  private currentPlaceholderConfig: StreamPlaceholderConfig | null = null;
+
+  static getInstance(): GlobalPlaceholderManager {
+    if (!GlobalPlaceholderManager.instance) {
+      GlobalPlaceholderManager.instance = new GlobalPlaceholderManager();
+    }
+    return GlobalPlaceholderManager.instance;
+  }
+
+  registerProcessor(processor: IStreamProcessor): void {
+    this.processors.add(processor);
+    
+    // If there's an active placeholder config, apply it to the new processor
+    if (this.currentPlaceholderConfig && this.currentPlaceholderConfig.enabled) {
+      processor.enablePlaceholder(this.currentPlaceholderConfig);
+    }
+  }
+
+  unregisterProcessor(processor: IStreamProcessor): void {
+    this.processors.delete(processor);
+  }
+
+  enableGlobalPlaceholder(config: StreamPlaceholderConfig): void {
+    this.currentPlaceholderConfig = { ...config, enabled: true };
+    Logger.dev("Enabling placeholder for all active streams:", config);
+
+    this.processors.forEach((processor) => {
+      processor.enablePlaceholder(this.currentPlaceholderConfig!);
+    });
+  }
+
+  disableGlobalPlaceholder(): void {
+    if (this.currentPlaceholderConfig) {
+      this.currentPlaceholderConfig.enabled = false;
+    }
+    Logger.dev("Disabling placeholder for all active streams");
+
+    this.processors.forEach((processor) => {
+      processor.disablePlaceholder();
+    });
+  }
+
+  updateGlobalPlaceholderSettings(config: Partial<StreamPlaceholderConfig>): void {
+    if (this.currentPlaceholderConfig) {
+      this.currentPlaceholderConfig = { ...this.currentPlaceholderConfig, ...config };
+      Logger.dev("Updating placeholder settings for all active streams:", config);
+
+      this.processors.forEach((processor) => {
+        processor.updatePlaceholderSettings(config);
+      });
+    }
+  }
+
+  getCurrentPlaceholderConfig(): StreamPlaceholderConfig | null {
+    return this.currentPlaceholderConfig ? { ...this.currentPlaceholderConfig } : null;
+  }
+
+  isPlaceholderEnabled(): boolean {
+    return this.currentPlaceholderConfig?.enabled ?? false;
   }
 }

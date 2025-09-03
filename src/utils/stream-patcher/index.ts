@@ -3,6 +3,7 @@ import {
   StreamCropConfig,
   StreamFilterConfig,
   StreamPatcherSettings,
+  StreamPlaceholderConfig,
 } from "@/utils/stream-patcher/types";
 import { CanvasManager } from "./canvas-manager";
 import {
@@ -211,4 +212,31 @@ export function applyGlobalCrop(config: StreamCropConfig): void {
  */
 export function applyGlobalFilters(config: StreamFilterConfig): void {
   GlobalFilterManager.getInstance().applyFilters(config);
+}
+
+/**
+ * Function to enable placeholder across all active video streams
+ */
+export function enableGlobalPlaceholder(config: StreamPlaceholderConfig): void {
+  import("./global-managers").then(({ GlobalPlaceholderManager }) => {
+    GlobalPlaceholderManager.getInstance().enableGlobalPlaceholder(config);
+  });
+}
+
+/**
+ * Function to disable placeholder across all active video streams
+ */
+export function disableGlobalPlaceholder(): void {
+  import("./global-managers").then(({ GlobalPlaceholderManager }) => {
+    GlobalPlaceholderManager.getInstance().disableGlobalPlaceholder();
+  });
+}
+
+/**
+ * Function to update placeholder settings across all active video streams
+ */
+export function updateGlobalPlaceholderSettings(config: Partial<StreamPlaceholderConfig>): void {
+  import("./global-managers").then(({ GlobalPlaceholderManager }) => {
+    GlobalPlaceholderManager.getInstance().updateGlobalPlaceholderSettings(config);
+  });
 }

@@ -2,6 +2,7 @@ import {
   CropMessage,
   FilterMessage,
   MessageTypeEnum,
+  PlaceholderMessage,
 } from "@/types/window-message";
 import { Logger } from "../utils/log";
 import { mediaDevicePatcher } from "../utils/media-device-patcher";
@@ -10,6 +11,8 @@ import {
   applyGlobalFilters,
   triggerGlobalConfetti,
   triggerGlobalMediaOverlay,
+  enableGlobalPlaceholder,
+  disableGlobalPlaceholder,
 } from "../utils/stream-patcher";
 
 window.addEventListener("message", (event) => {
@@ -21,12 +24,14 @@ window.addEventListener("message", (event) => {
     const label = event.data?.payload?.cameraSource?.label;
     const filterConfig = event.data?.payload?.filterConfig;
     const cropConfig = event.data?.payload?.cropConfig;
+    const placeholderConfig = event.data?.payload?.placeholderConfig;
 
     Logger.dev("Received settings:", {
       enable: enable,
       sourceDeviceLabel: label,
       filterConfig: filterConfig,
       cropConfig: cropConfig,
+      placeholderConfig: placeholderConfig,
     });
 
     mediaDevicePatcher({
@@ -35,6 +40,11 @@ window.addEventListener("message", (event) => {
       filterConfig: filterConfig ?? {},
       cropConfig: cropConfig ?? {},
     });
+
+    // Apply initial placeholder config if enabled
+    if (placeholderConfig?.enabled) {
+      enableGlobalPlaceholder(placeholderConfig);
+    }
   }
 
   if (event?.data?.type === MessageTypeEnum.CROP) {
@@ -79,6 +89,18 @@ window.addEventListener("message", (event) => {
         opacity: payload.opacity,
         delay: payload.delay,
       });
+    }
+  }
+
+  if (event?.data?.type === MessageTypeEnum.PLACEHOLDER) {
+    const payload = event.data?.payload as PlaceholderMessage["payload"];
+    if (payload) {
+      Logger.dev("Received placeholder message:", payload);
+      if (payload.enabled) {
+        enableGlobalPlaceholder(payload);
+      } else {
+        disableGlobalPlaceholder();
+      }
     }
   }
 });

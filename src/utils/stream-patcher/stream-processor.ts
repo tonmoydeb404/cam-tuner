@@ -3,6 +3,7 @@ import {
   StreamCropConfig,
   StreamFilterConfig,
   StreamMediaOverlayConfig,
+  StreamPlaceholderConfig,
 } from "@/utils/stream-patcher/types";
 import { Logger } from "../log";
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
@@ -14,8 +15,10 @@ import {
   GlobalCropManager,
   GlobalFilterManager,
   GlobalMediaOverlayManager,
+  GlobalPlaceholderManager,
 } from "./global-managers";
 import { MediaOverlayManager } from "./media-overlay";
+import { PlaceholderOverlayManager } from "./placeholder-overlay";
 import { GlobalPerformanceMonitor } from "./performance-monitor";
 
 export class StreamProcessor {
@@ -23,6 +26,7 @@ export class StreamProcessor {
   private frameController: FrameRateController;
   private confettiManagers: Map<string, ConfettiOverlayManager> = new Map();
   private mediaOverlayManagers: Map<string, MediaOverlayManager> = new Map();
+  private placeholderManager: PlaceholderOverlayManager | null = null;
   private configCache = new ConfigCache();
   private isDisposed = false;
   private performanceMonitor = GlobalPerformanceMonitor.getInstance();
@@ -88,6 +92,7 @@ export class StreamProcessor {
       GlobalMediaOverlayManager.getInstance().registerProcessor(this);
       GlobalCropManager.getInstance().registerProcessor(this);
       GlobalFilterManager.getInstance().registerProcessor(this);
+      GlobalPlaceholderManager.getInstance().registerProcessor(this);
 
       Logger.dev(`StreamProcessor initialized: ${this.streamId}`);
     } catch (error) {
@@ -157,7 +162,11 @@ export class StreamProcessor {
         this.canvasResource.prevHeight
       );
 
-      if (this.cropConfig.enableLetterbox) {
+      // Check if placeholder should be rendered (replaces video stream entirely)
+      if (this.placeholderManager && this.placeholderManager.shouldRender()) {
+        this.placeholderManager.render(ctx);
+        // Skip video rendering when placeholder is active
+      } else if (this.cropConfig.enableLetterbox) {
         // Letterbox mode: maintain original stream dimensions with background fill
 
         // Fill background with letterbox color
@@ -471,6 +480,40 @@ export class StreamProcessor {
     );
   }
 
+  enablePlaceholder(config: StreamPlaceholderConfig): void {
+    if (this.isDisposed) return;
+
+    // Clean up existing placeholder manager if any
+    if (this.placeholderManager) {
+      this.placeholderManager.cleanup();
+    }
+
+    // Create new placeholder manager
+    this.placeholderManager = new PlaceholderOverlayManager(config, {
+      width: this.originalStreamSize.width,
+      height: this.originalStreamSize.height,
+    });
+
+    this.placeholderManager.start();
+    Logger.dev(`Placeholder enabled for ${this.streamId}:`, config);
+  }
+
+  disablePlaceholder(): void {
+    if (this.placeholderManager) {
+      this.placeholderManager.stop();
+      this.placeholderManager.cleanup();
+      this.placeholderManager = null;
+      Logger.dev(`Placeholder disabled for ${this.streamId}`);
+    }
+  }
+
+  updatePlaceholderSettings(config: Partial<StreamPlaceholderConfig>): void {
+    if (this.placeholderManager) {
+      this.placeholderManager.updateConfig(config);
+      Logger.dev(`Placeholder settings updated for ${this.streamId}:`, config);
+    }
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -518,11 +561,18 @@ export class StreamProcessor {
       });
       this.mediaOverlayManagers.clear();
 
+      // Cleanup placeholder manager
+      if (this.placeholderManager) {
+        this.placeholderManager.cleanup();
+        this.placeholderManager = null;
+      }
+
       // Unregister from global managers
       GlobalConfettiManager.getInstance().unregisterProcessor(this);
       GlobalMediaOverlayManager.getInstance().unregisterProcessor(this);
       GlobalCropManager.getInstance().unregisterProcessor(this);
       GlobalFilterManager.getInstance().unregisterProcessor(this);
+      GlobalPlaceholderManager.getInstance().unregisterProcessor(this);
 
       // Clear configuration cache
       this.configCache.invalidate();

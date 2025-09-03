@@ -6,6 +6,7 @@ import { ConfettiContextProvider } from "@/context/confetti";
 import { CropProvider } from "@/context/crop";
 import { FilterProvider } from "@/context/filter";
 import { MediaOverlayContextProvider } from "@/context/media-overlay";
+import { PlaceholderProvider } from "@/context/placeholder";
 import { createRoot } from "react-dom/client";
 
 createRoot(document.getElementById("root")!).render(
@@ -14,11 +15,13 @@ createRoot(document.getElementById("root")!).render(
       <AppContextProvider>
         <CropProvider>
           <FilterProvider>
-            <MediaOverlayContextProvider>
-              <ConfettiContextProvider>
-                <PopupContent />
-              </ConfettiContextProvider>
-            </MediaOverlayContextProvider>
+            <PlaceholderProvider>
+              <MediaOverlayContextProvider>
+                <ConfettiContextProvider>
+                  <PopupContent />
+                </ConfettiContextProvider>
+              </MediaOverlayContextProvider>
+            </PlaceholderProvider>
           </FilterProvider>
         </CropProvider>
       </AppContextProvider>

@@ -52,9 +52,23 @@
 
 CamTuner available on the [Chrome Web Store](https://chromewebstore.google.com/detail/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb) & [Firefox Addon Store](https://addons.mozilla.org/en-US/firefox/addon/camtuner/) for one-click installation.
 
-### 🧪 Local Development
+## 🚀 Quick Start
 
-You can run CamTuner locally for Chrome or Firefox using the following commands:
+### Prerequisites
+- Node.js (v18 or higher)
+- pnpm package manager
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/tonmoydeb404/cam-tuner.git
+cd cam-tuner
+
+# Install dependencies
+pnpm install
+```
+
+### 🧪 Development
 
 ```bash
 # For Chrome extension development

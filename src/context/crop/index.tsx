@@ -16,6 +16,8 @@ interface CropConfig {
   zoom: number;
   mirror: boolean;
   align: StreamCropConfig["align"];
+  enableLetterbox: boolean;
+  letterboxBgColor: string | null;
 }
 
 interface CropContextType {
@@ -31,6 +33,8 @@ const defaultCropConfig: CropConfig = {
   zoom: 1,
   mirror: false,
   align: "center",
+  enableLetterbox: false,
+  letterboxBgColor: null,
 };
 
 const CropContext = createContext<CropContextType | undefined>(undefined);
@@ -73,6 +77,8 @@ export const CropProvider: React.FC<CropProviderProps> = ({ children }) => {
           aspectRatio: config.aspectRatio,
           mirror: config.mirror,
           zoom: config.zoom,
+          enableLetterbox: config.enableLetterbox,
+          letterboxBgColor: config.letterboxBgColor,
         },
       };
       Browser.runtime.sendMessage(message);

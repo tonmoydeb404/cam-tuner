@@ -53,7 +53,7 @@ const FeatureCard = React.forwardRef<HTMLDivElement, FeatureCardProps>(
             <Icon className="h-4 w-4 text-primary" />
           </div>
         )}
-        <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="min-w-0 flex-1 space-y-0">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-card-foreground">
               {title}

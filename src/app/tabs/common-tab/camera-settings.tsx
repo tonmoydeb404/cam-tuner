@@ -17,9 +17,11 @@ const CameraSettings = (props: Props) => {
   return (
     <FeatureCard
       title="Camera Source"
+      value="camera"
       icon={Camera}
       badge={hasMultipleCameras ? `${webcams.length} available` : undefined}
       badgeVariant="default"
+      type="accordion-item"
     >
       <FormSelect
         label="Active Camera"

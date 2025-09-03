@@ -10,7 +10,7 @@ import { Logger } from "../utils/log";
 const initializeExtension = async () => {
   const result = await browserStorage.get([
     "cameraSource",
-    "config",
+    "filterConfig",
     "enable",
     "cropConfig",
   ]);
@@ -45,6 +45,12 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
 
     if (message?.type === MessageTypeEnum.CROP) {
       Logger.dev("Crop message received from background");
+      window.postMessage(message, "*");
+      sendResponse({ success: true });
+    }
+
+    if (message?.type === MessageTypeEnum.FILTER) {
+      Logger.dev("Filter message received from background");
       window.postMessage(message, "*");
       sendResponse({ success: true });
     }

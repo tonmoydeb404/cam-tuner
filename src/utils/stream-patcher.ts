@@ -182,14 +182,6 @@ class ConfigCache {
   }
 }
 
-function generateFilterString(config: StreamFilterConfig): string {
-  const brightness = normalizeFilterValue(config.brightness);
-  const saturation = normalizeFilterValue(config.saturation);
-  const contrast = normalizeFilterValue(config.contrast);
-
-  return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
-}
-
 /**
  * Stream Processing Context
  * Manages the complete lifecycle of stream processing
@@ -247,6 +239,9 @@ class StreamProcessor {
       // Register with global crop manager
       GlobalCropManager.getInstance().registerProcessor(this);
 
+      // Register with global filter manager
+      GlobalFilterManager.getInstance().registerProcessor(this);
+
       Logger.dev(`StreamProcessor initialized: ${this.streamId}`);
     } catch (error) {
       Logger.dev("StreamProcessor construction failed:", error);
@@ -257,7 +252,8 @@ class StreamProcessor {
   private setupCanvas(): void {
     const { ctx } = this.canvasResource;
 
-    // Apply cached filter string
+    // Apply cached filter string using GlobalFilterManager
+    const filterManager = GlobalFilterManager.getInstance();
     const filterKey = `filter_${JSON.stringify({
       b: this.filterConfig.brightness,
       s: this.filterConfig.saturation,
@@ -265,7 +261,7 @@ class StreamProcessor {
     })}`;
 
     ctx.filter = this.configCache.get(filterKey, () =>
-      generateFilterString(this.filterConfig)
+      filterManager.generateFilterString(this.filterConfig)
     );
 
     // Apply mirror transformation using GlobalCropManager
@@ -560,6 +556,26 @@ class StreamProcessor {
     Logger.dev(`Crop settings updated for ${this.streamId}:`, this.crop);
   }
 
+  updateFilterSettings(config: StreamFilterConfig): void {
+    if (this.isDisposed) return;
+
+    // Update filter config with new settings
+    this.filterConfig = { ...this.filterConfig, ...config };
+
+    // Clear configuration cache to force recalculation
+    this.configCache.invalidate();
+
+    // Reapply canvas filters
+    const { ctx } = this.canvasResource;
+    const filterManager = GlobalFilterManager.getInstance();
+    ctx.filter = filterManager.generateFilterString(this.filterConfig);
+
+    Logger.dev(
+      `Filter settings updated for ${this.streamId}:`,
+      this.filterConfig
+    );
+  }
+
   start(): HTMLCanvasElement {
     this.frameController.start();
     return this.canvasResource.canvas;
@@ -615,6 +631,9 @@ class StreamProcessor {
 
       // Unregister from global crop manager
       GlobalCropManager.getInstance().unregisterProcessor(this);
+
+      // Unregister from global filter manager
+      GlobalFilterManager.getInstance().unregisterProcessor(this);
 
       // Clear configuration cache
       this.configCache.invalidate();
@@ -868,29 +887,25 @@ class GlobalCropManager {
 
   initProcessor(
     size: StreamPatcherSize,
-    config: StreamCropConfig
+    config: StreamCropConfig = {}
   ): {
     crop: { width: number; height: number; offsetX: number; offsetY: number };
-    cropConfig: {
-      aspectRatio?: number;
-      zoom?: number;
-      align?: "left" | "center" | "right";
-      mirror?: boolean;
-    };
+    cropConfig: StreamCropConfig;
   } {
-    const crop = this.calculateCrop(size, config.aspectRatio);
-    const zoom = this.calculateZoomedSize(crop, config.zoom);
-    const offset = this.calculateOffset(size, zoom, config.align);
-
-    const cropConfig = {
-      aspectRatio: config.aspectRatio,
-      zoom: config.zoom,
-      align: config.align,
-      mirror: config.mirror,
+    // Merge provided config with current state, giving precedence to provided values
+    const mergedConfig = {
+      aspectRatio: config.aspectRatio ?? this.currentCropConfig.aspectRatio,
+      zoom: config.zoom ?? this.currentCropConfig.zoom,
+      align: config.align ?? this.currentCropConfig.align,
+      mirror: config.mirror ?? this.currentCropConfig.mirror,
     };
 
-    // Store current config
-    this.currentCropConfig = { ...cropConfig };
+    const crop = this.calculateCrop(size, mergedConfig.aspectRatio);
+    const zoom = this.calculateZoomedSize(crop, mergedConfig.zoom);
+    const offset = this.calculateOffset(size, zoom, mergedConfig.align);
+
+    // Update current config with merged values
+    this.currentCropConfig = { ...mergedConfig };
 
     return {
       crop: {
@@ -898,16 +913,11 @@ class GlobalCropManager {
         offsetX: offset.x,
         offsetY: offset.y,
       },
-      cropConfig,
+      cropConfig: mergedConfig,
     };
   }
 
-  applyCrop(config: {
-    aspectRatio?: number;
-    zoom?: number;
-    align?: "left" | "center" | "right";
-    mirror?: boolean;
-  }): void {
+  applyCrop(config: StreamCropConfig): void {
     this.currentCropConfig = { ...this.currentCropConfig, ...config };
     Logger.dev("Applying crop settings to all active streams:", config);
 
@@ -919,6 +929,74 @@ class GlobalCropManager {
 
   getCurrentCropConfig() {
     return { ...this.currentCropConfig };
+  }
+}
+
+/**
+ * Global filter manager for handling filter settings across all streams
+ */
+class GlobalFilterManager {
+  private static instance: GlobalFilterManager;
+  private processors: Set<StreamProcessor> = new Set();
+  private currentFilterConfig: StreamFilterConfig = {};
+
+  static getInstance(): GlobalFilterManager {
+    if (!GlobalFilterManager.instance) {
+      GlobalFilterManager.instance = new GlobalFilterManager();
+    }
+    return GlobalFilterManager.instance;
+  }
+
+  registerProcessor(processor: StreamProcessor): void {
+    this.processors.add(processor);
+  }
+
+  unregisterProcessor(processor: StreamProcessor): void {
+    this.processors.delete(processor);
+  }
+
+  generateFilterString(config: StreamFilterConfig): string {
+    const brightness = normalizeFilterValue(config.brightness);
+    const saturation = normalizeFilterValue(config.saturation);
+    const contrast = normalizeFilterValue(config.contrast);
+
+    return `brightness(${brightness}) saturate(${saturation}) contrast(${contrast})`;
+  }
+
+  initProcessor(config: StreamFilterConfig = {}): {
+    filterConfig: StreamFilterConfig;
+    filterString: string;
+  } {
+    // Merge provided config with current state, giving precedence to provided values
+    const mergedConfig = {
+      brightness: config.brightness ?? this.currentFilterConfig.brightness,
+      saturation: config.saturation ?? this.currentFilterConfig.saturation,
+      contrast: config.contrast ?? this.currentFilterConfig.contrast,
+    };
+
+    const filterString = this.generateFilterString(mergedConfig);
+
+    // Update current config with merged values
+    this.currentFilterConfig = { ...mergedConfig };
+
+    return {
+      filterConfig: mergedConfig,
+      filterString,
+    };
+  }
+
+  applyFilters(config: StreamFilterConfig): void {
+    this.currentFilterConfig = { ...this.currentFilterConfig, ...config };
+    Logger.dev("Applying filter settings to all active streams:", config);
+
+    // Apply filter settings to all processors
+    this.processors.forEach((processor) => {
+      processor.updateFilterSettings(config);
+    });
+  }
+
+  getCurrentFilterConfig() {
+    return { ...this.currentFilterConfig };
   }
 }
 
@@ -942,7 +1020,10 @@ export function streamPatcher(
     // Use GlobalCropManager for initialization
     const cropManager = GlobalCropManager.getInstance();
     const { crop } = cropManager.initProcessor(size, cropConfig);
-    // Filters are applied during canvas setup
+
+    // Use GlobalFilterManager for initialization
+    const filterManager = GlobalFilterManager.getInstance();
+    filterManager.initProcessor(filterConfig);
 
     const { canvas, processor } = applyCanvasProcessing({
       video,
@@ -1056,11 +1137,13 @@ export function triggerGlobalMediaOverlay(config: {
 /**
  * Function to apply crop settings across all active video streams
  */
-export function applyGlobalCrop(config: {
-  aspectRatio?: number;
-  zoom?: number;
-  align?: "left" | "center" | "right";
-  mirror?: boolean;
-}): void {
+export function applyGlobalCrop(config: StreamCropConfig): void {
   GlobalCropManager.getInstance().applyCrop(config);
+}
+
+/**
+ * Function to apply filter settings across all active video streams
+ */
+export function applyGlobalFilters(config: StreamFilterConfig): void {
+  GlobalFilterManager.getInstance().applyFilters(config);
 }

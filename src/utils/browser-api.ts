@@ -8,9 +8,9 @@ import { Logger } from "./log";
  */
 
 export type StorageKeys = (
-  | "config"
   | "cameraSource"
   | "enable"
+  | "filterConfig"
   | "cropConfig"
 )[];
 

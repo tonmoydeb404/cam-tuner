@@ -1,5 +1,5 @@
-import { IAppCameraSource, IAppConfig } from "@/context/app/types";
-import { StreamCropConfig } from "./stream-patcher";
+import { IAppCameraSource } from "@/context/app/types";
+import { StreamCropConfig, StreamFilterConfig } from "./stream-patcher";
 
 export enum MessageTypeEnum {
   SETTINGS = "cam_tuner-settings",
@@ -15,14 +15,17 @@ export type SettingsUpdateMessage = {
   payload: {
     enable: boolean;
     cameraSource: IAppCameraSource | null;
-    config: IAppConfig;
-    overlay?: any;
   };
 };
 
 export type CropMessage = {
   type: MessageTypeEnum.CROP;
   payload: StreamCropConfig;
+};
+
+export type FilterMessage = {
+  type: MessageTypeEnum.FILTER;
+  payload: StreamFilterConfig;
 };
 
 export type ConfettiMessage = {

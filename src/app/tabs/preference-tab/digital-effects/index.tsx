@@ -1,11 +1,10 @@
 import { FormSlider } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card";
-import { useAppContext } from "@/context/app";
 import { ColorPreset } from "@/context/app/types";
+import { useFilter } from "@/context/filter";
 import useThrottle from "@/hooks/use-throttle";
 import { Sliders } from "lucide-react";
-import { useCallback } from "react";
 
 type QuickPreset = {
   name: string;
@@ -73,30 +72,22 @@ const QUICK_PRESETS: QuickPreset[] = [
 type Props = {};
 
 const DigitalEffects = (props: Props) => {
-  const { config, updateConfig, applyPreset } = useAppContext();
-  const { brightness, contrast, saturation } = config;
+  const { filterConfig, resetFilter, setFilter, updateFilter } = useFilter();
+  const { brightness, contrast, saturation } = filterConfig;
 
   const isDefaultSettings =
     brightness === 100 && contrast === 100 && saturation === 100;
 
   // Throttle expensive operations to improve performance
   const throttledUpdateBrightness = useThrottle(
-    updateConfig("brightness"),
+    updateFilter("brightness"),
     100
   );
-  const throttledUpdateContrast = useThrottle(updateConfig("contrast"), 100);
+  const throttledUpdateContrast = useThrottle(updateFilter("contrast"), 100);
   const throttledUpdateSaturation = useThrottle(
-    updateConfig("saturation"),
+    updateFilter("saturation"),
     100
   );
-
-  const resetToDefaults = useCallback(() => {
-    applyPreset({
-      brightness: 100,
-      contrast: 100,
-      saturation: 100,
-    });
-  }, [applyPreset]);
 
   return (
     <FeatureCard
@@ -159,7 +150,7 @@ const DigitalEffects = (props: Props) => {
               key={quickPreset.name}
               variant="outline"
               size="sm"
-              onClick={() => applyPreset(quickPreset.preset)}
+              onClick={() => setFilter(quickPreset.preset)}
               className="text-xs justify-start"
               title={quickPreset.description}
             >
@@ -170,7 +161,7 @@ const DigitalEffects = (props: Props) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={resetToDefaults}
+            onClick={resetFilter}
             disabled={isDefaultSettings}
             className="text-xs justify-start"
             title="Reset to default values"

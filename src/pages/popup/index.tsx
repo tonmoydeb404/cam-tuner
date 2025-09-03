@@ -4,6 +4,7 @@ import ErrorBoundary from "@/components/ui/error-boundary";
 import { AppContextProvider } from "@/context/app";
 import { ConfettiContextProvider } from "@/context/confetti";
 import { CropProvider } from "@/context/crop";
+import { FilterProvider } from "@/context/filter";
 import { MediaOverlayContextProvider } from "@/context/media-overlay";
 import { createRoot } from "react-dom/client";
 
@@ -12,11 +13,13 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <AppContextProvider>
         <CropProvider>
-          <MediaOverlayContextProvider>
-            <ConfettiContextProvider>
-              <PopupContent />
-            </ConfettiContextProvider>
-          </MediaOverlayContextProvider>
+          <FilterProvider>
+            <MediaOverlayContextProvider>
+              <ConfettiContextProvider>
+                <PopupContent />
+              </ConfettiContextProvider>
+            </MediaOverlayContextProvider>
+          </FilterProvider>
         </CropProvider>
       </AppContextProvider>
     </ThemeProvider>

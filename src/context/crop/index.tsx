@@ -55,7 +55,7 @@ export const CropProvider: React.FC<CropProviderProps> = ({ children }) => {
       if (typeof result?.cropConfig === "object") {
         setCropConfig((prev) => ({
           ...prev,
-          ...(result.config as CropConfig),
+          ...(result.cropConfig as CropConfig),
         }));
       }
     });
@@ -83,6 +83,7 @@ export const CropProvider: React.FC<CropProviderProps> = ({ children }) => {
 
   const resetCrop = () => {
     setCropConfig(defaultCropConfig);
+    applyChanges(defaultCropConfig);
   };
 
   const updateCrop: CropContextType["updateCrop"] = (key) => (value) => {

@@ -2,7 +2,7 @@
 
 # CamTuner
 
-**CamTuner** is a browser extension that lets you customize your webcam feed — adjust zoom, crop, color settings, and more — and output it as a virtual webcam for use in video calls and streaming.
+**CamTuner** is a browser extension that lets you customize your webcam feed with advanced features like zoom, crop, aspect ratios, letterbox mode, color effects, animated GIF overlays, confetti animations, and more — all output as a virtual webcam for video calls and streaming.
 
 [![Get it on Chrome Web Store](https://img.shields.io/badge/Available_on-Chrome_Web_Store-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/camtuner/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb)
 [![Get it on Firefox Add-ons](https://img.shields.io/badge/Available_on-Firefox_Add--ons-orange?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/camtuner/)
@@ -11,26 +11,41 @@
 
 ## ✨ Features
 
-- 🎞️ **Custom Aspect Ratios**  
-  Tailor your video frame with flexible aspect ratio options like 16:9, 4:3, and more.
-
-- 🔍 **Smooth Digital Zoom**  
-  Zoom in seamlessly to highlight parts of your feed without any stutter.
-
-- ↔️ **Horizontal Crop Alignment**  
-  Align your cropped view horizontally — left, center, or right — for the perfect framing.
-
+### 📹 Camera & Frame Controls
 - 🎥 **Multi-Camera Switching**  
   Instantly switch between connected cameras with real-time preview.
+
+- 🎞️ **Custom Aspect Ratios**  
+  Choose from flexible aspect ratio options like 16:9, 4:3, 1:1, and more.
+
+- 📐 **Letterbox Mode (Fit to Frame)**  
+  Scale video to fit while maintaining aspect ratio with customizable background colors.
 
 - 🪞 **Mirror Your Feed**  
   Flip your video horizontally to match how you naturally view yourself.
 
-- 🎚️ **Live Color Controls**  
-  Tweak brightness, contrast, and saturation on the fly.
+- ↔️ **Horizontal Crop Alignment**  
+  Align your cropped view horizontally — left, center, or right — for perfect framing.
 
-- ⚡ **Instant Preview of Adjustments**  
-  See changes as you make them — zero lag or reloads.
+### 🔍 Zoom & Effects
+- 🔍 **Smooth Digital Zoom**  
+  Zoom in seamlessly to highlight parts of your feed without any stutter.
+
+- 🎨 **Advanced Color Effects**  
+  Real-time brightness, contrast, and saturation controls with quick presets like Vivid, Moody, Natural, Warm, Cool, and Portrait.
+
+- ⚡ **Instant Preview**  
+  All adjustments are applied in real-time with zero lag or reloads.
+
+### 🎉 Overlay Features
+- 🎭 **Animated GIF Overlays**  
+  Add fun animated GIFs to your video with precise positioning and sizing controls.
+
+- 🎊 **Confetti Animations**  
+  Celebrate with customizable confetti effects — perfect for special moments and achievements.
+
+- 🎯 **Advanced Positioning**  
+  Fine-tune overlay placement with intuitive position pickers and sizing options.
 
 ## 🛠️ Tech Stack
 

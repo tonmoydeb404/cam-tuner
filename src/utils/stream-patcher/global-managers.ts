@@ -1,44 +1,22 @@
 import { Logger } from "@/utils/log";
 import {
+  StreamConfettiConfig,
   StreamCropConfig,
   StreamFilterConfig,
+  StreamMediaOverlayConfig,
   StreamPatcherSize,
 } from "@/utils/stream-patcher/types";
 import { normalizeFilterValue } from "./config-cache";
 
 // Forward declaration for StreamProcessor to avoid circular dependency
 interface IStreamProcessor {
-  startConfetti(
-    confettiId: string,
-    config: {
-      confettiType: string;
-      colors: string[];
-      intensity: number;
-      duration: number;
-    }
-  ): void;
+  startConfetti(confettiId: string, config: StreamConfettiConfig): void;
   stopConfetti(confettiId: string): void;
   clearAllConfetti(): void;
-  startMediaOverlay(
-    overlayId: string,
-    config: {
-      mediaUrl: string;
-      mediaType: "video" | "image";
-      position: { x: number; y: number };
-      scale: number;
-      duration: number;
-      opacity: number;
-      delay: number;
-    }
-  ): void;
+  startMediaOverlay(overlayId: string, config: StreamMediaOverlayConfig): void;
   stopMediaOverlay(overlayId: string): void;
   clearAllMediaOverlays(): void;
-  updateCropSettings(config: {
-    aspectRatio?: number;
-    zoom?: number;
-    align?: "left" | "center" | "right";
-    mirror?: boolean;
-  }): void;
+  updateCropSettings(config: StreamCropConfig): void;
   updateFilterSettings(config: StreamFilterConfig): void;
 }
 
@@ -61,12 +39,7 @@ export class GlobalConfettiManager {
     this.processors.delete(processor);
   }
 
-  triggerConfetti(config: {
-    confettiType: string;
-    colors: string[];
-    intensity: number;
-    duration: number;
-  }): void {
+  triggerConfetti(config: StreamConfettiConfig): void {
     const confettiId = `confetti_${Date.now()}`;
     Logger.dev("Triggering confetti for all active streams:", config);
 
@@ -142,12 +115,7 @@ export class GlobalMediaOverlayManager {
 export class GlobalCropManager {
   private static instance: GlobalCropManager;
   private processors: Set<IStreamProcessor> = new Set();
-  private currentCropConfig: {
-    aspectRatio?: number;
-    zoom?: number;
-    align?: "left" | "center" | "right";
-    mirror?: boolean;
-  } = {};
+  private currentCropConfig: StreamCropConfig = {};
 
   static getInstance(): GlobalCropManager {
     if (!GlobalCropManager.instance) {

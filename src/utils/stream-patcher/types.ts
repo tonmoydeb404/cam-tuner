@@ -29,3 +29,20 @@ export type StreamPatcherSettings = {
   cropConfig: StreamCropConfig;
   size: StreamPatcherSize;
 };
+
+export type StreamMediaOverlayConfig = {
+  mediaUrl: string;
+  mediaType: "video" | "image";
+  position: { x: number; y: number };
+  scale: number;
+  duration: number;
+  opacity: number;
+  delay: number;
+};
+
+export type StreamConfettiConfig = {
+  confettiType: string;
+  colors: string[];
+  intensity: number;
+  duration: number;
+};

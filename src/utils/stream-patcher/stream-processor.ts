@@ -32,7 +32,11 @@ export class StreamProcessor {
 
   constructor(
     private video: HTMLVideoElement,
-    private crop: {
+    private originalStreamSize: {
+      width: number;
+      height: number;
+    },
+    private cropArea: {
       width: number;
       height: number;
       offsetX: number;
@@ -45,7 +49,7 @@ export class StreamProcessor {
 
     try {
       const canvasManager = CanvasManager.getInstance();
-      this.canvasResource = canvasManager.getCanvas(crop.width, crop.height);
+      this.canvasResource = canvasManager.getCanvas(originalStreamSize.width, originalStreamSize.height);
 
       this.setupCanvas();
 
@@ -92,7 +96,7 @@ export class StreamProcessor {
     const cropManager = GlobalCropManager.getInstance();
     cropManager.applyMirrorTransform(
       ctx,
-      this.crop.width,
+      this.originalStreamSize.width,
       this.cropConfig.mirror
     );
   }
@@ -105,19 +109,23 @@ export class StreamProcessor {
 
     try {
       // Clear previous frame efficiently
-      ctx.clearRect(0, 0, this.crop.width, this.crop.height);
+      ctx.clearRect(0, 0, this.originalStreamSize.width, this.originalStreamSize.height);
 
-      // Draw main video
+      // Calculate centering offset for cropped content
+      const centerX = (this.originalStreamSize.width - this.cropArea.width) / 2;
+      const centerY = (this.originalStreamSize.height - this.cropArea.height) / 2;
+
+      // Draw main video cropped and centered
       ctx.drawImage(
         this.video,
-        this.crop.offsetX,
-        this.crop.offsetY,
-        this.crop.width,
-        this.crop.height,
-        0,
-        0,
-        this.crop.width,
-        this.crop.height
+        this.cropArea.offsetX,
+        this.cropArea.offsetY,
+        this.cropArea.width,
+        this.cropArea.height,
+        centerX,
+        centerY,
+        this.cropArea.width,
+        this.cropArea.height
       );
 
       // Optimized confetti rendering - batch all confetti operations
@@ -217,8 +225,8 @@ export class StreamProcessor {
 
       // Try to get a new canvas resource
       this.canvasResource = canvasManager.getCanvas(
-        this.crop.width,
-        this.crop.height
+        this.originalStreamSize.width,
+        this.originalStreamSize.height
       );
       this.setupCanvas();
 
@@ -257,8 +265,8 @@ export class StreamProcessor {
     if (this.isDisposed) return;
 
     const confettiManager = new ConfettiOverlayManager(config, {
-      width: this.crop.width,
-      height: this.crop.height,
+      width: this.originalStreamSize.width,
+      height: this.originalStreamSize.height,
     });
 
     confettiManager.start();
@@ -301,8 +309,8 @@ export class StreamProcessor {
     if (this.isDisposed) return;
 
     const mediaOverlayManager = new MediaOverlayManager(config, {
-      width: this.crop.width,
-      height: this.crop.height,
+      width: this.originalStreamSize.width,
+      height: this.originalStreamSize.height,
     });
 
     mediaOverlayManager.start();
@@ -339,29 +347,29 @@ export class StreamProcessor {
     if (this.isDisposed) return;
 
     // Update config with new crop settings
-    this.filterConfig = { ...this.filterConfig, ...config };
+    this.cropConfig = { ...this.cropConfig, ...config };
 
-    // Recalculate crop dimensions
+    // Recalculate crop dimensions based on original video dimensions
     const cropManager = GlobalCropManager.getInstance();
     const newCrop = cropManager.calculateCrop(
       {
-        width: this.canvasResource.canvas.width,
-        height: this.canvasResource.canvas.height,
+        width: this.video.videoWidth,
+        height: this.video.videoHeight,
       },
       config.aspectRatio
     );
     const newZoom = cropManager.calculateZoomedSize(newCrop, config.zoom);
     const newOffset = cropManager.calculateOffset(
       {
-        width: this.canvasResource.canvas.width,
-        height: this.canvasResource.canvas.height,
+        width: this.video.videoWidth,
+        height: this.video.videoHeight,
       },
       newZoom,
       config.align
     );
 
-    // Update crop settings
-    this.crop = {
+    // Update crop area settings
+    this.cropArea = {
       ...newZoom,
       offsetX: newOffset.x,
       offsetY: newOffset.y,
@@ -377,7 +385,7 @@ export class StreamProcessor {
       this.setupCanvas(); // Reapply all canvas settings including mirror
     }
 
-    Logger.dev(`Crop settings updated for ${this.streamId}:`, this.crop);
+    Logger.dev(`Crop settings updated for ${this.streamId}:`, this.cropArea);
   }
 
   updateFilterSettings(config: StreamFilterConfig): void {

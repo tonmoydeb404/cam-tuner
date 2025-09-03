@@ -15,13 +15,21 @@ import { StreamProcessor } from "./stream-processor";
 
 function applyCanvasProcessing(settings: {
   video: HTMLVideoElement;
-  crop: { width: number; height: number; offsetX: number; offsetY: number };
+  originalStreamSize: { width: number; height: number };
+  cropArea: { width: number; height: number; offsetX: number; offsetY: number };
   filterConfig: StreamFilterConfig;
   cropConfig: StreamCropConfig;
 }): { canvas: HTMLCanvasElement; processor: StreamProcessor } {
-  const { video, crop, filterConfig, cropConfig } = settings;
+  const { video, originalStreamSize, cropArea, filterConfig, cropConfig } =
+    settings;
 
-  const processor = new StreamProcessor(video, crop, filterConfig, cropConfig);
+  const processor = new StreamProcessor(
+    video,
+    originalStreamSize,
+    cropArea,
+    filterConfig,
+    cropConfig
+  );
   const canvas = processor.start();
 
   return { canvas, processor };
@@ -44,10 +52,10 @@ function setupVideoElement(track: MediaStreamTrack): HTMLVideoElement {
  */
 const activeProcessors = new WeakMap<MediaStream, StreamProcessor>();
 
-export function streamPatcher(
+export async function streamPatcher(
   settings: StreamPatcherSettings,
   stopOriginalStream = false
-): MediaStream {
+): Promise<MediaStream> {
   const { cropConfig, filterConfig, size, stream } = settings;
 
   try {
@@ -55,6 +63,23 @@ export function streamPatcher(
     if (!videoTrack) throw new Error("No video track found in stream.");
 
     const video = setupVideoElement(videoTrack);
+
+    // Wait for video metadata to load to get dimensions
+    await new Promise<void>((resolve) => {
+      if (video.readyState >= 1) {
+        resolve();
+      } else {
+        video.addEventListener("loadedmetadata", () => resolve(), {
+          once: true,
+        });
+      }
+    });
+
+    // Get original stream dimensions from video element
+    const originalStreamSize = {
+      width: video.videoWidth,
+      height: video.videoHeight,
+    };
 
     // Use GlobalCropManager for initialization
     const cropManager = GlobalCropManager.getInstance();
@@ -66,7 +91,8 @@ export function streamPatcher(
 
     const { canvas, processor } = applyCanvasProcessing({
       video,
-      crop,
+      originalStreamSize,
+      cropArea: crop,
       filterConfig,
       cropConfig,
     });

@@ -12,6 +12,10 @@ The placeholder feature allows replacing the video stream with static content (t
 interface PlaceholderConfig {
   enabled: boolean;
   mode: "text" | "image";
+  position: {
+    x: number;
+    y: number;
+  };
   text?: {
     content: string;
     backgroundColor: string;

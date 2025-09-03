@@ -90,8 +90,8 @@ const setupSteps = [
   },
   {
     id: 3,
-    title: "Apply Effects",
-    text: "Go to Effects tab to adjust zoom, brightness, contrast, and saturation. All changes are automatically applied in real-time.",
+    title: "Apply Effects & Overlays",
+    text: "Use the Effects tab to adjust zoom, color settings with presets, add animated GIF overlays, and trigger confetti animations. All changes are applied in real-time.",
   },
   {
     id: 4,
@@ -132,6 +132,21 @@ const commonIssues = [
     problem: "Poor performance or lag",
     solution:
       "Reduce extreme brightness/contrast/saturation values. High zoom levels and heavy effects can impact performance on older devices.",
+  },
+  {
+    problem: "GIF overlays not appearing",
+    solution:
+      "Make sure the GIF is properly selected and positioned. Check the positioning settings in the GIF section. Some GIFs may be outside the visible frame area.",
+  },
+  {
+    problem: "Confetti animations not working",
+    solution:
+      "Ensure you've selected a confetti effect and clicked the trigger button. Check confetti settings for duration and intensity. Some effects may be subtle depending on your settings.",
+  },
+  {
+    problem: "Overlays affecting performance",
+    solution:
+      "Large GIFs or intensive confetti effects can impact performance. Try smaller GIFs, reduce confetti intensity, or disable overlays during important calls.",
   },
   {
     problem: "Extension appears disabled",

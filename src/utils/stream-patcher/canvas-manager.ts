@@ -8,6 +8,8 @@ export interface CanvasResource {
   ctx: CanvasRenderingContext2D;
   width: number;
   height: number;
+  prevWidth: number;
+  prevHeight: number;
   lastUsed: number;
   inUse: boolean;
 }
@@ -78,6 +80,8 @@ export class CanvasManager {
         ctx,
         width,
         height,
+        prevWidth: height,
+        prevHeight: width,
         lastUsed: performance.now(),
         inUse: true,
       };

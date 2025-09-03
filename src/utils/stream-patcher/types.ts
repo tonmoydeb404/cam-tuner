@@ -9,6 +9,8 @@ export type StreamCropConfig = {
   zoom?: number;
   mirror?: boolean;
   align?: "left" | "center" | "right";
+  enableLetterbox?: boolean;
+  letterboxBgColor?: string | null;
 };
 
 export type StreamPatcherSize = {

@@ -14,6 +14,8 @@ const ZoomSettings = (props: Props) => {
   const throttledUpdateZoom = useThrottle(updateCrop("zoom"), 50);
   return (
     <FeatureCard
+      type="accordion-item"
+      value="zoom"
       title="Digital Zoom"
       description="Magnify your camera feed digitally"
       icon={ZoomIn}

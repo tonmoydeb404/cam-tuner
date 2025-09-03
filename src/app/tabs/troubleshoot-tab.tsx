@@ -4,7 +4,7 @@ import { AlertCircle, HelpCircle, Keyboard } from "lucide-react";
 
 type Props = {};
 
-const TroubleshootTab = (props: Props) => {
+const TroubleshootTab = (_props: Props) => {
   return (
     <div className="space-y-4">
       {/* Quick Setup Guide */}
@@ -81,15 +81,20 @@ const setupSteps = [
   {
     id: 1,
     title: "Configure Your Camera",
-    text: "Use the Camera tab to select your camera and adjust frame settings like aspect ratio and mirroring.",
+    text: "Use the Camera tab to select your camera and adjust basic settings.",
   },
   {
     id: 2,
-    title: "Apply Effects",
-    text: "Go to Effects tab to adjust zoom, brightness, contrast, and saturation. All changes are automatically applied in real-time.",
+    title: "Set Frame Configuration",
+    text: "In Frame Configuration, adjust aspect ratio, mirroring, and enable 'Fit to Frame' for letterbox mode with custom background colors.",
   },
   {
     id: 3,
+    title: "Apply Effects & Overlays",
+    text: "Use the Effects tab to adjust zoom, color settings with presets, add animated GIF overlays, and trigger confetti animations. All changes are applied in real-time.",
+  },
+  {
+    id: 4,
     title: "Select CamTuner in Video Apps",
     text: "In your video app (Google Meet, Zoom, etc.), select 'CamTuner' as your camera source to use your enhanced camera feed.",
   },
@@ -114,9 +119,34 @@ const commonIssues = [
       "Turn your camera off and on again in the video app. Some apps need to restart the camera feed to pick up changes.",
   },
   {
+    problem: "Video appears cropped or distorted",
+    solution:
+      "Check your aspect ratio settings in Frame Configuration. Enable 'Fit to Frame' to letterbox your video and maintain proper proportions with custom background colors.",
+  },
+  {
+    problem: "Black bars around my video",
+    solution:
+      "This is letterboxing when 'Fit to Frame' is enabled. You can change the background color in Frame Configuration or disable 'Fit to Frame' to crop instead.",
+  },
+  {
     problem: "Poor performance or lag",
     solution:
       "Reduce extreme brightness/contrast/saturation values. High zoom levels and heavy effects can impact performance on older devices.",
+  },
+  {
+    problem: "GIF overlays not appearing",
+    solution:
+      "Make sure the GIF is properly selected and positioned. Check the positioning settings in the GIF section. Some GIFs may be outside the visible frame area.",
+  },
+  {
+    problem: "Confetti animations not working",
+    solution:
+      "Ensure you've selected a confetti effect and clicked the trigger button. Check confetti settings for duration and intensity. Some effects may be subtle depending on your settings.",
+  },
+  {
+    problem: "Overlays affecting performance",
+    solution:
+      "Large GIFs or intensive confetti effects can impact performance. Try smaller GIFs, reduce confetti intensity, or disable overlays during important calls.",
   },
   {
     problem: "Extension appears disabled",

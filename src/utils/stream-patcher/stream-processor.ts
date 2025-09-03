@@ -1,6 +1,8 @@
 import {
+  StreamConfettiConfig,
   StreamCropConfig,
   StreamFilterConfig,
+  StreamMediaOverlayConfig,
 } from "@/utils/stream-patcher/types";
 import { Logger } from "../log";
 import { CanvasManager, type CanvasResource } from "./canvas-manager";
@@ -30,6 +32,13 @@ export class StreamProcessor {
   private lastErrorTime = 0;
   private errorThrottleMs = 1000;
 
+  // Letterbox scaling cache
+  private letterboxScale: number = 1;
+  private letterboxCenterX: number = 0;
+  private letterboxCenterY: number = 0;
+  private letterboxScaledWidth: number = 0;
+  private letterboxScaledHeight: number = 0;
+
   constructor(
     private video: HTMLVideoElement,
     private originalStreamSize: {
@@ -49,9 +58,19 @@ export class StreamProcessor {
 
     try {
       const canvasManager = CanvasManager.getInstance();
-      this.canvasResource = canvasManager.getCanvas(originalStreamSize.width, originalStreamSize.height);
+
+      // Use different canvas dimensions based on letterbox setting
+      const canvasWidth = cropConfig.enableLetterbox
+        ? originalStreamSize.width
+        : cropArea.width;
+      const canvasHeight = cropConfig.enableLetterbox
+        ? originalStreamSize.height
+        : cropArea.height;
+
+      this.canvasResource = canvasManager.getCanvas(canvasWidth, canvasHeight);
 
       this.setupCanvas();
+      this.updateLetterboxCache();
 
       this.frameController = new FrameRateController(video, this.renderFrame);
 
@@ -101,6 +120,25 @@ export class StreamProcessor {
     );
   }
 
+  private updateLetterboxCache(): void {
+    if (!this.cropConfig.enableLetterbox) return;
+
+    const canvasWidth = this.canvasResource.canvas.width;
+    const canvasHeight = this.canvasResource.canvas.height;
+
+    // Calculate scaling to fit video while maintaining aspect ratio
+    const scaleX = canvasWidth / this.cropArea.width;
+    const scaleY = canvasHeight / this.cropArea.height;
+    this.letterboxScale = Math.min(scaleX, scaleY);
+
+    this.letterboxScaledWidth = this.cropArea.width * this.letterboxScale;
+    this.letterboxScaledHeight = this.cropArea.height * this.letterboxScale;
+
+    // Center the scaled video
+    this.letterboxCenterX = (canvasWidth - this.letterboxScaledWidth) / 2;
+    this.letterboxCenterY = (canvasHeight - this.letterboxScaledHeight) / 2;
+  }
+
   private renderFrame = (): void => {
     if (this.isDisposed) return;
 
@@ -108,25 +146,52 @@ export class StreamProcessor {
     const currentTime = performance.now();
 
     try {
+      const canvasWidth = this.canvasResource.canvas.width;
+      const canvasHeight = this.canvasResource.canvas.height;
+
       // Clear previous frame efficiently
-      ctx.clearRect(0, 0, this.originalStreamSize.width, this.originalStreamSize.height);
-
-      // Calculate centering offset for cropped content
-      const centerX = (this.originalStreamSize.width - this.cropArea.width) / 2;
-      const centerY = (this.originalStreamSize.height - this.cropArea.height) / 2;
-
-      // Draw main video cropped and centered
-      ctx.drawImage(
-        this.video,
-        this.cropArea.offsetX,
-        this.cropArea.offsetY,
-        this.cropArea.width,
-        this.cropArea.height,
-        centerX,
-        centerY,
-        this.cropArea.width,
-        this.cropArea.height
+      ctx.clearRect(
+        0,
+        0,
+        this.canvasResource.prevWidth,
+        this.canvasResource.prevHeight
       );
+
+      if (this.cropConfig.enableLetterbox) {
+        // Letterbox mode: maintain original stream dimensions with background fill
+
+        // Fill background with letterbox color
+        if (this.cropConfig.letterboxBgColor) {
+          ctx.fillStyle = this.cropConfig.letterboxBgColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        // Use cached letterbox values
+        ctx.drawImage(
+          this.video,
+          this.cropArea.offsetX,
+          this.cropArea.offsetY,
+          this.cropArea.width,
+          this.cropArea.height,
+          this.letterboxCenterX,
+          this.letterboxCenterY,
+          this.letterboxScaledWidth,
+          this.letterboxScaledHeight
+        );
+      } else {
+        // Non-letterbox mode: canvas size matches crop area, no centering needed
+        ctx.drawImage(
+          this.video,
+          this.cropArea.offsetX,
+          this.cropArea.offsetY,
+          this.cropArea.width,
+          this.cropArea.height,
+          0,
+          0,
+          canvasWidth,
+          canvasHeight
+        );
+      }
 
       // Optimized confetti rendering - batch all confetti operations
       if (this.confettiManagers.size > 0) {
@@ -223,11 +288,15 @@ export class StreamProcessor {
       const canvasManager = CanvasManager.getInstance();
       const oldResource = this.canvasResource;
 
-      // Try to get a new canvas resource
-      this.canvasResource = canvasManager.getCanvas(
-        this.originalStreamSize.width,
-        this.originalStreamSize.height
-      );
+      // Try to get a new canvas resource with correct dimensions
+      const canvasWidth = this.cropConfig.enableLetterbox
+        ? this.originalStreamSize.width
+        : this.cropArea.width;
+      const canvasHeight = this.cropConfig.enableLetterbox
+        ? this.originalStreamSize.height
+        : this.cropArea.height;
+
+      this.canvasResource = canvasManager.getCanvas(canvasWidth, canvasHeight);
       this.setupCanvas();
 
       // Release the old resource
@@ -253,15 +322,7 @@ export class StreamProcessor {
     }
   }
 
-  startConfetti(
-    confettiId: string,
-    config: {
-      confettiType: string;
-      colors: string[];
-      intensity: number;
-      duration: number;
-    }
-  ): void {
+  startConfetti(confettiId: string, config: StreamConfettiConfig): void {
     if (this.isDisposed) return;
 
     const confettiManager = new ConfettiOverlayManager(config, {
@@ -294,18 +355,7 @@ export class StreamProcessor {
     Logger.dev(`All confetti cleared in ${this.streamId}`);
   }
 
-  startMediaOverlay(
-    overlayId: string,
-    config: {
-      mediaUrl: string;
-      mediaType: "video" | "image";
-      position: { x: number; y: number };
-      scale: number;
-      duration: number;
-      opacity: number;
-      delay: number;
-    }
-  ): void {
+  startMediaOverlay(overlayId: string, config: StreamMediaOverlayConfig): void {
     if (this.isDisposed) return;
 
     const mediaOverlayManager = new MediaOverlayManager(config, {
@@ -338,12 +388,7 @@ export class StreamProcessor {
     Logger.dev(`All media overlays cleared in ${this.streamId}`);
   }
 
-  updateCropSettings(config: {
-    aspectRatio?: number;
-    zoom?: number;
-    align?: "left" | "center" | "right";
-    mirror?: boolean;
-  }): void {
+  updateCropSettings(config: StreamCropConfig): void {
     if (this.isDisposed) return;
 
     // Update config with new crop settings
@@ -374,6 +419,24 @@ export class StreamProcessor {
       offsetX: newOffset.x,
       offsetY: newOffset.y,
     };
+
+    // Use different canvas dimensions based on letterbox setting
+    const canvasWidth = this.cropConfig.enableLetterbox
+      ? this.originalStreamSize.width
+      : this.cropArea.width;
+    const canvasHeight = this.cropConfig.enableLetterbox
+      ? this.originalStreamSize.height
+      : this.cropArea.height;
+
+    this.canvasResource.prevHeight = this.canvasResource.height;
+    this.canvasResource.prevWidth = this.canvasResource.width;
+    this.canvasResource.canvas.width = canvasWidth;
+    this.canvasResource.canvas.height = canvasHeight;
+    this.canvasResource.width = canvasWidth;
+    this.canvasResource.height = canvasHeight;
+
+    // Update letterbox cache with new dimensions
+    this.updateLetterboxCache();
 
     // Clear configuration cache to force recalculation
     this.configCache.invalidate();

@@ -1,6 +1,6 @@
-import { StreamCropConfig } from "@/types/stream-patcher";
 import { CropMessage, MessageTypeEnum } from "@/types/window-message";
 import { Logger } from "@/utils/log";
+import { StreamCropConfig } from "@/utils/stream-patcher/types";
 import React, {
   createContext,
   ReactNode,

@@ -1,5 +1,8 @@
-import { StreamFilterConfig, StreamPatcherSize } from "@/types/stream-patcher";
 import { streamPatcher } from "@/utils/stream-patcher";
+import {
+  StreamFilterConfig,
+  StreamPatcherSize,
+} from "@/utils/stream-patcher/types";
 import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -34,7 +37,12 @@ function useStreamPatcher(
   const patchStream = useCallback(() => {
     if (!stream || !size) return;
 
-    const newPatchedStream = streamPatcher(stream, size, config);
+    const newPatchedStream = streamPatcher({
+      stream,
+      size,
+      filterConfig: config,
+      cropConfig: {},
+    });
 
     // Check if the patched stream is different from the previous one
     if (previousPatchedStreamRef.current !== newPatchedStream) {

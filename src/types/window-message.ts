@@ -1,5 +1,8 @@
 import { IAppCameraSource } from "@/context/app/types";
-import { StreamCropConfig, StreamFilterConfig } from "./stream-patcher";
+import {
+  StreamCropConfig,
+  StreamFilterConfig,
+} from "../utils/stream-patcher/types";
 
 export enum MessageTypeEnum {
   SETTINGS = "cam_tuner-settings",

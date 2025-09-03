@@ -1,14 +1,17 @@
 import { FormSlider } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card";
-import { ColorPreset } from "@/context/app/types";
 import { useFilter } from "@/context/filter";
 import useThrottle from "@/hooks/use-throttle";
 import { Sliders } from "lucide-react";
 
 type QuickPreset = {
   name: string;
-  preset: ColorPreset;
+  preset: {
+    brightness: number;
+    contrast: number;
+    saturation: number;
+  };
   description?: string;
 };
 

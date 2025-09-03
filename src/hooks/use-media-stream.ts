@@ -1,4 +1,4 @@
-import { StreamPatcherSize } from "@/types/stream-patcher";
+import { StreamPatcherSize } from "@/utils/stream-patcher/types";
 import { cleanupMediaStream } from "@/utils/stream-utils";
 import { useEffect, useState } from "react";
 

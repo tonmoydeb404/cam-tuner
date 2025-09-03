@@ -1,5 +1,5 @@
 import { env } from "@/config";
-import { MediaPatcherSettings } from "@/types/stream-patcher";
+import { MediaPatcherSettings } from "@/utils/stream-patcher/types";
 import { Logger } from "./log";
 import {
   buildMediaStreamConstraints,

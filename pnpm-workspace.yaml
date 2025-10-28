@@ -1,5 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - dtrace-provider
   - esbuild
+  - sharp
   - spawn-sync
+  - unrs-resolver

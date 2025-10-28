@@ -4,11 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "sync-version": "node -e \"const pkg=require('./package.json');const manifest=require('./apps/extension/manifest.json');manifest.version=pkg.version;require('fs').writeFileSync('manifest.json',JSON.stringify(manifest,null,2));console.log('✓ Synced version',pkg.version,'to manifest.json')\"",
-    "version": "pnpm sync-version && git add manifest.json"
+    "dev:extension": "pnpm --filter cam-tuner-extension dev",
+    "dev:website": "pnpm --filter cam-tuner-website dev",
+    "build:extension": "pnpm --filter cam-tuner-extension build",
+    "build:website": "pnpm --filter cam-tuner-website build",
+    "build:all": "pnpm -r build",
+    "lint:all": "pnpm -r lint",
+    "clean": "pnpm -r exec rm -rf dist .next node_modules && rm -rf node_modules",
+    "sync-version": "node scripts/sync-version.js",
+    "version": "pnpm sync-version && git add apps/extension/manifest.json"
   },
   "keywords": [],
   "author": "tonmoydeb404@gmail.com",
   "license": "MIT",
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "devDependencies": {}
 }

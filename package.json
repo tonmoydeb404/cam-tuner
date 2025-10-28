@@ -8,6 +8,7 @@
     "dev:website": "pnpm --filter cam-tuner-website dev",
     "build:extension": "pnpm --filter cam-tuner-extension build",
     "build:website": "pnpm --filter cam-tuner-website build",
+    "start:website": "pnpm --filter cam-tuner-website start",
     "build:all": "pnpm -r build",
     "lint:all": "pnpm -r lint",
     "clean": "pnpm -r exec rm -rf dist .next node_modules && rm -rf node_modules",

@@ -5,6 +5,7 @@ import {
   scriptInjection,
 } from "../utils/browser-api";
 import { Logger } from "../utils/log";
+import { createIframeOverlay } from "./iframe";
 
 // Initiate web page with initial settings  ----------------------------------------------------------------------
 const initializeExtension = async () => {
@@ -66,6 +67,14 @@ chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
       window.postMessage(message, "*");
       sendResponse({ success: true });
     }
+  }
+
+  if (message?.type === MessageTypeEnum.TOGGLE_IFRAME) {
+    console.log(message, sender);
+
+    Logger.dev("Toggle iframe message received");
+    createIframeOverlay();
+    sendResponse({ success: true });
   }
 
   return true;

@@ -11,6 +11,7 @@ export enum MessageTypeEnum {
   FILTER = "cam_tuner-filter",
   CONFETTI = "cam_tuner-confetti",
   MEDIA_OVERLAY = "cam_tuner-media-overlay",
+  TOGGLE_IFRAME = "cam_tuner-toggle-iframe",
 }
 
 export type SettingsUpdateMessage = {
@@ -52,4 +53,9 @@ export type MediaOverlayMessage = {
     opacity: number;
     delay: number;
   };
+};
+
+export type ToggleIframeMessage = {
+  type: MessageTypeEnum.TOGGLE_IFRAME;
+  payload?: Record<string, never>;
 };

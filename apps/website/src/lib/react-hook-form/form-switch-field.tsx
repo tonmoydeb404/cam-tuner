@@ -1,50 +1,37 @@
-"use client"
+"use client";
 
-import { useController, type UseControllerProps, type FieldValues } from "react-hook-form"
-import { SwitchField } from "@/components/fields/switch-field"
+import {
+  Controller,
+  useFormContext,
+  type FieldPath,
+  type FieldValues,
+} from "react-hook-form";
+import { SwitchField, SwitchFieldProps } from "@/components/fields/switch-field";
 
-interface FormSwitchFieldProps<T extends FieldValues> extends UseControllerProps<T> {
-  label: string
-  description?: string
-  disabled?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
-  className?: string
+interface FormSwitchFieldProps<T extends FieldValues>
+  extends Omit<SwitchFieldProps, "checked" | "onChange" | "id"> {
+  name: FieldPath<T>;
 }
 
-export function FormSwitchField<T extends FieldValues>({
-  label,
-  name,
-  control,
-  rules,
-  description,
-  disabled = false,
-  orientation = "horizontal",
-  className,
-  defaultValue,
-  shouldUnregister,
-}: FormSwitchFieldProps<T>) {
-  const {
-    field,
-    fieldState: { error },
-  } = useController({
-    name,
-    control,
-    rules,
-    defaultValue,
-    shouldUnregister,
-  })
+export function FormSwitchField<T extends FieldValues>(
+  props: FormSwitchFieldProps<T>
+) {
+  const { name, ...others } = props;
+  const { control } = useFormContext<T>();
 
   return (
-    <SwitchField
-      id={name}
-      label={label}
-      checked={field.value ?? false}
-      onChange={field.onChange}
-      description={description}
-      error={error?.message}
-      disabled={disabled}
-      orientation={orientation}
-      className={className}
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState: { error } }) => (
+        <SwitchField
+          id={name}
+          checked={field.value ?? false}
+          onChange={field.onChange}
+          error={error?.message}
+          {...others}
+        />
+      )}
     />
-  )
+  );
 }

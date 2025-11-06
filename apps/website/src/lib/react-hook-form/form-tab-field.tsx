@@ -1,20 +1,20 @@
 "use client";
 
-import { InputField, InputFieldProps } from "@/components/fields/input-field";
 import {
   Controller,
   useFormContext,
   type FieldPath,
   type FieldValues,
 } from "react-hook-form";
+import { TabField, TabFieldProps } from "@/components/fields";
 
-interface FormInputFieldProps<T extends FieldValues>
-  extends Omit<InputFieldProps, "value" | "onChange" | "id"> {
+interface FormTabFieldProps<T extends FieldValues>
+  extends Omit<TabFieldProps, "value" | "onChange" | "id"> {
   name: FieldPath<T>;
 }
 
-export function FormInputField<T extends FieldValues>(
-  props: FormInputFieldProps<T>
+export function FormTabField<T extends FieldValues>(
+  props: FormTabFieldProps<T>
 ) {
   const { name, ...others } = props;
   const { control } = useFormContext<T>();
@@ -24,7 +24,7 @@ export function FormInputField<T extends FieldValues>(
       name={name}
       control={control}
       render={({ field, fieldState: { error } }) => (
-        <InputField
+        <TabField
           id={name}
           value={field.value ?? ""}
           onChange={field.onChange}

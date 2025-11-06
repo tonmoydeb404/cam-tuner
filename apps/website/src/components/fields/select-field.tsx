@@ -1,38 +1,31 @@
-"use client"
+"use client";
 
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field"
+} from "@/components/ui/select";
+import { CommonFieldProps } from "./types";
 
 export interface SelectOption {
-  label: string
-  value: string
-  disabled?: boolean
+  label: string;
+  value: string;
+  disabled?: boolean;
 }
 
-interface SelectFieldProps {
-  label: string
-  id: string
-  value: string
-  onChange: (value: string) => void
-  options: SelectOption[]
-  className?: string
-  placeholder?: string
-  description?: string
-  error?: string
-  disabled?: boolean
-  required?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
+export interface SelectFieldProps extends CommonFieldProps<string> {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
 }
 
 export function SelectField({
@@ -48,8 +41,14 @@ export function SelectField({
   disabled = false,
   required = false,
   orientation = "vertical",
+  encode = (v) => v,
+  decode = (v) => v,
 }: SelectFieldProps) {
-  const isInvalid = !!error
+  const isInvalid = !!error;
+
+  const handleChange = (newValue: string) => {
+    onChange(encode(newValue));
+  };
 
   return (
     <Field
@@ -62,7 +61,11 @@ export function SelectField({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <Select
+        value={decode(value)}
+        onValueChange={handleChange}
+        disabled={disabled}
+      >
         <SelectTrigger
           id={id}
           aria-invalid={isInvalid}
@@ -89,5 +92,5 @@ export function SelectField({
       )}
       {error && <FieldError>{error}</FieldError>}
     </Field>
-  )
+  );
 }

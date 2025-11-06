@@ -1,59 +1,40 @@
-"use client"
+"use client";
 
-import { useController, type UseControllerProps, type FieldValues } from "react-hook-form"
-import { SelectField, type SelectOption } from "@/components/fields/select-field"
+import {
+  SelectField,
+  SelectFieldProps,
+} from "@/components/fields/select-field";
+import {
+  Controller,
+  useFormContext,
+  type FieldPath,
+  type FieldValues,
+} from "react-hook-form";
 
-interface FormSelectFieldProps<T extends FieldValues> extends UseControllerProps<T> {
-  label: string
-  options: SelectOption[]
-  placeholder?: string
-  description?: string
-  disabled?: boolean
-  required?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
-  className?: string
+interface FormSelectFieldProps<T extends FieldValues>
+  extends Omit<SelectFieldProps, "value" | "onChange" | "id" | "error"> {
+  name: FieldPath<T>;
 }
 
-export function FormSelectField<T extends FieldValues>({
-  label,
-  name,
-  control,
-  rules,
-  options,
-  placeholder = "Select an option",
-  description,
-  disabled = false,
-  required = false,
-  orientation = "vertical",
-  className,
-  defaultValue,
-  shouldUnregister,
-}: FormSelectFieldProps<T>) {
-  const {
-    field,
-    fieldState: { error },
-  } = useController({
-    name,
-    control,
-    rules,
-    defaultValue,
-    shouldUnregister,
-  })
+export function FormSelectField<T extends FieldValues>(
+  props: FormSelectFieldProps<T>
+) {
+  const { name, ...others } = props;
+  const { control } = useFormContext<T>();
 
   return (
-    <SelectField
-      id={name}
-      label={label}
-      value={field.value ?? ""}
-      onChange={field.onChange}
-      options={options}
-      placeholder={placeholder}
-      description={description}
-      error={error?.message}
-      disabled={disabled}
-      required={required}
-      orientation={orientation}
-      className={className}
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState: { error } }) => (
+        <SelectField
+          id={name}
+          value={field.value ?? ""}
+          onChange={field.onChange}
+          error={error?.message}
+          {...others}
+        />
+      )}
     />
-  )
+  );
 }

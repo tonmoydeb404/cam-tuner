@@ -1,23 +1,17 @@
-"use client"
+"use client";
 
-import { Switch } from "@/components/ui/switch"
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { CommonFieldProps } from "./types";
 
-interface SwitchFieldProps {
-  label: string
-  id: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-  className?: string
-  description?: string
-  error?: string
-  disabled?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
+export interface SwitchFieldProps extends Omit<CommonFieldProps<boolean>, "required"> {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
 }
 
 export function SwitchField({
@@ -30,8 +24,14 @@ export function SwitchField({
   error,
   disabled = false,
   orientation = "horizontal",
+  encode = (v) => v,
+  decode = (v) => v,
 }: SwitchFieldProps) {
-  const isInvalid = !!error
+  const isInvalid = !!error;
+
+  const handleChange = (newChecked: boolean) => {
+    onChange(encode(newChecked));
+  };
 
   return (
     <Field
@@ -43,8 +43,8 @@ export function SwitchField({
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Switch
         id={id}
-        checked={checked}
-        onCheckedChange={onChange}
+        checked={decode(checked)}
+        onCheckedChange={handleChange}
         disabled={disabled}
         aria-invalid={isInvalid}
         aria-describedby={description ? `${id}-description` : undefined}
@@ -56,5 +56,5 @@ export function SwitchField({
       )}
       {error && <FieldError>{error}</FieldError>}
     </Field>
-  )
+  );
 }

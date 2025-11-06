@@ -6,24 +6,28 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { CommonFieldProps } from "./types";
 
-export interface InputFieldProps extends CommonFieldProps<string> {
+export interface TabOption {
+  label: string;
   value: string;
-  onChange: (value: string) => void;
-  type?: React.HTMLInputTypeAttribute;
-  placeholder?: string;
+  disabled?: boolean;
 }
 
-export function InputField({
+export interface TabFieldProps extends CommonFieldProps<string> {
+  value: string;
+  onChange: (value: string) => void;
+  options: TabOption[];
+}
+
+export function TabField({
   label,
   id,
   value,
   onChange,
+  options,
   className = "",
-  type = "text",
-  placeholder,
   description,
   error,
   disabled = false,
@@ -31,7 +35,7 @@ export function InputField({
   orientation = "vertical",
   encode = (v) => v,
   decode = (v) => v,
-}: InputFieldProps) {
+}: TabFieldProps) {
   const isInvalid = !!error;
 
   const handleChange = (newValue: string) => {
@@ -49,17 +53,23 @@ export function InputField({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </FieldLabel>
-      <Input
-        id={id}
-        type={type}
+      <Tabs
         value={decode(value)}
-        onChange={(e) => handleChange(e.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        required={required}
-        aria-invalid={isInvalid}
-        aria-describedby={description ? `${id}-description` : undefined}
-      />
+        onValueChange={handleChange}
+        className="w-full"
+      >
+        <TabsList className="w-full bg-accent dark:bg-background">
+          {options.map((item) => (
+            <TabsTrigger
+              key={item.value}
+              value={item.value}
+              disabled={item.disabled}
+            >
+              {item.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
       {description && (
         <FieldDescription id={`${id}-description`}>
           {description}

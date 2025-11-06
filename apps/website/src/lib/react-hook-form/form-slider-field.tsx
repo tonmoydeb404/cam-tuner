@@ -1,74 +1,38 @@
-"use client"
+"use client";
 
-import { useController, type UseControllerProps, type FieldValues } from "react-hook-form"
-import { SliderField } from "@/components/fields/slider-field"
+import {
+  Controller,
+  useFormContext,
+  type FieldPath,
+  type FieldValues,
+} from "react-hook-form";
+import { SliderField, SliderFieldProps } from "@/components/fields/slider-field";
 
-interface FormSliderFieldProps<T extends FieldValues> extends UseControllerProps<T> {
-  label: string
-  min: number
-  max: number
-  step: number
-  unit?: string
-  description?: string
-  disabled?: boolean
-  formatValue?: (value: number) => string
-  showValue?: boolean
-  showPercentage?: boolean
-  showMinMax?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
-  className?: string
+interface FormSliderFieldProps<T extends FieldValues>
+  extends Omit<SliderFieldProps, "value" | "onChange" | "id"> {
+  name: FieldPath<T>;
 }
 
-export function FormSliderField<T extends FieldValues>({
-  label,
-  name,
-  control,
-  rules,
-  min,
-  max,
-  step,
-  unit = "",
-  description,
-  disabled = false,
-  formatValue,
-  showValue = true,
-  showPercentage = true,
-  showMinMax = true,
-  orientation = "vertical",
-  className,
-  defaultValue,
-  shouldUnregister,
-}: FormSliderFieldProps<T>) {
-  const {
-    field,
-    fieldState: { error },
-  } = useController({
-    name,
-    control,
-    rules,
-    defaultValue,
-    shouldUnregister,
-  })
+export function FormSliderField<T extends FieldValues>(
+  props: FormSliderFieldProps<T>
+) {
+  const { name, min, ...others } = props;
+  const { control } = useFormContext<T>();
 
   return (
-    <SliderField
-      id={name}
-      label={label}
-      value={field.value ?? min}
-      onChange={field.onChange}
-      min={min}
-      max={max}
-      step={step}
-      unit={unit}
-      description={description}
-      error={error?.message}
-      disabled={disabled}
-      formatValue={formatValue}
-      showValue={showValue}
-      showPercentage={showPercentage}
-      showMinMax={showMinMax}
-      orientation={orientation}
-      className={className}
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState: { error } }) => (
+        <SliderField
+          id={name}
+          value={field.value ?? min}
+          onChange={field.onChange}
+          min={min}
+          error={error?.message}
+          {...others}
+        />
+      )}
     />
-  )
+  );
 }

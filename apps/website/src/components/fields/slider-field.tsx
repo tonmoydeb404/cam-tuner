@@ -1,33 +1,26 @@
-"use client"
+"use client";
 
-import { Slider } from "@/components/ui/slider"
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
-  FieldContent,
-  FieldTitle,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
+import { Slider } from "@/components/ui/slider";
+import { CommonFieldProps } from "./types";
 
-interface SliderFieldProps {
-  label: string
-  id: string
-  value: number
-  min: number
-  max: number
-  step: number
-  onChange: (value: number) => void
-  unit?: string
-  className?: string
-  description?: string
-  error?: string
-  disabled?: boolean
-  formatValue?: (value: number) => string
-  showValue?: boolean
-  showPercentage?: boolean
-  showMinMax?: boolean
-  orientation?: "vertical" | "horizontal" | "responsive"
+export interface SliderFieldProps extends CommonFieldProps<number> {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+  unit?: string;
+  formatValue?: (value: number) => string;
+  showValue?: boolean;
+  showPercentage?: boolean;
+  showMinMax?: boolean;
 }
 
 export function SliderField({
@@ -48,10 +41,19 @@ export function SliderField({
   showPercentage = true,
   showMinMax = true,
   orientation = "vertical",
+  encode = (v) => v,
+  decode = (v) => v,
 }: SliderFieldProps) {
-  const isInvalid = !!error
-  const displayValue = formatValue ? formatValue(value) : value.toString()
-  const percentage = ((value - min) / (max - min)) * 100
+  const isInvalid = !!error;
+  const decodedValue = decode(value);
+  const displayValue = formatValue
+    ? formatValue(decodedValue)
+    : decodedValue.toString();
+  const percentage = ((decodedValue - min) / (max - min)) * 100;
+
+  const handleChange = (newValue: number) => {
+    onChange(encode(newValue));
+  };
 
   return (
     <Field
@@ -66,7 +68,7 @@ export function SliderField({
           <span
             id={`${id}-value`}
             aria-live="polite"
-            className="text-sm font-medium text-foreground bg-muted/50 px-2 py-1 rounded-md min-w-[3rem] text-center"
+            className="text-sm font-medium text-foreground bg-muted/50 px-2 py-1 rounded-md min-w-12 text-center"
           >
             {displayValue}
             {unit}
@@ -80,8 +82,8 @@ export function SliderField({
           min={min}
           max={max}
           step={step}
-          value={[value]}
-          onValueChange={(values) => onChange(values[0])}
+          value={[decodedValue]}
+          onValueChange={(values) => handleChange(values[0])}
           disabled={disabled}
           aria-invalid={isInvalid}
           aria-describedby={description ? `${id}-description` : undefined}
@@ -117,5 +119,5 @@ export function SliderField({
 
       {error && <FieldError>{error}</FieldError>}
     </Field>
-  )
+  );
 }

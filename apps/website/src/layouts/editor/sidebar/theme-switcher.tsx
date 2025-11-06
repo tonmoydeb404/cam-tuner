@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon } from "lucide-react";
 import { ThemeAnimationType, useTheme } from "@/lib/next-themes";
+import { MoonIcon, SunIcon } from "lucide-react";
 
 const ThemeSwitcher = () => {
   const { ref, setTheme, resolvedTheme } = useTheme({

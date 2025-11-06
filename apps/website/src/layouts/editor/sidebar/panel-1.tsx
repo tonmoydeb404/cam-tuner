@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { CommandIcon } from "lucide-react";
+import Link from "next/link";
 import { toolsList } from "../config";
 import ThemeSwitcher from "./theme-switcher";
 
@@ -36,28 +37,19 @@ const EditorSidebarPanel1 = (props: Props) => {
           <SidebarGroupContent className="px-1.5 md:px-0">
             <SidebarMenu className="gap-y-2">
               {toolsList.map((item) => (
-                <SidebarMenuItem key={item.id}>
+                <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     tooltip={{
                       children: item.title,
                       hidden: false,
                     }}
                     variant={"outline"}
-                    // onClick={() => {
-                    //   setActiveItem(item)
-                    //   const mail = data.mails.sort(() => Math.random() - 0.5)
-                    //   setMails(
-                    //     mail.slice(
-                    //       0,
-                    //       Math.max(5, Math.floor(Math.random() * 10) + 1)
-                    //     )
-                    //   )
-                    //   setOpen(true)
-                    // }}
-                    // isActive={activeItem?.title === item.title}
                     className="items-center justify-center aspect-square h-auto border"
+                    asChild
                   >
-                    <item.icon className="size-5!" />
+                    <Link href={item.path}>
+                      <item.icon className="size-5!" />
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

@@ -16,13 +16,14 @@ export interface UseWebcamPermissionResult {
 export function useWebcamPermission(): UseWebcamPermissionResult {
   const [permission, setPermission] =
     React.useState<WebcamPermissionState>("prompt");
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   // Check initial permission state
   React.useEffect(() => {
     if (!navigator.mediaDevices || !navigator.permissions) {
       setPermission("unavailable");
+      setIsLoading(false);
       return;
     }
 
@@ -42,6 +43,8 @@ export function useWebcamPermission(): UseWebcamPermissionResult {
       } catch (err) {
         // Permissions API might not be fully supported
         setPermission("prompt");
+      } finally {
+        setIsLoading(false);
       }
     };
 

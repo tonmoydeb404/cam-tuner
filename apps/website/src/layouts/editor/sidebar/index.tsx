@@ -13,7 +13,7 @@ const EditorSidebar = (props: Props) => {
   return (
     <Sidebar
       collapsible="icon"
-      className="overflow-hidden *:data-[sidebar=sidebar]:flex-row [--sidebar-width:500px]"
+      className="overflow-hidden *:data-[sidebar=sidebar]:flex-row"
     >
       <EditorSidebarPanel1 />
       <EditorSidebarPanel2>{props.children}</EditorSidebarPanel2>

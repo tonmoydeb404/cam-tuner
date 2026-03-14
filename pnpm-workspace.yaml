@@ -1,5 +1,3 @@
-onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - dtrace-provider
-  - esbuild
-  - spawn-sync
+packages:
+  - "apps/*"
+  - "packages/*"

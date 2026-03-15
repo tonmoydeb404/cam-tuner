@@ -5,13 +5,41 @@ import { useWebcam } from "@/hooks/use-webcam"
 import { Video01Icon, VideoOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@workspace/ui/components/button"
+import type { AlignPosition, AspectRatio, TunerConfig } from "@/lib/tuner-types"
+import { DEFAULT_TUNER_CONFIG } from "@/lib/tuner-types"
 import PreviewError from "./error"
 import PreviewSidebar from "./sidebar"
 import PreviewVideo from "./video"
 
-const PreviewView = () => {
+interface PreviewViewProps {
+  initialAspectRatio?: AspectRatio
+  initialZoom?: number
+  initialAlign?: AlignPosition
+  initialGridVisible?: boolean
+}
+
+const PreviewView = ({
+  initialAspectRatio,
+  initialZoom,
+  initialAlign,
+  initialGridVisible,
+}: PreviewViewProps) => {
   const webcam = useWebcam()
-  const tuner = useTuner(webcam.stream)
+
+  // Build initial config from URL params or defaults
+  const initialConfig: Partial<TunerConfig> = {
+    aspectRatio: initialAspectRatio,
+    zoom: initialZoom,
+    align: initialAlign,
+    gridVisible: initialGridVisible,
+  }
+
+  // Filter out undefined values and merge with defaults
+  const validConfig = Object.fromEntries(
+    Object.entries(initialConfig).filter(([_, v]) => v !== undefined)
+  ) as Partial<TunerConfig>
+
+  const tuner = useTuner(webcam.stream, validConfig)
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center">

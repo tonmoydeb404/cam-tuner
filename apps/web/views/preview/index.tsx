@@ -2,20 +2,23 @@
 
 import { useTuner } from "@/hooks/use-tuner"
 import { useWebcam } from "@/hooks/use-webcam"
+import type { AlignPosition, AspectRatio, TunerConfig } from "@/lib/tuner-types"
 import { Video01Icon, VideoOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@workspace/ui/components/button"
-import type { AlignPosition, AspectRatio, TunerConfig } from "@/lib/tuner-types"
-import { DEFAULT_TUNER_CONFIG } from "@/lib/tuner-types"
 import PreviewError from "./error"
 import PreviewSidebar from "./sidebar"
 import PreviewVideo from "./video"
+
+type SyncStatus = "idle" | "syncing" | "success" | "error"
 
 interface PreviewViewProps {
   initialAspectRatio?: AspectRatio
   initialZoom?: number
   initialAlign?: AlignPosition
   initialGridVisible?: boolean
+  syncStatus: SyncStatus
+  setSyncStatus: (status: SyncStatus) => void
 }
 
 const PreviewView = ({
@@ -23,6 +26,8 @@ const PreviewView = ({
   initialZoom,
   initialAlign,
   initialGridVisible,
+  syncStatus,
+  setSyncStatus,
 }: PreviewViewProps) => {
   const webcam = useWebcam()
 
@@ -74,7 +79,12 @@ const PreviewView = ({
         </div>
 
         {/* Tuner Controls Sidebar */}
-        <PreviewSidebar tuner={tuner} webcam={webcam} />
+        <PreviewSidebar
+          tuner={tuner}
+          webcam={webcam}
+          syncStatus={syncStatus}
+          setSyncStatus={setSyncStatus}
+        />
       </div>
     </div>
   )

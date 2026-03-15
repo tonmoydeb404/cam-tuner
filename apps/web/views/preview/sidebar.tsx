@@ -32,9 +32,13 @@ import {
 import { Slider } from "@workspace/ui/components/slider"
 import PreviewActions from "./actions"
 
+type SyncStatus = "idle" | "syncing" | "success" | "error"
+
 type Props = {
   webcam: UseWebcamReturn
   tuner: UseTunerReturn
+  syncStatus: SyncStatus
+  setSyncStatus: (status: SyncStatus) => void
 }
 
 const ALIGN_OPTIONS: AlignPosition[] = [
@@ -62,7 +66,7 @@ const ALIGN_ICONS: Record<AlignPosition, typeof ArrowUpLeft01Icon> = {
 }
 
 const PreviewSidebar = (props: Props) => {
-  const { webcam, tuner } = props
+  const { webcam, tuner, syncStatus, setSyncStatus } = props
 
   return (
     <div className="flex w-full flex-col gap-6 md:w-80">
@@ -161,7 +165,12 @@ const PreviewSidebar = (props: Props) => {
                 })}
               </div>
             </div>
-            <PreviewActions tuner={tuner} webcam={webcam} />
+            <PreviewActions
+              tuner={tuner}
+              webcam={webcam}
+              syncStatus={syncStatus}
+              setSyncStatus={setSyncStatus}
+            />
           </div>
         </CardContent>
       </Card>

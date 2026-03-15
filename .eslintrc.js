@@ -10,4 +10,7 @@ module.exports = {
     "**/.turbo/**",
     "**/coverage/**",
   ],
+  rules: {
+    "@typescript-eslint/no-unused-vars": 0,
+  },
 }

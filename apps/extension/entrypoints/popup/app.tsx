@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import {
   ArrowAllDirectionIcon,
   ArrowDown01Icon,
@@ -18,6 +17,14 @@ import { Button } from "@workspace/ui/components/button"
 import { Label } from "@workspace/ui/components/label"
 import { Slider } from "@workspace/ui/components/slider"
 import { Switch } from "@workspace/ui/components/switch"
+import { useEffect, useState } from "react"
+import {
+  getTunerConfig,
+  setAlign,
+  setAspectRatio,
+  setGridVisible,
+  setZoom,
+} from "../../lib/storage"
 import type {
   AlignPosition,
   AspectRatio,
@@ -27,13 +34,6 @@ import {
   ASPECT_RATIO_OPTIONS,
   DEFAULT_TUNER_CONFIG,
 } from "../../lib/tuner-types"
-import {
-  getTunerConfig,
-  setAspectRatio,
-  setAlign,
-  setZoom,
-  setGridVisible,
-} from "../../lib/storage"
 
 const ALIGN_OPTIONS: AlignPosition[] = [
   "top-left",
@@ -103,12 +103,15 @@ export default function App() {
   }
 
   const handlePreview = async () => {
-    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-      if (tabs[0]?.id) {
-        browser.tabs.sendMessage(tabs[0].id, { action: "showPreview" })
-        window.close()
-      }
+    const webUrl = import.meta.env.VITE_WEB_URL
+    const configParams = new URLSearchParams({
+      aspectRatio: config.aspectRatio,
+      zoom: config.zoom.toString(),
+      align: config.align,
+      gridVisible: config.gridVisible.toString(),
     })
+    const previewUrl = `${webUrl}/preview?${configParams.toString()}`
+    await browser.tabs.create({ url: previewUrl })
   }
 
   const handleApply = async () => {

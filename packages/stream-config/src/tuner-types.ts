@@ -15,7 +15,6 @@ export interface TunerConfig {
   aspectRatio: AspectRatio
   zoom: number
   align: AlignPosition
-  gridVisible: boolean
 }
 
 export const ASPECT_RATIO_OPTIONS: AspectRatio[] = [
@@ -48,5 +47,4 @@ export const DEFAULT_TUNER_CONFIG: TunerConfig = {
   aspectRatio: "16:9",
   zoom: 1,
   align: "center",
-  gridVisible: false,
 }

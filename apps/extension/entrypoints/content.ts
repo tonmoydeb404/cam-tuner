@@ -1,9 +1,46 @@
-import { setTunerConfig } from "../lib/storage"
+import {
+  getTunerConfig,
+  setTunerConfig,
+  tunerConfig,
+  virtualCamEnabled,
+} from "../lib/storage"
+
+const CAMTUNER_EVENT = "camtuner:config-update"
+const CAMTUNER_REQUEST = "camtuner:request-config"
+
+function sendToPage(config: any, enabled: boolean) {
+  window.dispatchEvent(
+    new CustomEvent(CAMTUNER_EVENT, { detail: { config, enabled } })
+  )
+}
 
 export default defineContentScript({
   matches: ["*://*/*"],
-  main(ctx) {
+  main() {
+    // Bridge: when the MAIN world requests initial config
+    window.addEventListener(CAMTUNER_REQUEST, async () => {
+      const [config, enabled] = await Promise.all([
+        getTunerConfig(),
+        virtualCamEnabled.getValue(),
+      ])
+      sendToPage(config, enabled)
+    })
+
+    // Bridge: sync config from web preview page to storage
     window.addEventListener("message", handleMessage)
+
+    // Bridge: watch storage changes and forward to MAIN world
+    tunerConfig.watch((config) => {
+      virtualCamEnabled.getValue().then((enabled) => {
+        sendToPage(config, enabled)
+      })
+    })
+
+    virtualCamEnabled.watch((enabled) => {
+      getTunerConfig().then((config) => {
+        sendToPage(config, enabled)
+      })
+    })
   },
 })
 

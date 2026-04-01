@@ -1,27 +1,24 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import {
-  AlignPosition,
   ALIGN_OBJECT_POSITION,
-  AspectRatio,
+  AlignPosition,
   ASPECT_RATIO_CLASS,
-  DEFAULT_TUNER_CONFIG,
-  TunerConfig,
-} from "@/lib/tuner-types"
-import {
-  createStreamModifier,
+  AspectRatio,
   createCropZoomAlignPlugin,
-  StreamModifier,
+  createStreamModifier,
   CROP_ZOOM_ALIGN_PLUGIN_ID,
+  DEFAULT_TUNER_CONFIG,
+  StreamModifier,
+  TunerConfig,
 } from "@workspace/stream-config"
+import { useEffect, useRef, useState } from "react"
 
 export interface UseTunerReturn {
   config: TunerConfig
   setAspectRatio: (v: AspectRatio) => void
   setZoom: (v: number) => void
   setAlign: (v: AlignPosition) => void
-  setGridVisible: (v: boolean) => void
   // Derived CSS values
   aspectRatioClass: string
   objectPosition: string
@@ -119,15 +116,11 @@ export function useTuner(
     })
   }
 
-  const setGridVisible = (gridVisible: boolean) =>
-    setConfig((c) => ({ ...c, gridVisible }))
-
   return {
     config,
     setAspectRatio,
     setZoom,
     setAlign,
-    setGridVisible,
     aspectRatioClass: ASPECT_RATIO_CLASS[config.aspectRatio],
     objectPosition: ALIGN_OBJECT_POSITION[config.align],
     outputStream,

@@ -5,6 +5,6 @@ export default defineConfig({
   dev: { server: { port: 3001 } },
   manifest: {
     permissions: ["storage", "activeTab"],
-    host_permissions: ["http://localhost:3000/*"],
+    host_permissions: ["http://localhost:3000/*", "*://*/*"],
   },
 })

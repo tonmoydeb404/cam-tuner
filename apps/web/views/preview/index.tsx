@@ -2,9 +2,13 @@
 
 import { useTuner } from "@/hooks/use-tuner"
 import { useWebcam } from "@/hooks/use-webcam"
-import type { AlignPosition, AspectRatio, TunerConfig } from "@/lib/tuner-types"
 import { Video01Icon, VideoOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  AlignPosition,
+  AspectRatio,
+  TunerConfig,
+} from "@workspace/stream-config"
 import { Button } from "@workspace/ui/components/button"
 import PreviewError from "./error"
 import PreviewSidebar from "./sidebar"
@@ -16,7 +20,6 @@ interface PreviewViewProps {
   initialAspectRatio?: AspectRatio
   initialZoom?: number
   initialAlign?: AlignPosition
-  initialGridVisible?: boolean
   syncStatus: SyncStatus
   setSyncStatus: (status: SyncStatus) => void
 }
@@ -25,7 +28,6 @@ const PreviewView = ({
   initialAspectRatio,
   initialZoom,
   initialAlign,
-  initialGridVisible,
   syncStatus,
   setSyncStatus,
 }: PreviewViewProps) => {
@@ -36,7 +38,6 @@ const PreviewView = ({
     aspectRatio: initialAspectRatio,
     zoom: initialZoom,
     align: initialAlign,
-    gridVisible: initialGridVisible,
   }
 
   // Filter out undefined values and merge with defaults

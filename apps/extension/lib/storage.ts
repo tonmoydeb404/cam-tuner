@@ -44,3 +44,7 @@ export async function setZoom(zoom: number): Promise<void> {
 export async function setAlign(align: AlignPosition): Promise<void> {
   await setTunerConfig({ align })
 }
+
+export async function setBarColor(barColor: string): Promise<void> {
+  await setTunerConfig({ barColor })
+}

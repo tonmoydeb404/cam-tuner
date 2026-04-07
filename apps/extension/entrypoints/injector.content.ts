@@ -51,6 +51,7 @@ export default defineContentScript({
         zoom: config.zoom,
         alignX,
         alignY,
+        barColor: config.barColor || "#000000",
       }
     }
 

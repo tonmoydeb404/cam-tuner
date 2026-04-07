@@ -18,6 +18,7 @@ import {
   getTunerConfig,
   setAlign,
   setAspectRatio,
+  setBarColor,
   setZoom,
   virtualCamEnabled,
 } from "../../lib/storage"
@@ -56,6 +57,11 @@ export default function App() {
   const handleAlign = async (align: AlignPosition) => {
     setConfig((c) => ({ ...c, align }))
     await setAlign(align)
+  }
+
+  const handleBarColor = async (barColor: string) => {
+    setConfig((c) => ({ ...c, barColor }))
+    await setBarColor(barColor)
   }
 
   const handlePreview = async () => {
@@ -119,6 +125,24 @@ export default function App() {
 
             {/* Align Control */}
             <AlignControl value={config.align} onChange={handleAlign} />
+
+            {/* Bar Color */}
+            <div className="flex flex-col gap-3">
+              <Label className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                Bar Color
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.barColor || "#000000"}
+                  onChange={(e) => handleBarColor(e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {config.barColor || "#000000"}
+                </span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

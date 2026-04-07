@@ -16,6 +16,7 @@ export class CanvasEngine implements ProcessorEngine {
   private plugins: { plugin: StreamPlugin; config: any }[] = []
   private isProcessing = false
   private requestVideoFrameCallbackId = 0
+  private canvasTrack: any = null // Reference to the capture stream track for requestFrame()
 
   constructor(private inputStream: MediaStream) {
     // Setup invisible video tag to read stream frames
@@ -37,12 +38,6 @@ export class CanvasEngine implements ProcessorEngine {
   start(): MediaStream {
     this.video.play().catch(console.error)
 
-    // Update canvas size to match original video exactly
-    this.video.addEventListener("loadedmetadata", () => {
-      this.canvas.width = this.video.videoWidth
-      this.canvas.height = this.video.videoHeight
-    })
-
     // Start processing loop
     this.isProcessing = true
 
@@ -59,8 +54,9 @@ export class CanvasEngine implements ProcessorEngine {
       polyfillLoop()
     }
 
-    // Capture stream at 30 fps
-    this.outputStream = this.canvas.captureStream(30)
+    // Capture stream on-demand: 0 means frames are only captured when we call requestFrame()
+    this.outputStream = this.canvas.captureStream(0)
+    this.canvasTrack = this.outputStream.getVideoTracks()[0] ?? null
     return this.outputStream
   }
 
@@ -75,8 +71,15 @@ export class CanvasEngine implements ProcessorEngine {
   private processFrame() {
     if (this.video.readyState < 2 || this.canvas.width === 0) return
 
-    // Apply all plugins in sequence.
-    // The crop-zoom plugin handles background fill and drawing.
+    // Sync canvas to video dimensions once they're known
+    if (
+      this.canvas.width !== this.video.videoWidth ||
+      this.canvas.height !== this.video.videoHeight
+    ) {
+      this.canvas.width = this.video.videoWidth
+      this.canvas.height = this.video.videoHeight
+    }
+
     for (const { plugin, config } of this.plugins) {
       if (plugin.drawCanvas) {
         plugin.drawCanvas(
@@ -87,6 +90,14 @@ export class CanvasEngine implements ProcessorEngine {
           config
         )
       }
+    }
+
+    // Signal that a new frame is ready for capture
+    if (
+      this.canvasTrack &&
+      typeof this.canvasTrack.requestFrame === "function"
+    ) {
+      this.canvasTrack.requestFrame()
     }
   }
 

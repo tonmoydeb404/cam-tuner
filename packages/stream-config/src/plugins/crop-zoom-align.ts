@@ -1,5 +1,6 @@
 import { StreamPlugin } from "../types"
 import {
+  Box,
   calculateCropBox,
   calculateDestinationBox,
   CropConfig,
@@ -16,6 +17,7 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
     zoom: Math.max(1, config.zoom || 1),
     alignX: config.alignX || "center",
     alignY: config.alignY || "center",
+    barColor: config.barColor || "#000000",
   }
 }
 
@@ -24,6 +26,29 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
  * and centers it on a black background maintaining the original canvas resolution.
  */
 export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
+  // Cached computed values — only recalculated when config changes
+  let cachedConfig: CropConfig | null = null
+  let cachedSrcWidth = 0
+  let cachedSrcHeight = 0
+  let cachedCropBox: Box = { x: 0, y: 0, width: 0, height: 0 }
+  let cachedDestBox: Box = { x: 0, y: 0, width: 0, height: 0 }
+  let cachedNeedsBars = true
+
+  function recompute(config: CropConfig, srcWidth: number, srcHeight: number) {
+    const originalSize = { width: srcWidth, height: srcHeight }
+    cachedCropBox = calculateCropBox(originalSize, config)
+    cachedDestBox = calculateDestinationBox(originalSize, cachedCropBox)
+    // Bars are needed only when the destination box doesn't fill the entire canvas
+    cachedNeedsBars =
+      cachedDestBox.x !== 0 ||
+      cachedDestBox.y !== 0 ||
+      cachedDestBox.width !== srcWidth ||
+      cachedDestBox.height !== srcHeight
+    cachedConfig = config
+    cachedSrcWidth = srcWidth
+    cachedSrcHeight = srcHeight
+  }
+
   return {
     id: CROP_ZOOM_ALIGN_PLUGIN_ID,
 
@@ -69,40 +94,39 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
       config: Partial<CropConfig>
     ) {
       const normalized = normalizeConfig(config)
-
-      // Always use actual video dimensions as the source, not the canvas size
-      // (they're the same after loadedmetadata, but this is safer for early frames)
       const srcWidth = videoEl.videoWidth || canvasWidth
       const srcHeight = videoEl.videoHeight || canvasHeight
-      const originalSize = { width: srcWidth, height: srcHeight }
 
-      // Canvas stays at original source dimensions — never resized
-      if (ctx.canvas.width !== srcWidth || ctx.canvas.height !== srcHeight) {
-        ctx.canvas.width = srcWidth
-        ctx.canvas.height = srcHeight
+      // Recompute boxes only when config or source dimensions change
+      if (
+        cachedConfig === null ||
+        cachedSrcWidth !== srcWidth ||
+        cachedSrcHeight !== srcHeight ||
+        cachedConfig.aspectRatio !== normalized.aspectRatio ||
+        cachedConfig.zoom !== normalized.zoom ||
+        cachedConfig.alignX !== normalized.alignX ||
+        cachedConfig.alignY !== normalized.alignY ||
+        cachedConfig.barColor !== normalized.barColor
+      ) {
+        recompute(normalized, srcWidth, srcHeight)
       }
 
-      // 1. Fill background (letterbox bars)
-      ctx.fillStyle = "red"
-      ctx.fillRect(0, 0, srcWidth, srcHeight)
+      // Fill background only when there are actual bars to draw
+      if (cachedNeedsBars) {
+        ctx.fillStyle = normalized.barColor
+        ctx.fillRect(0, 0, srcWidth, srcHeight)
+      }
 
-      // 2. Calculate the crop box in source coordinates
-      const cropBox = calculateCropBox(originalSize, normalized)
-
-      // 3. Calculate where to draw it centered on the same-size canvas
-      const destBox = calculateDestinationBox(originalSize, cropBox)
-
-      // 4. Draw the cropped region, scaled to fill the destination box
       ctx.drawImage(
         videoEl,
-        cropBox.x,
-        cropBox.y,
-        cropBox.width,
-        cropBox.height,
-        destBox.x,
-        destBox.y,
-        destBox.width,
-        destBox.height
+        cachedCropBox.x,
+        cachedCropBox.y,
+        cachedCropBox.width,
+        cachedCropBox.height,
+        cachedDestBox.x,
+        cachedDestBox.y,
+        cachedDestBox.width,
+        cachedDestBox.height
       )
     },
   }

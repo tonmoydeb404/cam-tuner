@@ -19,6 +19,7 @@ export interface UseTunerReturn {
   setAspectRatio: (v: AspectRatio) => void
   setZoom: (v: number) => void
   setAlign: (v: AlignPosition) => void
+  setBarColor: (v: string) => void
   // Derived CSS values
   aspectRatioClass: string
   objectPosition: string
@@ -67,6 +68,7 @@ export function useTuner(
           zoom: newConfig.zoom,
           alignX,
           alignY,
+          barColor: newConfig.barColor || "#000000",
         })
       }
     }
@@ -105,6 +107,7 @@ export function useTuner(
       zoom: config.zoom,
       alignX,
       alignY,
+      barColor: config.barColor || "#000000",
     })
 
     modifierRef.current = modifier
@@ -148,11 +151,19 @@ export function useTuner(
     })
   }
 
+  const setBarColor = (barColor: string) => {
+    setConfig((c) => ({ ...c, barColor }))
+    modifierRef.current?.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
+      barColor,
+    })
+  }
+
   return {
     config,
     setAspectRatio,
     setZoom,
     setAlign,
+    setBarColor,
     aspectRatioClass: ASPECT_RATIO_CLASS[config.aspectRatio],
     objectPosition: ALIGN_OBJECT_POSITION[config.align],
     outputStream,

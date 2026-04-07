@@ -80,7 +80,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Virtual Camera Toggle */}
+      {/* Enable Toggle */}
       <div className="flex items-center justify-between rounded-lg border p-3">
         <div className="flex items-center gap-3">
           <HugeiconsIcon
@@ -89,7 +89,7 @@ export default function App() {
             className={enabled ? "text-primary" : "text-muted-foreground"}
           />
           <div>
-            <p className="text-sm font-medium">Virtual Camera</p>
+            <p className="text-sm font-medium">Camera Tuning</p>
             <p className="text-xs text-muted-foreground">
               {enabled ? "Active" : "Disabled"}
             </p>
@@ -98,7 +98,9 @@ export default function App() {
         <Switch checked={enabled} onCheckedChange={handleToggle} />
       </div>
 
-      <Card className="bg-muted dark:bg-card">
+      <Card
+        className={`bg-muted dark:bg-card transition-opacity${!enabled ? "pointer-events-none opacity-50" : ""}`}
+      >
         <CardContent>
           <div className="flex flex-col gap-6">
             {/* Aspect Ratio Control */}

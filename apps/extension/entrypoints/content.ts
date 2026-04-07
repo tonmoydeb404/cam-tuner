@@ -14,7 +14,13 @@ function sendToPage(config: any, enabled: boolean) {
 
 export default defineContentScript({
   matches: ["*://*/*"],
+  runAt: "document_start",
   main() {
+    // Immediately push state so the MAIN world injector has it before getUserMedia fires
+    Promise.all([getTunerConfig(), virtualCamEnabled.getValue()]).then(
+      ([config, enabled]) => sendToPage(config, enabled)
+    )
+
     // Bridge: when the MAIN world requests initial config
     window.addEventListener(CAMTUNER_REQUEST, async () => {
       const [config, enabled] = await Promise.all([

@@ -19,6 +19,16 @@ export default defineContentScript({
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     const activeModifiers: StreamModifier[] = []
 
+    // Promise that resolves once the isolated content script sends initial state.
+    // getUserMedia calls are held until this resolves so we never miss a stream.
+    let resolveInitialState!: () => void
+    const initialStateReady = new Promise<void>((resolve) => {
+      resolveInitialState = resolve
+      // Safety timeout: if the content script never responds (e.g. not installed),
+      // unblock getUserMedia after 1 second so the page still works.
+      setTimeout(resolve, 1000)
+    })
+
     function parseAspectRatio(ratio: string): number {
       if (ratio === "16:9") return 16 / 9
       if (ratio === "4:3") return 4 / 3
@@ -45,7 +55,7 @@ export default defineContentScript({
     }
 
     function processStream(original: MediaStream): MediaStream {
-      const modifier = createStreamModifier(original)
+      const modifier = createStreamModifier(original, true)
       modifier.addPlugin(
         createCropZoomAlignPlugin(),
         toPluginConfig(currentConfig)
@@ -62,6 +72,9 @@ export default defineContentScript({
     navigator.mediaDevices.getUserMedia = async function (
       constraints?: MediaStreamConstraints
     ) {
+      // Wait for initial state from the isolated content script before deciding
+      // whether to process the stream. Prevents missing streams on page load.
+      await initialStateReady
       const stream = await originalGetUserMedia(constraints)
       if (!enabled || !constraints?.video) return stream
       return processStream(stream)
@@ -85,6 +98,9 @@ export default defineContentScript({
           )
         }
       }
+
+      // Unblock any pending getUserMedia calls
+      resolveInitialState()
     })
 
     // Request initial config from the ISOLATED content script

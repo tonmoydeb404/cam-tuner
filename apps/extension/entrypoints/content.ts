@@ -9,9 +9,7 @@ const CAMTUNER_EVENT = "camtuner:config-update"
 const CAMTUNER_REQUEST = "camtuner:request-config"
 
 function sendToPage(config: any, enabled: boolean) {
-  window.dispatchEvent(
-    new CustomEvent(CAMTUNER_EVENT, { detail: { config, enabled } })
-  )
+  window.postMessage({ type: CAMTUNER_EVENT, config, enabled }, "*")
 }
 
 export default defineContentScript({

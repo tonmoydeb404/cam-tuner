@@ -1,9 +1,4 @@
-import {
-  CheckmarkCircle01Icon,
-  EyeIcon,
-  Video01Icon,
-  VideoOffIcon,
-} from "@hugeicons/core-free-icons"
+import { EyeIcon, Video01Icon, VideoOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type {
   AlignPosition,
@@ -30,7 +25,6 @@ import {
 export default function App() {
   const [config, setConfig] = useState<TunerConfig>(DEFAULT_TUNER_CONFIG)
   const [enabled, setEnabled] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -66,20 +60,7 @@ export default function App() {
 
   const handlePreview = async () => {
     const webUrl = import.meta.env.VITE_WEB_URL
-    const configParams = new URLSearchParams({
-      aspectRatio: config.aspectRatio,
-      zoom: config.zoom.toString(),
-      align: config.align,
-    })
-    const previewUrl = `${webUrl}/preview?${configParams.toString()}`
-    await browser.tabs.create({ url: previewUrl })
-  }
-
-  const handleApply = async () => {
-    setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsSaving(false)
-    window.close()
+    await browser.tabs.create({ url: `${webUrl}/preview` })
   }
 
   return (
@@ -139,14 +120,6 @@ export default function App() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-2">
-        <Button size="lg" onClick={handleApply} disabled={isSaving}>
-          <HugeiconsIcon icon={CheckmarkCircle01Icon} size={20} />
-          {isSaving ? "Applying..." : "Apply"}
-        </Button>
-      </div>
     </div>
   )
 }

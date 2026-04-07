@@ -1,10 +1,10 @@
 import {
-  createStreamModifier,
   createCropZoomAlignPlugin,
+  createStreamModifier,
   CROP_ZOOM_ALIGN_PLUGIN_ID,
+  DEFAULT_TUNER_CONFIG,
   type StreamModifier,
   type TunerConfig,
-  DEFAULT_TUNER_CONFIG,
 } from "@workspace/stream-config"
 
 const CAMTUNER_EVENT = "camtuner:config-update"
@@ -55,8 +55,9 @@ export default defineContentScript({
     }
 
     // Override getUserMedia
-    const originalGetUserMedia =
-      navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+    const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
+      navigator.mediaDevices
+    )
 
     navigator.mediaDevices.getUserMedia = async function (
       constraints?: MediaStreamConstraints
@@ -67,8 +68,9 @@ export default defineContentScript({
     }
 
     // Listen for config updates from the ISOLATED content script
-    window.addEventListener(CAMTUNER_EVENT, ((event: CustomEvent) => {
-      const { config, enabled: isEnabled } = event.detail
+    window.addEventListener("message", (event: MessageEvent) => {
+      if (event.data?.type !== CAMTUNER_EVENT) return
+      const { config, enabled: isEnabled } = event.data
 
       if (typeof isEnabled === "boolean") {
         enabled = isEnabled
@@ -83,7 +85,7 @@ export default defineContentScript({
           )
         }
       }
-    }) as EventListener)
+    })
 
     // Request initial config from the ISOLATED content script
     window.dispatchEvent(new CustomEvent(CAMTUNER_REQUEST))

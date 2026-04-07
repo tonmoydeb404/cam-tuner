@@ -26,6 +26,7 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@wxt-dev/auto-icons": "^1.1.1",
     "@wxt-dev/module-react": "^1.1.5",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",

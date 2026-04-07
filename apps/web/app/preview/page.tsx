@@ -1,14 +1,11 @@
 "use client"
 
 import PreviewView from "@/views/preview"
-import type { AlignPosition, AspectRatio } from "@workspace/stream-config"
-import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 type SyncStatus = "idle" | "syncing" | "success" | "error"
 
 const PreviewPage = () => {
-  const searchParams = useSearchParams()
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle")
 
   useEffect(() => {
@@ -26,19 +23,7 @@ const PreviewPage = () => {
     return () => window.removeEventListener("message", handleMessage)
   }, [])
 
-  const aspectRatio = searchParams.get("aspectRatio") as AspectRatio | null
-  const zoom = searchParams.get("zoom")
-  const align = searchParams.get("align") as AlignPosition | null
-
-  return (
-    <PreviewView
-      initialAspectRatio={aspectRatio ?? undefined}
-      initialZoom={zoom ? parseFloat(zoom) : undefined}
-      initialAlign={align ?? undefined}
-      syncStatus={syncStatus}
-      setSyncStatus={setSyncStatus}
-    />
-  )
+  return <PreviewView syncStatus={syncStatus} setSyncStatus={setSyncStatus} />
 }
 
 export default PreviewPage

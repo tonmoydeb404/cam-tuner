@@ -44,6 +44,38 @@ export function useTuner(
 
   const modifierRef = useRef<StreamModifier | null>(null)
 
+  // Sync config from extension storage via content script messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "camtuner:config-update") return
+      const newConfig: TunerConfig = event.data.config
+      if (!newConfig) return
+
+      setConfig(newConfig)
+
+      if (modifierRef.current) {
+        let alignX: "left" | "center" | "right" = "center"
+        if (newConfig.align.includes("left")) alignX = "left"
+        else if (newConfig.align.includes("right")) alignX = "right"
+
+        let alignY: "top" | "center" | "bottom" = "center"
+        if (newConfig.align.includes("top")) alignY = "top"
+        else if (newConfig.align.includes("bottom")) alignY = "bottom"
+
+        modifierRef.current.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
+          aspectRatio: parseAspectRatio(newConfig.aspectRatio),
+          zoom: newConfig.zoom,
+          alignX,
+          alignY,
+        })
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    window.dispatchEvent(new CustomEvent("camtuner:request-config"))
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
+
   useEffect(() => {
     if (!inputStream) {
       if (modifierRef.current) {

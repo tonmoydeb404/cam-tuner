@@ -22,7 +22,9 @@ export const ZoomControl = ({ value, onChange }: Props) => {
         max={3}
         step={0.1}
         value={[value]}
-        onValueChange={(values) => onChange(values[0] ?? 1)}
+        onValueChange={(values) =>
+          onChange(Array.isArray(values) ? (values[0] ?? 1) : values)
+        }
         className="w-full [&_[data-slot=slider-track]]:bg-gray-300 dark:[&_[data-slot=slider-track]]:bg-muted"
       />
       <div className="flex items-center justify-between text-[10px] font-medium text-neutral-600">

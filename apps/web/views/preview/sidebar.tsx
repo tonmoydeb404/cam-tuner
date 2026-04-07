@@ -40,7 +40,7 @@ const PreviewSidebar = (props: Props) => {
               </Label>
               <Select
                 value={webcam.selectedDeviceId}
-                onValueChange={webcam.setSelectedDeviceId}
+                onValueChange={(v) => v && webcam.setSelectedDeviceId(v)}
               >
                 <SelectTrigger className="w-full bg-white">
                   <SelectValue placeholder="Select camera" />

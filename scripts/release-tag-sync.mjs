@@ -12,13 +12,17 @@ const TARGETS = [
 ]
 
 function run(cmd, options = {}) {
-  return execSync(cmd, {
+  const output = execSync(cmd, {
     cwd: ROOT,
     stdio: ["ignore", "pipe", "pipe"],
     ...options,
   })
-    .toString()
-    .trim()
+
+  if (output == null) {
+    return ""
+  }
+
+  return output.toString().trim()
 }
 
 function parseVersion(version) {

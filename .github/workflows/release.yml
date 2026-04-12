@@ -10,8 +10,43 @@ on:
         description: "Tag to release (e.g. v1.0.0)"
         required: true
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm turbo typecheck --filter=@workspace/extension...
+
+      - name: Lint
+        run: pnpm turbo lint --filter=@workspace/extension...
+
+      - name: Build packages
+        run: pnpm turbo build --filter='./packages/*'
+
+      - name: Test
+        run: pnpm turbo test --filter=@workspace/extension...
+
   release:
+    name: Release
+    needs: ci
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -25,31 +60,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "pnpm"
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Typecheck & Lint
-        run: pnpm turbo typecheck lint --filter=@workspace/extension...
-
-      - name: Build workspace packages
+      - name: Build dependency packages
         run: pnpm turbo build --filter=@workspace/extension^...
         env:
           VITE_WEB_URL: ${{ vars.VITE_WEB_URL }}
 
-      - name: Test
-        run: pnpm turbo test --filter=@workspace/extension...
+      - name: Zip Chrome extension
+        run: pnpm --filter @workspace/extension zip
 
-      - name: Zip extensions
-        run: |
-          pnpm --filter @workspace/extension zip
-          pnpm --filter @workspace/extension zip:firefox
+      - name: Zip Firefox extension
+        run: pnpm --filter @workspace/extension zip:firefox
 
       - name: Upload ZIPs to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
           files: |
             apps/extension/.output/*-chrome.zip
             apps/extension/.output/*-firefox.zip

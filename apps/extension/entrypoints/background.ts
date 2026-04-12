@@ -1,3 +1,5 @@
+import { migrateFromV1 } from "../lib/migration"
+
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install") {
@@ -7,6 +9,7 @@ export default defineBackground(() => {
       await browser.tabs.create({ url: `${webUrl}/preview?welcome=true` })
     } else if (details.reason === "update") {
       console.debug("CamTuner extension updated")
+      await migrateFromV1()
     }
   })
 })

@@ -15,9 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: apps/extension
 
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +29,21 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        working-directory: .
         run: pnpm install
+
+      - name: Typecheck & Lint
+        run: pnpm turbo typecheck lint --filter=@workspace/extension...
+
+      - name: Build workspace packages
+        run: pnpm turbo build --filter=@workspace/extension^...
+
+      - name: Test
+        run: pnpm turbo test --filter=@workspace/extension...
 
       - name: Zip extensions
         run: |
-          pnpm zip
-          pnpm zip:firefox
+          pnpm --filter @workspace/extension zip
+          pnpm --filter @workspace/extension zip:firefox
 
       - name: Upload ZIPs to GitHub Release
         uses: softprops/action-gh-release@v2

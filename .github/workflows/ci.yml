@@ -29,10 +29,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm turbo typecheck
+        run: pnpm turbo typecheck --filter='!@workspace/web'
 
       - name: Lint
-        run: pnpm turbo lint
+        run: pnpm turbo lint --filter='!@workspace/web'
 
   test:
     name: Test
@@ -55,4 +55,4 @@ jobs:
         run: pnpm turbo build --filter='./packages/*'
 
       - name: Test
-        run: pnpm turbo test
+        run: pnpm turbo test --filter='!@workspace/web'

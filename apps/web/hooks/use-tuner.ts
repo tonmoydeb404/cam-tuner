@@ -105,7 +105,7 @@ export function useTuner(
     window.addEventListener("message", handleMessage)
     window.dispatchEvent(new CustomEvent("camtuner:request-config"))
     return () => window.removeEventListener("message", handleMessage)
-  }, [modifierRef])
+  }, [modifierRef, syncExtension])
 
   const setAspectRatio = useConfigSetter(
     "aspectRatio",

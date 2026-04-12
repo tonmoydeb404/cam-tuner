@@ -53,7 +53,7 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
     id: CROP_ZOOM_ALIGN_PLUGIN_ID,
 
     // WebCodecs / Insertable Streams pipeline
-    transformFrame(frame: any, config: Partial<CropConfig>): any {
+    transformFrame(frame: VideoFrame, config: Partial<CropConfig>): VideoFrame {
       // NOTE: For WebCodecs, full letterboxing natively onto the SAME frame is non-trivial
       // without drawing to an OffscreenCanvas because VideoFrame is immutable.
       // We can *crop* by changing the visible rect, but we can't pad black bars

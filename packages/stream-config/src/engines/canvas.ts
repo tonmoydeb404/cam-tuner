@@ -3,8 +3,8 @@ import { StreamPlugin } from "../types"
 export interface ProcessorEngine {
   start(): MediaStream
   stop(): void
-  addPlugin(plugin: StreamPlugin<any>, config: any): void
-  updatePluginConfig(pluginId: string, config: any): void
+  addPlugin(plugin: StreamPlugin<unknown>, config: unknown): void
+  updatePluginConfig(pluginId: string, config: unknown): void
   removePlugin(pluginId: string): void
 }
 
@@ -13,7 +13,7 @@ export class CanvasEngine implements ProcessorEngine {
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
   private video: HTMLVideoElement
-  private plugins: { plugin: StreamPlugin; config: any }[] = []
+  private plugins: { plugin: StreamPlugin<unknown>; config: unknown }[] = []
   private isProcessing = false
   private requestVideoFrameCallbackId = 0
   private canvasTrack: CanvasCaptureMediaStreamTrack | null = null
@@ -83,14 +83,14 @@ export class CanvasEngine implements ProcessorEngine {
     this.canvasTrack?.requestFrame()
   }
 
-  addPlugin(plugin: StreamPlugin<any>, config: any): void {
+  addPlugin(plugin: StreamPlugin<unknown>, config: unknown): void {
     this.plugins.push({ plugin, config })
   }
 
-  updatePluginConfig(pluginId: string, diffConfig: any): void {
+  updatePluginConfig(pluginId: string, diffConfig: unknown): void {
     const entry = this.plugins.find((p) => p.plugin.id === pluginId)
     if (entry) {
-      entry.config = { ...entry.config, ...diffConfig }
+      entry.config = { ...(entry.config as object), ...(diffConfig as object) }
       entry.plugin.updateConfig?.(entry.config)
     }
   }

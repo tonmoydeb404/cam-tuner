@@ -4,7 +4,7 @@ import { ProcessorEngine } from "./canvas"
 export class WebCodecsEngine implements ProcessorEngine {
   private inputStream: MediaStream
   private outputStream: MediaStream | null = null
-  private plugins: { plugin: StreamPlugin; config: any }[] = []
+  private plugins: { plugin: StreamPlugin<unknown>; config: unknown }[] = []
 
   private trackProcessor: MediaStreamTrackProcessor | null = null
   private trackGenerator: MediaStreamTrackGenerator | null = null
@@ -24,7 +24,7 @@ export class WebCodecsEngine implements ProcessorEngine {
     this.abortController = new AbortController()
 
     // Pipe the processor to the generator through a transformer
-    const transformer = new TransformStream<any, any>({
+    const transformer = new TransformStream<VideoFrame, VideoFrame>({
       transform: (frame, controller) => {
         let currentFrame = frame
 
@@ -43,23 +43,13 @@ export class WebCodecsEngine implements ProcessorEngine {
           controller.enqueue(currentFrame)
         } catch (e) {
           console.error("Error in WebCodecs transform pipeline:", e)
+          // Try to enqueue a clone; if the frame was already closed by the
+          // failing plugin this will also throw and we silently drop the frame.
           try {
-            // Only clone if the frame hasn't been closed by the failing plugin
-            if (currentFrame.state === "valid") {
-              const fallbackFrame = new VideoFrame(currentFrame)
-              controller.enqueue(fallbackFrame)
-            } else {
-              // Frame was already closed — skip it to avoid InvalidStateError
-              currentFrame.close?.()
-            }
-          } catch (e2) {
-            // Last resort: try to enqueue the raw frame if still valid
-            try {
-              if (currentFrame.state === "valid")
-                controller.enqueue(currentFrame)
-            } catch {
-              // Frame is unusable, drop it silently
-            }
+            const fallbackFrame = new VideoFrame(currentFrame)
+            controller.enqueue(fallbackFrame)
+          } catch {
+            // Frame is unusable, drop it silently
           }
         }
       },
@@ -78,14 +68,14 @@ export class WebCodecsEngine implements ProcessorEngine {
     return this.outputStream
   }
 
-  addPlugin(plugin: StreamPlugin<any>, config: any): void {
+  addPlugin(plugin: StreamPlugin<unknown>, config: unknown): void {
     this.plugins.push({ plugin, config })
   }
 
-  updatePluginConfig(pluginId: string, diffConfig: any): void {
+  updatePluginConfig(pluginId: string, diffConfig: unknown): void {
     const entry = this.plugins.find((p) => p.plugin.id === pluginId)
     if (entry) {
-      entry.config = { ...entry.config, ...diffConfig }
+      entry.config = { ...(entry.config as object), ...(diffConfig as object) }
       if (entry.plugin.updateConfig) {
         entry.plugin.updateConfig(entry.config)
       }

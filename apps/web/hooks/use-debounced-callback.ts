@@ -7,14 +7,14 @@ import { useCallback, useRef } from "react"
 export function useDebouncedCallback<T extends (...args: never[]) => void>(
   callback: T,
   ms: number
-): T {
+): (...args: Parameters<T>) => void {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   return useCallback(
-    ((...args: Parameters<T>) => {
+    (...args: Parameters<T>) => {
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => callback(...args), ms)
-    }) as T,
+    },
     [callback, ms]
   )
 }

@@ -4,7 +4,7 @@
  * duplicated across the web hook and the extension injector.
  */
 
-import type { AlignPosition, AspectRatio, TunerConfig } from "../tuner-types"
+import type { AlignPosition, TunerConfig } from "../tuner-types"
 import type { AlignX, AlignY, CropConfig } from "./math"
 
 /**

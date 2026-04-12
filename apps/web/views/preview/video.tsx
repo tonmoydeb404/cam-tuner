@@ -1,7 +1,6 @@
 "use client"
 
-import { Video01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { IconVideo } from "@tabler/icons-react"
 import { useEffect, useRef } from "react"
 
 interface CameraPreviewProps {
@@ -28,6 +27,7 @@ const PreviewVideo = (props: CameraPreviewProps) => {
         autoPlay
         playsInline
         muted
+        aria-label="Camera preview"
         className="absolute inset-0 h-full w-full text-transparent"
         style={{ objectFit: "contain" }}
         ref={(el) => {
@@ -43,11 +43,7 @@ const PreviewVideo = (props: CameraPreviewProps) => {
 
       {/* Fallback pattern while loading or if no camera */}
       <div className="flex flex-col items-center justify-center gap-y-2">
-        <HugeiconsIcon
-          icon={Video01Icon}
-          strokeWidth={1.5}
-          className="size-8 text-muted-foreground"
-        />
+        <IconVideo className="size-8 text-muted-foreground" />
         <span className="text-muted-foreground">No Video Feed</span>
       </div>
     </>

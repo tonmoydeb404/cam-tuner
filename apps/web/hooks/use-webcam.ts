@@ -19,14 +19,45 @@ export interface UseWebcamReturn {
   stopCamera: () => void
 }
 
-export function useWebcam(): UseWebcamReturn {
+interface UseWebcamOptions {
+  /** If false, camera will NOT start automatically on mount. Default: true */
+  autoStart?: boolean
+  /**
+   * If true, calls the original (pre-extension) getUserMedia so you always get
+   * the raw camera stream even when the cam-tuner extension is active.
+   * Falls back to the normal getUserMedia when the extension is not installed.
+   */
+  bypassExtension?: boolean
+}
+
+export function useWebcam({
+  autoStart = true,
+  bypassExtension = false,
+}: UseWebcamOptions = {}): UseWebcamReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [devices, setDevices] = useState<VideoDevice[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
+  // Label saved in extension storage — used to restore the right camera across sessions.
+  const savedLabelRef = useRef<string | null>(null)
+  const [isLoading, setIsLoading] = useState(autoStart)
   const [error, setError] = useState<string | null>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
+
+  // Resolve which getUserMedia to use:
+  // - bypassExtension=true + extension present → use the pre-patch original
+  // - otherwise → use whatever is on navigator.mediaDevices (may be patched)
+  const getStream = useCallback(
+    (constraints: MediaStreamConstraints) => {
+      const fn =
+        bypassExtension &&
+        typeof (window as any).__camtuner_getUserMedia === "function"
+          ? (window as any).__camtuner_getUserMedia
+          : navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+      return fn(constraints) as Promise<MediaStream>
+    },
+    [bypassExtension]
+  )
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -59,7 +90,7 @@ export function useWebcam(): UseWebcamReturn {
         const constraints: MediaStreamConstraints = {
           video: deviceId ? { deviceId: { exact: deviceId } } : true,
         }
-        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        const stream = await getStream(constraints)
         streamRef.current = stream
         setStream(stream)
         if (videoRef.current) {
@@ -67,9 +98,29 @@ export function useWebcam(): UseWebcamReturn {
         }
         // Enumerate devices after permission is granted so labels are available
         const videoDevices = await loadDevices()
-        if (!deviceId && videoDevices.length > 0) {
-          const active = stream.getVideoTracks()[0]?.getSettings().deviceId
-          setSelectedDeviceId(active ?? videoDevices[0]?.deviceId ?? "")
+        if (videoDevices.length > 0) {
+          const activeId =
+            deviceId ??
+            stream.getVideoTracks()[0]?.getSettings().deviceId ??
+            videoDevices[0]!.deviceId
+
+          // If no explicit deviceId was requested, try to restore by saved label.
+          if (!deviceId && savedLabelRef.current) {
+            const match = videoDevices.find(
+              (d) => d.label === savedLabelRef.current
+            )
+            if (match && match.deviceId !== activeId) {
+              // Restart with the matching device — will resolve on next call.
+              setIsLoading(false)
+              startStream(match.deviceId)
+              return
+            }
+          }
+
+          const resolved =
+            videoDevices.find((d) => d.deviceId === activeId) ??
+            videoDevices[0]!
+          setSelectedDeviceId(resolved.deviceId)
         }
       } catch (err) {
         setError(
@@ -79,33 +130,57 @@ export function useWebcam(): UseWebcamReturn {
         setIsLoading(false)
       }
     },
-    [stopStream, loadDevices]
+    [stopStream, loadDevices, getStream]
   )
 
-  // Attach stream to video element once it mounts
+  // Attach stream to video element when stream changes
   useEffect(() => {
     if (videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current
     }
-  })
+  }, [stream])
 
-  // Initial stream start
+  // Initial stream start (only when autoStart is true)
   useEffect(() => {
+    if (!autoStart) return
     startStream()
     return stopStream
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Switch camera when selection changes (skip first render)
+  // Switch camera when selection changes (skip first render).
+  // Also persist the label to extension storage so it survives page reloads.
   const isFirstMount = useRef(true)
   useEffect(() => {
     if (isFirstMount.current) {
       isFirstMount.current = false
       return
     }
-    if (selectedDeviceId) startStream(selectedDeviceId)
+    if (!selectedDeviceId) return
+    const label = devices.find((d) => d.deviceId === selectedDeviceId)?.label
+    if (label) {
+      savedLabelRef.current = label
+      window.postMessage(
+        { type: "syncCameraLabel", label },
+        window.location.origin
+      )
+    }
+    startStream(selectedDeviceId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDeviceId])
+
+  // Listen for the extension to send back the saved camera label.
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+      if (event.data?.type !== "camtuner:config-update") return
+      const label: string | null = event.data.cameraLabel ?? null
+      savedLabelRef.current = label
+    }
+    window.addEventListener("message", handler)
+    window.dispatchEvent(new CustomEvent("camtuner:request-config"))
+    return () => window.removeEventListener("message", handler)
+  }, [])
 
   return {
     videoRef,

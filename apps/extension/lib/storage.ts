@@ -17,8 +17,16 @@ export const tunerConfig = storage.defineItem<TunerConfig>(
 export const virtualCamEnabled = storage.defineItem<boolean>(
   "local:virtualCamEnabled",
   {
-    fallback: false,
-    init: () => false,
+    fallback: true,
+    init: () => true,
+  }
+)
+
+export const selectedCameraLabel = storage.defineItem<string | null>(
+  "local:selectedCameraLabel",
+  {
+    fallback: null,
+    init: () => null,
   }
 )
 

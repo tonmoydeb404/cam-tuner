@@ -18,7 +18,8 @@
     "next.config.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "../../packages/stream-config/src/types/dom.d.ts"
   ],
   "exclude": ["node_modules"]
 }

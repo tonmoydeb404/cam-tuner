@@ -16,20 +16,17 @@ export class CanvasEngine implements ProcessorEngine {
   private plugins: { plugin: StreamPlugin; config: any }[] = []
   private isProcessing = false
   private requestVideoFrameCallbackId = 0
-  private canvasTrack: any = null // Reference to the capture stream track for requestFrame()
+  private canvasTrack: CanvasCaptureMediaStreamTrack | null = null
 
   constructor(private inputStream: MediaStream) {
-    // Setup invisible video tag to read stream frames
     this.video = document.createElement("video")
     this.video.srcObject = inputStream
     this.video.muted = true
     this.video.playsInline = true
 
-    // Default size, will be updated when metadata loads
     this.canvas = document.createElement("canvas")
     this.canvas.width = 640
     this.canvas.height = 480
-
     const context = this.canvas.getContext("2d", { alpha: false })
     if (!context) throw new Error("Could not get 2D context")
     this.ctx = context
@@ -37,15 +34,11 @@ export class CanvasEngine implements ProcessorEngine {
 
   start(): MediaStream {
     this.video.play().catch(console.error)
-
-    // Start processing loop
     this.isProcessing = true
 
-    // We try to use requestVideoFrameCallback for maximum performance and power savings
     if ("requestVideoFrameCallback" in this.video) {
       this.frameLoop()
     } else {
-      // Fallback for browsers that don't support requestVideoFrameCallback (e.g. old versions)
       const polyfillLoop = () => {
         if (!this.isProcessing) return
         this.processFrame()
@@ -54,24 +47,23 @@ export class CanvasEngine implements ProcessorEngine {
       polyfillLoop()
     }
 
-    // Capture stream on-demand: 0 means frames are only captured when we call requestFrame()
     this.outputStream = this.canvas.captureStream(0)
-    this.canvasTrack = this.outputStream.getVideoTracks()[0] ?? null
+    this.canvasTrack =
+      (this.outputStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | null) ??
+      null
     return this.outputStream
   }
 
   private frameLoop = () => {
     if (!this.isProcessing) return
     this.processFrame()
-    this.requestVideoFrameCallbackId = (
-      this.video as any
-    ).requestVideoFrameCallback(this.frameLoop)
+    this.requestVideoFrameCallbackId = this.video.requestVideoFrameCallback(
+      this.frameLoop
+    )
   }
 
   private processFrame() {
     if (this.video.readyState < 2 || this.canvas.width === 0) return
-
-    // Sync canvas to video dimensions once they're known
     if (
       this.canvas.width !== this.video.videoWidth ||
       this.canvas.height !== this.video.videoHeight
@@ -79,26 +71,16 @@ export class CanvasEngine implements ProcessorEngine {
       this.canvas.width = this.video.videoWidth
       this.canvas.height = this.video.videoHeight
     }
-
     for (const { plugin, config } of this.plugins) {
-      if (plugin.drawCanvas) {
-        plugin.drawCanvas(
-          this.ctx,
-          this.video,
-          this.canvas.width,
-          this.canvas.height,
-          config
-        )
-      }
+      plugin.drawCanvas?.(
+        this.ctx,
+        this.video,
+        this.canvas.width,
+        this.canvas.height,
+        config
+      )
     }
-
-    // Signal that a new frame is ready for capture
-    if (
-      this.canvasTrack &&
-      typeof this.canvasTrack.requestFrame === "function"
-    ) {
-      this.canvasTrack.requestFrame()
-    }
+    this.canvasTrack?.requestFrame()
   }
 
   addPlugin(plugin: StreamPlugin<any>, config: any): void {
@@ -109,17 +91,14 @@ export class CanvasEngine implements ProcessorEngine {
     const entry = this.plugins.find((p) => p.plugin.id === pluginId)
     if (entry) {
       entry.config = { ...entry.config, ...diffConfig }
-      if (entry.plugin.updateConfig) {
-        entry.plugin.updateConfig(entry.config)
-      }
+      entry.plugin.updateConfig?.(entry.config)
     }
   }
 
   removePlugin(pluginId: string): void {
     const index = this.plugins.findIndex((p) => p.plugin.id === pluginId)
     if (index !== -1) {
-      const entry = this.plugins[index]
-      if (entry && entry.plugin.destroy) entry.plugin.destroy()
+      this.plugins[index]?.plugin.destroy?.()
       this.plugins.splice(index, 1)
     }
   }
@@ -127,22 +106,17 @@ export class CanvasEngine implements ProcessorEngine {
   stop(): void {
     this.isProcessing = false
     if (
-      "requestVideoFrameCallback" in this.video &&
+      "cancelVideoFrameCallback" in this.video &&
       this.requestVideoFrameCallbackId
     ) {
-      // Attempt cancellation if possible (not strictly necessary since we check isProcessing)
+      this.video.cancelVideoFrameCallback(this.requestVideoFrameCallbackId)
     }
-
-    this.plugins.forEach(({ plugin }) => {
-      if (plugin.destroy) plugin.destroy()
-    })
+    this.plugins.forEach(({ plugin }) => plugin.destroy?.())
     this.plugins = []
-
     if (this.outputStream) {
       this.outputStream.getTracks().forEach((t) => t.stop())
       this.outputStream = null
     }
-
     this.video.pause()
     this.video.srcObject = null
     this.video.remove()

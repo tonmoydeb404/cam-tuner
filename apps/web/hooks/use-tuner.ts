@@ -2,17 +2,20 @@
 
 import {
   ALIGN_OBJECT_POSITION,
-  AlignPosition,
+  type AlignPosition,
   ASPECT_RATIO_CLASS,
-  AspectRatio,
-  createCropZoomAlignPlugin,
-  createStreamModifier,
+  type AspectRatio,
   CROP_ZOOM_ALIGN_PLUGIN_ID,
   DEFAULT_TUNER_CONFIG,
-  StreamModifier,
-  TunerConfig,
+  type TunerConfig,
+  tunerConfigToCropConfig,
+  tunerUpdateToCropUpdate,
 } from "@workspace/stream-config"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useDebouncedCallback } from "./use-debounced-callback"
+import { useStreamModifier } from "./use-stream-modifier"
+
+const SYNC_DEBOUNCE_MS = 300
 
 export interface UseTunerReturn {
   config: TunerConfig
@@ -20,19 +23,43 @@ export interface UseTunerReturn {
   setZoom: (v: number) => void
   setAlign: (v: AlignPosition) => void
   setBarColor: (v: string) => void
-  // Derived CSS values
+  resetConfig: () => void
   aspectRatioClass: string
   objectPosition: string
-  // Output stream
+  /** The processed/modified output stream with tuner effects applied. */
   outputStream: MediaStream | null
+  /** The original raw camera stream before any tuner processing. */
+  inputStream: MediaStream | null
+  error: string | null
 }
 
-function parseAspectRatio(ratio: string): number {
-  if (ratio === "16:9") return 16 / 9
-  if (ratio === "4:3") return 4 / 3
-  if (ratio === "1:1") return 1
-  if (ratio === "9:16") return 9 / 16
-  return 16 / 9 // fallback
+function syncConfigToExtension(config: TunerConfig) {
+  window.postMessage({ type: "syncConfig", config }, window.location.origin)
+}
+
+function useConfigSetter<K extends keyof TunerConfig>(
+  key: K,
+  setConfig: React.Dispatch<React.SetStateAction<TunerConfig>>,
+  syncToExtension: (c: TunerConfig) => void,
+  modifierRef: React.RefObject<
+    import("@workspace/stream-config").StreamModifier | null
+  >
+) {
+  return useCallback(
+    (value: TunerConfig[K]) => {
+      const update = { [key]: value } as Partial<TunerConfig>
+      setConfig((c) => {
+        const next = { ...c, ...update }
+        syncToExtension(next)
+        return next
+      })
+      modifierRef.current?.updatePluginConfig(
+        CROP_ZOOM_ALIGN_PLUGIN_ID,
+        tunerUpdateToCropUpdate(update)
+      )
+    },
+    [key, setConfig, syncToExtension, modifierRef]
+  )
 }
 
 export function useTuner(
@@ -41,9 +68,24 @@ export function useTuner(
 ): UseTunerReturn {
   const mergedConfig = { ...DEFAULT_TUNER_CONFIG, ...initialConfig }
   const [config, setConfig] = useState<TunerConfig>(mergedConfig)
-  const [outputStream, setOutputStream] = useState<MediaStream | null>(null)
+  const configRef = useRef<TunerConfig>(mergedConfig)
+  const debouncedSync = useDebouncedCallback(
+    syncConfigToExtension,
+    SYNC_DEBOUNCE_MS
+  )
 
-  const modifierRef = useRef<StreamModifier | null>(null)
+  const syncToExtension = useCallback(
+    (next: TunerConfig) => {
+      configRef.current = next
+      debouncedSync(next)
+    },
+    [debouncedSync]
+  )
+
+  const { outputStream, error, modifierRef } = useStreamModifier(
+    inputStream,
+    configRef
+  )
 
   // Sync config from extension storage via content script messages
   useEffect(() => {
@@ -51,112 +93,51 @@ export function useTuner(
       if (event.data?.type !== "camtuner:config-update") return
       const newConfig: TunerConfig = event.data.config
       if (!newConfig) return
-
       setConfig(newConfig)
-
-      if (modifierRef.current) {
-        let alignX: "left" | "center" | "right" = "center"
-        if (newConfig.align.includes("left")) alignX = "left"
-        else if (newConfig.align.includes("right")) alignX = "right"
-
-        let alignY: "top" | "center" | "bottom" = "center"
-        if (newConfig.align.includes("top")) alignY = "top"
-        else if (newConfig.align.includes("bottom")) alignY = "bottom"
-
-        modifierRef.current.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
-          aspectRatio: parseAspectRatio(newConfig.aspectRatio),
-          zoom: newConfig.zoom,
-          alignX,
-          alignY,
-          barColor: newConfig.barColor || "#000000",
-        })
-      }
+      configRef.current = newConfig
+      modifierRef.current?.updatePluginConfig(
+        CROP_ZOOM_ALIGN_PLUGIN_ID,
+        tunerConfigToCropConfig(newConfig)
+      )
     }
-
     window.addEventListener("message", handleMessage)
     window.dispatchEvent(new CustomEvent("camtuner:request-config"))
     return () => window.removeEventListener("message", handleMessage)
-  }, [])
+  }, [modifierRef])
 
-  useEffect(() => {
-    if (!inputStream) {
-      if (modifierRef.current) {
-        modifierRef.current.destroy()
-        modifierRef.current = null
-      }
-      setOutputStream(null)
-      return
-    }
+  const setAspectRatio = useConfigSetter(
+    "aspectRatio",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
+  const setZoom = useConfigSetter(
+    "zoom",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
+  const setAlign = useConfigSetter(
+    "align",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
+  const setBarColor = useConfigSetter(
+    "barColor",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
 
-    if (modifierRef.current) {
-      modifierRef.current.destroy()
-    }
-
-    const modifier = createStreamModifier(inputStream, true)
-
-    let alignX: "left" | "center" | "right" = "center"
-    if (config.align.includes("left")) alignX = "left"
-    else if (config.align.includes("right")) alignX = "right"
-
-    let alignY: "top" | "center" | "bottom" = "center"
-    if (config.align.includes("top")) alignY = "top"
-    else if (config.align.includes("bottom")) alignY = "bottom"
-
-    modifier.addPlugin(createCropZoomAlignPlugin(), {
-      aspectRatio: parseAspectRatio(config.aspectRatio),
-      zoom: config.zoom,
-      alignX,
-      alignY,
-      barColor: config.barColor || "#000000",
-    })
-
-    modifierRef.current = modifier
-    setOutputStream(modifier.outputStream)
-
-    return () => {
-      if (modifierRef.current) {
-        modifierRef.current.destroy()
-        modifierRef.current = null
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputStream])
-
-  const setAspectRatio = (aspectRatio: AspectRatio) => {
-    setConfig((c) => ({ ...c, aspectRatio }))
-    modifierRef.current?.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
-      aspectRatio: parseAspectRatio(aspectRatio),
-    })
-  }
-
-  const setZoom = (zoom: number) => {
-    setConfig((c) => ({ ...c, zoom }))
-    modifierRef.current?.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, { zoom })
-  }
-
-  const setAlign = (align: AlignPosition) => {
-    setConfig((c) => ({ ...c, align }))
-
-    let alignX: "left" | "center" | "right" = "center"
-    if (align.includes("left")) alignX = "left"
-    else if (align.includes("right")) alignX = "right"
-
-    let alignY: "top" | "center" | "bottom" = "center"
-    if (align.includes("top")) alignY = "top"
-    else if (align.includes("bottom")) alignY = "bottom"
-
-    modifierRef.current?.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
-      alignX,
-      alignY,
-    })
-  }
-
-  const setBarColor = (barColor: string) => {
-    setConfig((c) => ({ ...c, barColor }))
-    modifierRef.current?.updatePluginConfig(CROP_ZOOM_ALIGN_PLUGIN_ID, {
-      barColor,
-    })
-  }
+  const resetConfig = useCallback(() => {
+    setConfig(DEFAULT_TUNER_CONFIG)
+    syncToExtension(DEFAULT_TUNER_CONFIG)
+    modifierRef.current?.updatePluginConfig(
+      CROP_ZOOM_ALIGN_PLUGIN_ID,
+      tunerConfigToCropConfig(DEFAULT_TUNER_CONFIG)
+    )
+  }, [syncToExtension, modifierRef])
 
   return {
     config,
@@ -164,8 +145,11 @@ export function useTuner(
     setZoom,
     setAlign,
     setBarColor,
+    resetConfig,
     aspectRatioClass: ASPECT_RATIO_CLASS[config.aspectRatio],
     objectPosition: ALIGN_OBJECT_POSITION[config.align],
     outputStream,
+    inputStream,
+    error,
   }
 }

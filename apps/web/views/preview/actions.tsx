@@ -1,68 +1,16 @@
 import { UseTunerReturn } from "@/hooks/use-tuner"
 import { UseWebcamReturn } from "@/hooks/use-webcam"
-import { CheckmarkCircle01Icon, RefreshIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { IconRefresh, IconRotate } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
-
-type SyncStatus = "idle" | "syncing" | "success" | "error"
 
 type Props = {
   webcam: UseWebcamReturn
   tuner: UseTunerReturn
-  syncStatus: SyncStatus
-  setSyncStatus: (status: SyncStatus) => void
 }
 
-const PreviewActions = (props: Props) => {
-  const { webcam, tuner, syncStatus, setSyncStatus } = props
-
-  const handleApply = () => {
-    setSyncStatus("syncing")
-    window.postMessage(
-      {
-        type: "syncConfig",
-        config: tuner.config,
-      },
-      "*"
-    )
-  }
-
-  const getButtonText = () => {
-    switch (syncStatus) {
-      case "syncing":
-        return "Syncing..."
-      case "success":
-        return "Applied!"
-      case "error":
-        return "Failed"
-      default:
-        return "Apply"
-    }
-  }
-
-  const getButtonVariant = () => {
-    switch (syncStatus) {
-      case "success":
-        return "default" as const
-      case "error":
-        return "destructive" as const
-      default:
-        return "default" as const
-    }
-  }
-
+const PreviewActions = ({ webcam, tuner }: Props) => {
   return (
-    <div className="flex flex-col gap-y-2">
-      <Button
-        variant={getButtonVariant()}
-        size={"lg"}
-        onClick={handleApply}
-        // disabled={syncStatus === "syncing"}
-      >
-        <HugeiconsIcon icon={CheckmarkCircle01Icon} />
-        {getButtonText()}
-      </Button>
-
+    <div className="flex gap-2">
       <Button
         onClick={() => {
           webcam.stopCamera()
@@ -70,9 +18,19 @@ const PreviewActions = (props: Props) => {
         }}
         variant="outline"
         size={"lg"}
+        className="flex-1"
       >
-        <HugeiconsIcon icon={RefreshIcon} />
+        <IconRefresh />
         Restart
+      </Button>
+      <Button
+        onClick={tuner.resetConfig}
+        variant="outline"
+        size={"lg"}
+        className="flex-1"
+      >
+        <IconRotate />
+        Reset
       </Button>
     </div>
   )

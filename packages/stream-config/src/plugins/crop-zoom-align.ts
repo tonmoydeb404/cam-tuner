@@ -78,7 +78,6 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
 
       // VideoFrame constructor allows us to clone a frame with a new visible rectangle
       // This is a zero-copy metadata change! Incredibly fast.
-      // @ts-ignore
       return new VideoFrame(frame, {
         visibleRect: cropBox,
       })

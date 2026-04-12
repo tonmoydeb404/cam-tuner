@@ -1,4 +1,5 @@
-import type { AspectRatio, AlignPosition } from "@workspace/stream-config"
+import type { AlignPosition, AspectRatio } from "@workspace/stream-config"
+import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { AlignControl } from "@workspace/ui/components/tuner/align-control"
 import { AspectRatioControl } from "@workspace/ui/components/tuner/aspect-ratio-control"
@@ -37,7 +38,7 @@ export const TunerControlFields = ({
   <>
     {/* Aspect Ratio */}
     <div className="flex flex-col gap-3">
-      <Label className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+      <Label className="text-xs font-semibold tracking-wider uppercase">
         Aspect Ratio
       </Label>
       <AspectRatioControl value={aspectRatio} onChange={onAspectRatioChange} />
@@ -51,11 +52,11 @@ export const TunerControlFields = ({
 
     {/* Bar Color */}
     <div className="flex flex-col gap-3">
-      <Label className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+      <Label className="text-xs font-semibold tracking-wider uppercase">
         Bar Color
       </Label>
       <div className="flex items-center gap-2">
-        <input
+        <Input
           type="color"
           value={barColor || "#000000"}
           onChange={(e) => onBarColorChange(e.target.value)}

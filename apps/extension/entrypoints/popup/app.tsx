@@ -1,13 +1,14 @@
-import { IconEye, IconVideo, IconVideoOff } from "@tabler/icons-react"
+import { IconEye } from "@tabler/icons-react"
 import {
   DEFAULT_TUNER_CONFIG,
   type TunerConfig,
 } from "@workspace/stream-config"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent } from "@workspace/ui/components/card"
 import { Switch } from "@workspace/ui/components/switch"
 import { TunerControlFields } from "@workspace/ui/components/tuner/tuner-control-fields"
+import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
+import logo from "../../assets/icon.svg"
 import {
   getTunerConfig,
   setAlign,
@@ -44,70 +45,60 @@ export default function App() {
   }
 
   return (
-    <div className="flex w-[400px] flex-col gap-4 p-4">
+    <div className="flex w-[320px] flex-col gap-2.5 bg-background p-3 text-foreground">
       {/* Header */}
-      <div className="flex items-center justify-between border-b pb-3">
-        <h1 className="text-lg font-semibold">CamTuner</h1>
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handlePreview}
-            className="text-primary"
-          >
-            <IconEye size={18} />
-          </Button>
+          <img
+            src={logo}
+            alt="CamTuner Logo"
+            width={25}
+            height={25}
+            className={cn(enabled ? "" : "grayscale")}
+          />
+          <h1 className="text-sm font-semibold">CamTuner</h1>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Switch checked={enabled} onCheckedChange={handleToggle} />
         </div>
       </div>
 
-      {/* Enable Toggle */}
-      <div className="flex items-center justify-between rounded-lg border p-3">
-        <div className="flex items-center gap-3">
-          {enabled ? (
-            <IconVideo size={20} className={"text-primary"} />
-          ) : (
-            <IconVideoOff size={20} className={"text-muted-foreground"} />
-          )}
-          <div>
-            <p className="text-sm font-medium">Camera Tuning</p>
-            <p className="text-xs text-muted-foreground">
-              {enabled ? "Active" : "Disabled"}
-            </p>
-          </div>
-        </div>
-        <Switch checked={enabled} onCheckedChange={handleToggle} />
-      </div>
+      <div className="mb-2 h-px bg-border" />
 
-      <Card
-        className={`bg-muted dark:bg-card transition-opacity${!enabled ? "pointer-events-none opacity-50" : ""}`}
+      <div
+        className={cn(
+          "mb-2 space-y-5",
+          !enabled && "pointer-events-none opacity-50"
+        )}
       >
-        <CardContent>
-          <div className="flex flex-col gap-6">
-            <TunerControlFields
-              aspectRatio={config.aspectRatio}
-              onAspectRatioChange={async (v) => {
-                setConfig((c) => ({ ...c, aspectRatio: v }))
-                await setAspectRatio(v)
-              }}
-              zoom={config.zoom}
-              onZoomChange={async (v) => {
-                setConfig((c) => ({ ...c, zoom: v }))
-                await setZoom(v)
-              }}
-              align={config.align}
-              onAlignChange={async (v) => {
-                setConfig((c) => ({ ...c, align: v }))
-                await setAlign(v)
-              }}
-              barColor={config.barColor}
-              onBarColorChange={async (v) => {
-                setConfig((c) => ({ ...c, barColor: v }))
-                await setBarColor(v)
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <TunerControlFields
+          aspectRatio={config.aspectRatio}
+          onAspectRatioChange={async (v) => {
+            setConfig((c) => ({ ...c, aspectRatio: v }))
+            await setAspectRatio(v)
+          }}
+          zoom={config.zoom}
+          onZoomChange={async (v) => {
+            setConfig((c) => ({ ...c, zoom: v }))
+            await setZoom(v)
+          }}
+          align={config.align}
+          onAlignChange={async (v) => {
+            setConfig((c) => ({ ...c, align: v }))
+            await setAlign(v)
+          }}
+          barColor={config.barColor}
+          onBarColorChange={async (v) => {
+            setConfig((c) => ({ ...c, barColor: v }))
+            await setBarColor(v)
+          }}
+        />
+      </div>
+
+      <Button variant="default" onClick={handlePreview} size={"lg"}>
+        <IconEye size={15} />
+        Show Preview
+      </Button>
     </div>
   )
 }

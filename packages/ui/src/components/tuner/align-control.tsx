@@ -47,7 +47,7 @@ type Props = {
 export const AlignControl = ({ value, onChange, size = "default" }: Props) => {
   return (
     <div className="flex flex-col gap-3">
-      <Label className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+      <Label className="text-xs font-semibold tracking-wider uppercase">
         Align
       </Label>
       <div className="grid w-full grid-cols-3 gap-2">

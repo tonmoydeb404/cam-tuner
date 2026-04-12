@@ -23,10 +23,10 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By installing the CamTuner browser extension or using the
-              CamTuner website, you agree to be bound by these Terms and
-              Conditions. If you do not agree with any part of these terms, you
-              must not use CamTuner.
+              By installing the CamTuner browser extension or using the CamTuner
+              website, you agree to be bound by these Terms and Conditions. If
+              you do not agree with any part of these terms, you must not use
+              CamTuner.
             </p>
           </section>
 
@@ -47,7 +47,9 @@ export default function TermsPage() {
             <h2 className="mb-3 text-lg font-bold text-foreground">
               3. Use of the Service
             </h2>
-            <p>You agree to use CamTuner only for lawful purposes. You must not:</p>
+            <p>
+              You agree to use CamTuner only for lawful purposes. You must not:
+            </p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
                 Modify, decompile, or reverse-engineer the extension except as
@@ -98,10 +100,10 @@ export default function TermsPage() {
             </h2>
             <p>
               To the fullest extent permitted by law, the CamTuner team shall
-              not be liable for any indirect, incidental, special, consequential,
-              or punitive damages arising from your use of or inability to use
-              the service, even if we have been advised of the possibility of
-              such damages.
+              not be liable for any indirect, incidental, special,
+              consequential, or punitive damages arising from your use of or
+              inability to use the service, even if we have been advised of the
+              possibility of such damages.
             </p>
           </section>
 

@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 
 import { assets } from "@/assets"
 import ThemeButton from "@/components/theme-button"
+import envLib from "@/lib/env"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import Image from "next/image"
@@ -31,7 +32,7 @@ export const Navbar = () => {
             <Link
               key={item.label}
               href={item.href}
-              className="relative text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase transition-colors after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:text-foreground hover:after:w-full"
+              className="relative text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase transition-colors after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:text-foreground hover:after:w-full"
             >
               {item.label}
             </Link>
@@ -42,7 +43,7 @@ export const Navbar = () => {
           <ThemeButton />
 
           <Link
-            href={process.env.NEXT_PUBLIC_CHROME_STORE_URL!}
+            href={envLib.chromeStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: "default", size: "lg" }))}

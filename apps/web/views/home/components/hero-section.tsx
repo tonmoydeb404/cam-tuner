@@ -1,3 +1,4 @@
+import envLib from "@/lib/env"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { motion } from "framer-motion"
@@ -14,11 +15,11 @@ export const HeroSection = () => {
       {/* Background Glows */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 opacity-70 blur-[80px] sm:h-[600px] sm:w-[600px] sm:blur-[120px]"
+        className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-75 w-75 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 opacity-70 blur-[80px] sm:h-150 sm:w-150 sm:blur-[120px]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/4 -z-10 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-secondary/10 opacity-50 blur-[60px] sm:h-[400px] sm:w-[400px] sm:blur-[100px]"
+        className="pointer-events-none absolute top-1/2 left-1/4 -z-10 h-50 w-50 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-secondary/10 opacity-50 blur-[60px] sm:h-100 sm:w-100 sm:blur-[100px]"
       />
 
       {/* Headline */}
@@ -29,7 +30,7 @@ export const HeroSection = () => {
         transition={{ duration: 0.7, delay: 0.1 }}
         className="max-w-[90vw] text-5xl leading-[1.1] font-black tracking-tighter sm:max-w-5xl sm:text-7xl sm:leading-[0.95] md:text-8xl lg:text-[9rem]"
       >
-        <span className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+        <span className="bg-linear-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
           {content.hero.headlineMain}
         </span>
         <br />
@@ -56,12 +57,12 @@ export const HeroSection = () => {
         className="z-10 mt-10 flex w-full flex-col gap-4 sm:mt-12 sm:w-auto sm:flex-row"
       >
         <Link
-          href={process.env.NEXT_PUBLIC_CHROME_STORE_URL!}
+          href={envLib.chromeStoreUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
             buttonVariants({ variant: "default" }),
-            "h-15 min-w-[240px] text-base font-semibold"
+            "h-15 min-w-60 text-base font-semibold"
           )}
         >
           {content.hero.primaryCta}
@@ -70,7 +71,7 @@ export const HeroSection = () => {
           href={"/#hero-demo"}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "h-15 min-w-[200px] text-base font-semibold"
+            "h-15 min-w-50 text-base font-semibold"
           )}
         >
           {content.hero.secondaryCta}

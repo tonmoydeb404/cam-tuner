@@ -64,7 +64,8 @@ function useConfigSetter<K extends keyof TunerConfig>(
 
 export function useTuner(
   inputStream: MediaStream | null,
-  initialConfig: Partial<TunerConfig> = {}
+  initialConfig: Partial<TunerConfig> = {},
+  { syncExtension = true }: { syncExtension?: boolean } = {}
 ): UseTunerReturn {
   const mergedConfig = { ...DEFAULT_TUNER_CONFIG, ...initialConfig }
   const [config, setConfig] = useState<TunerConfig>(mergedConfig)
@@ -77,9 +78,9 @@ export function useTuner(
   const syncToExtension = useCallback(
     (next: TunerConfig) => {
       configRef.current = next
-      debouncedSync(next)
+      if (syncExtension) debouncedSync(next)
     },
-    [debouncedSync]
+    [debouncedSync, syncExtension]
   )
 
   const { outputStream, error, modifierRef } = useStreamModifier(
@@ -89,6 +90,7 @@ export function useTuner(
 
   // Sync config from extension storage via content script messages
   useEffect(() => {
+    if (!syncExtension) return
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type !== "camtuner:config-update") return
       const newConfig: TunerConfig = event.data.config

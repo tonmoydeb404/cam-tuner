@@ -43,7 +43,7 @@ export const SchemaMarkup = () => {
         "@id": `${brand.baseUrl}/#organization`,
         name: brand.name,
         url: brand.baseUrl,
-        sameAs: [brand.social.github, brand.social.twitter],
+        sameAs: [brand.social.github],
       },
       {
         "@type": "WebPage",

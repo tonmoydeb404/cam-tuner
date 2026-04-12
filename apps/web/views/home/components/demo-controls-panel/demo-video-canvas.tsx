@@ -23,7 +23,7 @@ export const DemoVideoCanvas = (props: DemoVideoCanvasProps) => {
   const { camState, videoRef, onStart, error, onStop } = props
 
   return (
-    <div className="relative flex items-center justify-center overflow-hidden bg-stone-900 max-md:h-80 md:flex-1">
+    <div className="dark relative flex items-center justify-center overflow-hidden bg-card max-md:h-80 md:flex-1">
       <AnimatePresence mode="wait">
         {camState === "active" && (
           <motion.div

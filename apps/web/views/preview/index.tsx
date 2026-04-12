@@ -20,7 +20,7 @@ import PreviewSidebar from "./sidebar"
 import PreviewVideo from "./video"
 
 const PreviewView = () => {
-  const webcam = useWebcam()
+  const webcam = useWebcam({ autoStart: true, bypassExtension: true })
   const tuner = useTuner(webcam.stream)
 
   const camState = deriveCamState({

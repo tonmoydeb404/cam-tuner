@@ -2,12 +2,12 @@
   "nav": {
     "links": [
       {
-        "label": "Features",
-        "href": "#features"
-      },
-      {
         "label": "Demo",
         "href": "#hero-demo"
+      },
+      {
+        "label": "Features",
+        "href": "#features"
       },
       {
         "label": "Workflow",

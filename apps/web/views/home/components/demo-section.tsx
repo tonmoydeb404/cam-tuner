@@ -10,8 +10,8 @@ import { DemoControlsPanel } from "./demo-controls-panel"
 import { DemoVideoCanvas } from "./demo-controls-panel/demo-video-canvas"
 
 export const DemoSection = () => {
-  const webcam = useWebcam({ autoStart: false })
-  const tuner = useTuner(webcam.stream)
+  const webcam = useWebcam({ autoStart: false, bypassExtension: true })
+  const tuner = useTuner(webcam.stream, {}, { syncExtension: false })
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [camState, setCamState] = useState<CamState>("idle")
 

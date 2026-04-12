@@ -5,6 +5,8 @@ on:
     branches: [main]
   push:
     branches: [main]
+    tags-ignore:
+      - "v*"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -29,10 +31,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm turbo typecheck --filter='!@workspace/web'
+        run: pnpm turbo typecheck --filter='!@cam-tuner/web'
 
       - name: Lint
-        run: pnpm turbo lint --filter='!@workspace/web'
+        run: pnpm turbo lint --filter='!@cam-tuner/web'
 
   test:
     name: Test
@@ -55,4 +57,4 @@ jobs:
         run: pnpm turbo build --filter='./packages/*'
 
       - name: Test
-        run: pnpm turbo test --filter='!@workspace/web'
+        run: pnpm turbo test --filter='!@cam-tuner/web'

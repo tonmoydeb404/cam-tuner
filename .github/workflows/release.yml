@@ -33,16 +33,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm turbo typecheck --filter=@workspace/extension...
+        run: pnpm turbo typecheck --filter=@cam-tuner/extension...
 
       - name: Lint
-        run: pnpm turbo lint --filter=@workspace/extension...
+        run: pnpm turbo lint --filter=@cam-tuner/extension...
 
       - name: Build packages
         run: pnpm turbo build --filter='./packages/*'
 
       - name: Test
-        run: pnpm turbo test --filter=@workspace/extension...
+        run: pnpm turbo test --filter=@cam-tuner/extension...
 
   release:
     name: Release
@@ -66,15 +66,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build dependency packages
-        run: pnpm turbo build --filter=@workspace/extension^...
+        run: pnpm turbo build --filter=@cam-tuner/extension^...
         env:
           VITE_WEB_URL: ${{ vars.VITE_WEB_URL }}
 
       - name: Zip Chrome extension
-        run: pnpm --filter @workspace/extension zip
+        run: pnpm --filter @cam-tuner/extension zip
 
       - name: Zip Firefox extension
-        run: pnpm --filter @workspace/extension zip:firefox
+        run: pnpm --filter @cam-tuner/extension zip:firefox
 
       - name: Upload ZIPs to GitHub Release
         uses: softprops/action-gh-release@v2

@@ -1,0 +1,55 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.0.0)"
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Typecheck & Lint
+        run: pnpm turbo typecheck lint --filter=@workspace/extension...
+
+      - name: Build workspace packages
+        run: pnpm turbo build --filter=@workspace/extension^...
+
+      - name: Test
+        run: pnpm turbo test --filter=@workspace/extension...
+
+      - name: Zip extensions
+        run: |
+          pnpm --filter @workspace/extension zip
+          pnpm --filter @workspace/extension zip:firefox
+
+      - name: Upload ZIPs to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: |
+            apps/extension/.output/*-chrome.zip
+            apps/extension/.output/*-firefox.zip
+            apps/extension/.output/*-sources.zip

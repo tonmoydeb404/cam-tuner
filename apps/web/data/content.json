@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "links": [
+      {
+        "label": "Demo",
+        "href": "#hero-demo"
+      },
+      {
+        "label": "Features",
+        "href": "#features"
+      },
+      {
+        "label": "Workflow",
+        "href": "#workflow"
+      }
+    ],
+    "primaryCta": "Get Extension"
+  },
+  "hero": {
+    "badge": "Available on Chrome Web Store",
+    "headlineBadge": "PIXEL PERFECT",
+    "headlineMain": "PRO CAMERA",
+    "headlineSub": "IN YOUR BROWSER.",
+    "description": "Stop settling for awkward webcam angles on Google Meet or Zoom. CamTuner is a professional browser extension that lets you crop, zoom, and align your live feed without installing bulky desktop software.",
+    "primaryCta": "Add to Chrome — Free",
+    "secondaryCta": "View Demo",
+    "mockupBadge": "1080p • 60FPS"
+  },
+  "features": {
+    "title": "Unmatched Control",
+    "subtitle": "Native browser adjustments built for professionals.",
+    "cards": [
+      {
+        "icon": "Settings",
+        "title": "Granular Controls",
+        "description": "Adjust your aspect ratio, dial in the perfect zoom, and align your shot frame. Our extension intercepts your browser's MediaStream API for zero-latency framing.",
+        "stats": [
+          {
+            "value": "<2ms",
+            "label": "Latency"
+          },
+          {
+            "value": "HD+",
+            "label": "Support"
+          }
+        ]
+      },
+      {
+        "icon": "Shield",
+        "title": "Local Only Processing",
+        "description": "Everything runs in-browser. Frames are cropped locally via WebCodecs, meaning no video data ever leaves your machine."
+      },
+      {
+        "icon": "Palette",
+        "title": "Custom Letterboxing",
+        "description": "Crop to 21:9 or 1:1 and customize the letterbox padding color to match your brand or presentation background."
+      }
+    ]
+  },
+  "workflow": {
+    "steps": [
+      {
+        "number": "01",
+        "title": "Mount Extension",
+        "description": "Install from the Chrome Web Store, pin the extension, and give it access to your camera."
+      },
+      {
+        "number": "02",
+        "title": "Frame & Tune",
+        "description": "Open the popup to establish your Aspect Ratio, adjust the slider to Zoom in, and drag to Align your face."
+      },
+      {
+        "number": "03",
+        "title": "Look Professional",
+        "description": "Your settings persist seamlessly across sessions. Join every Google Meet or Zoom call with perfect framing."
+      }
+    ]
+  },
+  "demo": {
+    "badge": "INTERACTIVE DEMO",
+    "title": "Try It Yourself",
+    "description": "Start your camera below and tweak the aspect ratio, zoom, and framing. All processing happens entirely inside your browser using WebCodecs.",
+    "startButton": "Start Camera",
+    "stopButton": "Stop"
+  },
+  "cta": {
+    "headline": "READY TO UPGRADE?",
+    "description": "Take control of your framing and join thousands of professionals looking their best.",
+    "button": "Install CamTuner Now"
+  },
+  "footer": {}
+}

@@ -1,4 +1,4 @@
-![CamTuner Logo](./apps/extension/public/icons/icon128.png)
+![CamTuner Logo](./apps/extension/public/icon128.png)
 
 # CamTuner
 

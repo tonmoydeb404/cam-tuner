@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 
 type Props = {}
 
-const ThemeButton = (props: Props) => {
+const ThemeButton = (_props: Props) => {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 

@@ -12,6 +12,7 @@ export default defineConfig({
         : "http://localhost:3000/*",
       "*://*/*",
     ],
+    name: "CamTuner",
   },
   autoIcons: {
     enabled: true,

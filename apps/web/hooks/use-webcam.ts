@@ -49,10 +49,14 @@ export function useWebcam({
   // - otherwise → use whatever is on navigator.mediaDevices (may be patched)
   const getStream = useCallback(
     (constraints: MediaStreamConstraints) => {
+      const win = window as Window & {
+        __camtuner_getUserMedia?: (
+          constraints: MediaStreamConstraints
+        ) => Promise<MediaStream>
+      }
       const fn =
-        bypassExtension &&
-        typeof (window as any).__camtuner_getUserMedia === "function"
-          ? (window as any).__camtuner_getUserMedia
+        bypassExtension && typeof win.__camtuner_getUserMedia === "function"
+          ? win.__camtuner_getUserMedia.bind(window)
           : navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
       return fn(constraints) as Promise<MediaStream>
     },

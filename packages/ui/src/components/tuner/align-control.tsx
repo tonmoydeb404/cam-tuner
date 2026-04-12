@@ -53,7 +53,7 @@ export const AlignControl = ({ value, onChange, size = "default" }: Props) => {
       <div className="grid w-full grid-cols-3 gap-2">
         {ALIGN_OPTIONS.map((pos: AlignPosition) => {
           const isSelected = value === pos
-          const Icon = ALIGN_ICONS[pos]
+          const Icon = ALIGN_ICONS[pos] ?? IconArrowsMove
           return (
             <Button
               key={pos}

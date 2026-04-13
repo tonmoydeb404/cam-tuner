@@ -19,6 +19,7 @@ export default defineContentScript({
     let enabled = true
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     const activeModifiers: StreamModifier[] = []
+    const trackToModifier = new WeakMap<MediaStreamTrack, StreamModifier>()
 
     let resolveInitialState!: () => void
     const initialStateReady = new Promise<void>((resolve) => {
@@ -26,29 +27,46 @@ export default defineContentScript({
       setTimeout(resolve, 1000)
     })
 
+    function cleanupModifier(modifier: StreamModifier) {
+      // Remove all tracks from mapping first to prevent re-entrancy
+      for (const track of modifier.outputStream.getTracks()) {
+        trackToModifier.delete(track)
+      }
+      modifier.destroy()
+      const idx = activeModifiers.indexOf(modifier)
+      if (idx !== -1) activeModifiers.splice(idx, 1)
+    }
+
     function processStream(original: MediaStream): MediaStream {
       const modifier = createStreamModifier(original, true)
       modifier.addPlugin(
         createCropZoomAlignPlugin(),
         tunerConfigToCropConfig(currentConfig)
       )
-      activeModifiers.push(modifier)
 
-      // Auto-cleanup when the output tracks end (e.g. site calls track.stop())
       for (const track of modifier.outputStream.getTracks()) {
-        track.addEventListener("ended", () => {
-          const allEnded = modifier.outputStream
-            .getTracks()
-            .every((t) => t.readyState === "ended")
-          if (allEnded) {
-            modifier.destroy()
-            const idx = activeModifiers.indexOf(modifier)
-            if (idx !== -1) activeModifiers.splice(idx, 1)
-          }
-        })
+        trackToModifier.set(track, modifier)
       }
 
+      activeModifiers.push(modifier)
       return modifier.outputStream
+    }
+
+    // Intercept track.stop() so we can release the raw camera stream
+    // when a site (e.g. Google Meet) stops the tracks we gave it.
+    const originalTrackStop = MediaStreamTrack.prototype.stop
+    MediaStreamTrack.prototype.stop = function () {
+      const modifier = trackToModifier.get(this)
+      originalTrackStop.call(this)
+
+      if (modifier) {
+        const allEnded = modifier.outputStream
+          .getTracks()
+          .every((t) => t.readyState === "ended")
+        if (allEnded) {
+          cleanupModifier(modifier)
+        }
+      }
     }
 
     const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(

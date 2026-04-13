@@ -1,3 +1,4 @@
+import { brand } from "@/data/brand"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -140,7 +141,7 @@ export default function TermsPage() {
               If you have questions about these terms, please open an issue on
               our{" "}
               <a
-                href="https://github.com/camtuner/cam-tuner"
+                href={brand.social.github}
                 className="text-primary underline underline-offset-4 hover:text-primary/80"
                 rel="noopener noreferrer"
                 target="_blank"

@@ -1,6 +1,5 @@
 "use client"
 
-import { IconVideo } from "@tabler/icons-react"
 import { useEffect, useRef } from "react"
 
 interface CameraPreviewProps {
@@ -40,12 +39,6 @@ const PreviewVideo = (props: CameraPreviewProps) => {
           }
         }}
       />
-
-      {/* Fallback pattern while loading or if no camera */}
-      <div className="flex flex-col items-center justify-center gap-y-2">
-        <IconVideo className="size-8 text-muted-foreground" />
-        <span className="text-muted-foreground">No Video Feed</span>
-      </div>
     </>
   )
 }

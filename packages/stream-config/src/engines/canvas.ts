@@ -117,6 +117,7 @@ export class CanvasEngine implements ProcessorEngine {
       this.outputStream.getTracks().forEach((t) => t.stop())
       this.outputStream = null
     }
+    this.inputStream.getTracks().forEach((t) => t.stop())
     this.video.pause()
     this.video.srcObject = null
     this.video.remove()

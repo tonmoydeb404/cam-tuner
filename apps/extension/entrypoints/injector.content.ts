@@ -33,6 +33,21 @@ export default defineContentScript({
         tunerConfigToCropConfig(currentConfig)
       )
       activeModifiers.push(modifier)
+
+      // Auto-cleanup when the output tracks end (e.g. site calls track.stop())
+      for (const track of modifier.outputStream.getTracks()) {
+        track.addEventListener("ended", () => {
+          const allEnded = modifier.outputStream
+            .getTracks()
+            .every((t) => t.readyState === "ended")
+          if (allEnded) {
+            modifier.destroy()
+            const idx = activeModifiers.indexOf(modifier)
+            if (idx !== -1) activeModifiers.splice(idx, 1)
+          }
+        })
+      }
+
       return modifier.outputStream
     }
 

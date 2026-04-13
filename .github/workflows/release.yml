@@ -51,6 +51,8 @@ jobs:
     environment: production
     permissions:
       contents: write
+    env:
+      VITE_WEB_URL: ${{ vars.VITE_WEB_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -67,8 +69,6 @@ jobs:
 
       - name: Build dependency packages
         run: pnpm turbo build --filter=@cam-tuner/extension^...
-        env:
-          VITE_WEB_URL: ${{ vars.VITE_WEB_URL }}
 
       - name: Zip Chrome extension
         run: pnpm --filter @cam-tuner/extension zip

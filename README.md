@@ -2,7 +2,7 @@
 
 # CamTuner
 
-**CamTuner** is a browser extension that lets you customize your webcam feed with advanced features like zoom, crop, aspect ratios, letterbox mode, animated GIF overlays, confetti animations, and more - all output as a virtual webcam for video calls and streaming.
+**Your webcam, your rules.** CamTuner is a browser extension that lets you fine-tune your webcam feed — crop, zoom, align, switch aspect ratios, and apply letterbox framing — all in real-time as a virtual webcam for video calls and streaming.
 
 [![Get it on Chrome Web Store](https://img.shields.io/badge/Available_on-Chrome_Web_Store-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/camtuner/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb)
 [![Get it on Firefox Add-ons](https://img.shields.io/badge/Available_on-Firefox_Add--ons-orange?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/camtuner/)
@@ -13,39 +13,38 @@
 
 ### 📹 Camera & Frame Controls
 
-- 🎥 **Multi-Camera Switching**  
-  Instantly switch between connected cameras with real-time preview.
-
 - 🎞️ **Custom Aspect Ratios**  
-  Choose from flexible aspect ratio options like 16:9, 4:3, 1:1, and more.
+  Choose from flexible aspect ratio options — 16:9, 4:3, 1:1, and 9:16 (portrait).
 
 - 📐 **Letterbox Mode (Fit to Frame)**  
   Scale video to fit while maintaining aspect ratio with customizable background colors.
 
-- 🪞 **Mirror Your Feed**  
-  Flip your video horizontally to match how you naturally view yourself.
+- 🎯 **9-Point Crop Alignment**  
+  Position your cropped view using a full 3×3 alignment grid — top, center, bottom combined with left, center, right.
 
-- ↔️ **Horizontal Crop Alignment**  
-  Align your cropped view horizontally - left, center, or right - for perfect framing.
+- 🎥 **Multi-Camera Switching**  
+  Instantly switch between connected cameras with real-time preview.
 
 ### 🔍 Zoom & Effects
 
 - 🔍 **Smooth Digital Zoom**  
-  Zoom in seamlessly to highlight parts of your feed without any stutter.
+  Zoom in up to 3× seamlessly to highlight parts of your feed without any stutter.
 
 - ⚡ **Instant Preview**  
   All adjustments are applied in real-time with zero lag or reloads.
 
-### 🎉 Overlay Features
+## 🏗️ Project Structure
 
-- 🎭 **Animated GIF Overlays**  
-  Add fun animated GIFs to your video with precise positioning and sizing controls.
+CamTuner is a **monorepo** powered by [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/repo):
 
-- 🎊 **Confetti Animations**  
-  Celebrate with customizable confetti effects - perfect for special moments and achievements.
-
-- 🎯 **Advanced Positioning**  
-  Fine-tune overlay placement with intuitive position pickers and sizing options.
+| Package                      | Description                                                  |
+| ---------------------------- | ------------------------------------------------------------ |
+| `apps/extension`             | Browser extension (Chrome & Firefox)                         |
+| `apps/web`                   | Next.js marketing & live-preview site                        |
+| `packages/stream-config`     | Shared video-processing library (Canvas & WebCodecs engines) |
+| `packages/ui`                | Shared React component library (Radix UI + shadcn)           |
+| `packages/eslint-config`     | Shared ESLint configurations                                 |
+| `packages/typescript-config` | Shared TypeScript configurations                             |
 
 ## 🛠️ Tech Stack
 
@@ -53,15 +52,17 @@
 
 ### Frontend
 
-- **React JS**: A powerful JavaScript library for building dynamic user interfaces.
-- **TypeScript**: Adds static typing to JavaScript for better maintainability and developer experience.
-- **TailwindCSS**: A utility-first CSS framework to rapidly build custom designs.
-- **ShadCn**: A UI component library built for building beautiful, accessible, and customizable interfaces.
+- **React 19**: A powerful JavaScript library for building dynamic user interfaces.
+- **TypeScript 5**: Adds static typing to JavaScript for better maintainability and developer experience.
+- **TailwindCSS 4**: A utility-first CSS framework to rapidly build custom designs.
+- **Radix UI + shadcn**: Accessible, customizable UI component primitives and pre-built components.
+- **Next.js 16**: Powers the marketing site and live camera-preview page (with Turbopack).
 
 ### Build & Development Tools
 
-- **Vite**: A next-generation, fast development build tool that provides lightning-fast hot module reloading and optimized production builds.
-- **Vite Plugin Web Extension**: This plugin simplifies building browser extensions with Vite, making it easier to develop and bundle for multiple browsers.
+- **WXT**: A modern framework for building cross-browser extensions with Vite under the hood.
+- **Turborepo**: Orchestrates builds, linting, and type-checking across the monorepo.
+- **TSup**: Bundles the `stream-config` library as CJS + ESM with type declarations.
 
 ## 🚀 Installation
 
@@ -71,8 +72,8 @@ CamTuner available on the [Chrome Web Store](https://chromewebstore.google.com/d
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- pnpm package manager
+- Node.js (v20 or higher)
+- pnpm package manager (v9+)
 
 ### Setup
 

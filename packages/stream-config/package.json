@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/dom-webcodecs": "^0.1.18",
     "@workspace/eslint-config": "workspace:*",
+    "eslint": "^9.39.2",
     "@workspace/typescript-config": "workspace:*",
     "jsdom": "^29.0.2",
     "tsup": "^8.0.2",

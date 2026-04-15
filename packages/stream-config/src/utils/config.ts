@@ -52,6 +52,7 @@ export function tunerConfigToCropConfig(
     alignX,
     alignY,
     barColor: config.barColor || "#000000",
+    mirror: config.mirror,
   }
 }
 
@@ -77,6 +78,9 @@ export function tunerUpdateToCropUpdate(
   }
   if (update.barColor !== undefined) {
     result.barColor = update.barColor
+  }
+  if (update.mirror !== undefined) {
+    result.mirror = update.mirror
   }
 
   return result

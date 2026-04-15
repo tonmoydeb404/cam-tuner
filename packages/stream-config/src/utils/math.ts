@@ -20,6 +20,7 @@ export type CropConfig = {
   alignX: AlignX
   alignY: AlignY
   barColor: string // CSS color for letterbox bars
+  mirror?: boolean // horizontal flip
 }
 
 /**

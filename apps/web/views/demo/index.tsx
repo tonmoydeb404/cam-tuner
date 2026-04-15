@@ -86,6 +86,8 @@ const DemoView = () => {
                   onAlignChange={tuner.setAlign}
                   barColor={tuner.config.barColor ?? "#000000"}
                   onBarColorChange={tuner.setBarColor}
+                  mirror={tuner.config.mirror}
+                  onMirrorChange={tuner.setMirror}
                 />
 
                 <Button

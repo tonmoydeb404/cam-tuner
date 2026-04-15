@@ -16,6 +16,7 @@ export interface TunerConfig {
   zoom: number
   align: AlignPosition
   barColor: string
+  mirror: boolean
 }
 
 export const ASPECT_RATIO_OPTIONS: AspectRatio[] = [
@@ -48,5 +49,6 @@ export const DEFAULT_TUNER_CONFIG: TunerConfig = {
   aspectRatio: "16:9",
   zoom: 1,
   align: "center",
+  mirror: false,
   barColor: "#000000",
 }

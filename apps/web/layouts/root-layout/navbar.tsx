@@ -1,16 +1,18 @@
+"use client"
+
 import { motion } from "framer-motion"
 
 import { assets } from "@/assets"
 import ThemeButton from "@/components/theme-button"
+import { brand } from "@/data/brand"
+import content from "@/data/content.json"
 import envLib from "@/lib/env"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
-import { brand } from "../../../data/brand"
-import content from "../../../data/content.json"
 
-export const Navbar = () => {
+export const HomeNavbar = () => {
   return (
     <motion.header
       initial={{ y: -100 }}

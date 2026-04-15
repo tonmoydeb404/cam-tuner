@@ -7,8 +7,11 @@ import { brand } from "@/data/brand"
 import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 
-const nunitoSansHeading = Nunito_Sans({subsets:['latin'],variable:'--font-heading'})
-const geist = Geist({subsets:['latin'],variable:'--font-sans'})
+const nunitoSansHeading = Nunito_Sans({
+  subsets: ["latin"],
+  variable: "--font-heading",
+})
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = {
@@ -46,7 +49,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -62,6 +65,7 @@ export default function RootLayout({
         geist.variable,
         nunitoSansHeading.variable
       )}
+      data-scroll-behavior="smooth"
     >
       <head>
         <SchemaMarkup />

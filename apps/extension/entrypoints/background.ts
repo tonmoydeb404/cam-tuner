@@ -10,6 +10,12 @@ export default defineBackground(() => {
     } else if (details.reason === "update") {
       console.debug("CamTuner extension updated")
       await migrateFromV1()
+      const webUrl = import.meta.env.VITE_WEB_URL
+      if (!webUrl) throw new Error("VITE_WEB_URL is not set")
+      const { version } = browser.runtime.getManifest()
+      await browser.tabs.create({
+        url: `${webUrl}/whats-new?version=${version}`,
+      })
     }
   })
 })

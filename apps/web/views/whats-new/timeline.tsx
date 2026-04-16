@@ -2,22 +2,11 @@
 
 import { releaseNotes } from "@/data/release-notes"
 import { IconCheck, IconPackage } from "@tabler/icons-react"
-import { useSearchParams } from "next/navigation"
-import { useEffect, useRef } from "react"
 
 type Props = {}
 
 const TimelineSection = (props: Props) => {
-  const searchParams = useSearchParams()
-  const activeVersion = searchParams.get("version") || releaseNotes[0]?.version
-
-  const activeRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (activeRef.current) {
-      activeRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [])
+  const activeVersion = releaseNotes[0]?.version
 
   return (
     <div className="relative">
@@ -28,11 +17,7 @@ const TimelineSection = (props: Props) => {
         {releaseNotes.map((note) => {
           const isActive = note.version === activeVersion
           return (
-            <div
-              key={note.version}
-              ref={isActive ? activeRef : undefined}
-              className="relative flex gap-4 sm:gap-6"
-            >
+            <div key={note.version} className="relative flex gap-4 sm:gap-6">
               {/* Dot */}
               <div
                 className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 sm:h-10 sm:w-10 ${

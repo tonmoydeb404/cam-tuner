@@ -1,4 +1,5 @@
 import { brand } from "@/data/brand"
+import PageHeader from "@/layouts/page-layout/header"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -9,16 +10,15 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-24 sm:py-32">
-        <h1 className="text-4xl font-black tracking-tighter sm:text-5xl">
-          Terms and Conditions
-        </h1>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Last updated: April 2026
-        </p>
+    <>
+      <PageHeader
+        title="Terms and Conditions"
+        description="CamTuner terms and conditions. Read the terms governing your use of the extension and website."
+        className="mb-14"
+      />
 
-        <div className="mt-12 space-y-10 text-sm leading-relaxed text-muted-foreground">
+      <div className="container">
+        <div className="max-w-3xl space-y-10 pb-32 text-sm leading-relaxed text-muted-foreground sm:text-base">
           <section>
             <h2 className="mb-3 text-lg font-bold text-foreground">
               1. Acceptance of Terms
@@ -153,6 +153,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-    </div>
+    </>
   )
 }

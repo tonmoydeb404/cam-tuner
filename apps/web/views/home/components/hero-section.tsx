@@ -1,3 +1,5 @@
+"use client"
+
 import envLib from "@/lib/env"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"

@@ -23,6 +23,7 @@ export interface UseTunerReturn {
   setZoom: (v: number) => void
   setAlign: (v: AlignPosition) => void
   setBarColor: (v: string) => void
+  setMirror: (v: boolean) => void
   resetConfig: () => void
   aspectRatioClass: string
   objectPosition: string
@@ -131,6 +132,12 @@ export function useTuner(
     syncToExtension,
     modifierRef
   )
+  const setMirror = useConfigSetter(
+    "mirror",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
 
   const resetConfig = useCallback(() => {
     setConfig(DEFAULT_TUNER_CONFIG)
@@ -147,6 +154,7 @@ export function useTuner(
     setZoom,
     setAlign,
     setBarColor,
+    setMirror,
     resetConfig,
     aspectRatioClass: ASPECT_RATIO_CLASS[config.aspectRatio],
     objectPosition: ALIGN_OBJECT_POSITION[config.align],

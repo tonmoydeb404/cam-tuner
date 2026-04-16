@@ -1,6 +1,7 @@
 import type { AlignPosition, AspectRatio } from "@workspace/stream-config"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
+import { Switch } from "@workspace/ui/components/switch"
 import { AlignControl } from "@workspace/ui/components/tuner/align-control"
 import { AspectRatioControl } from "@workspace/ui/components/tuner/aspect-ratio-control"
 import { ZoomControl } from "@workspace/ui/components/tuner/zoom-control"
@@ -18,6 +19,9 @@ export interface TunerControlFieldsProps {
   /** Current letterbox bar color (hex) */
   barColor: string
   onBarColorChange: (value: string) => void
+  /** Whether to horizontally flip the output */
+  mirror: boolean
+  onMirrorChange: (value: boolean) => void
 }
 
 /**
@@ -34,6 +38,8 @@ export const TunerControlFields = ({
   onAlignChange,
   barColor,
   onBarColorChange,
+  mirror,
+  onMirrorChange,
 }: TunerControlFieldsProps) => (
   <>
     {/* Aspect Ratio */}
@@ -50,22 +56,34 @@ export const TunerControlFields = ({
     {/* Align */}
     <AlignControl value={align} onChange={onAlignChange} />
 
-    {/* Bar Color */}
-    <div className="flex flex-col gap-3">
-      <Label className="text-xs font-semibold tracking-wider uppercase">
-        Bar Color
-      </Label>
-      <div className="flex items-center gap-2">
-        <Input
-          type="color"
-          value={barColor || "#000000"}
-          onChange={(e) => onBarColorChange(e.target.value)}
-          aria-label="Letterbox bar color picker"
-          className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+    {/* Bar Color + Mirror */}
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-xs font-semibold tracking-wider uppercase">
+          Bar Color
+        </Label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="color"
+            value={barColor || "#000000"}
+            onChange={(e) => onBarColorChange(e.target.value)}
+            aria-label="Letterbox bar color picker"
+            className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent p-0"
+          />
+          <span className="text-xs text-muted-foreground">
+            {barColor || "#000000"}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1.5">
+        <Label className="text-xs font-semibold tracking-wider uppercase">
+          Mirror
+        </Label>
+        <Switch
+          checked={mirror}
+          onCheckedChange={onMirrorChange}
+          aria-label="Flip output horizontally"
         />
-        <span className="text-xs text-muted-foreground">
-          {barColor || "#000000"}
-        </span>
       </div>
     </div>
   </>

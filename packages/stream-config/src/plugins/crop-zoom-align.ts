@@ -18,6 +18,7 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
     alignX: config.alignX || "center",
     alignY: config.alignY || "center",
     barColor: config.barColor || "#000000",
+    mirror: config.mirror ?? false,
   }
 }
 
@@ -116,6 +117,12 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         ctx.fillRect(0, 0, srcWidth, srcHeight)
       }
 
+      if (normalized.mirror) {
+        ctx.save()
+        ctx.translate(canvasWidth, 0)
+        ctx.scale(-1, 1)
+      }
+
       ctx.drawImage(
         videoEl,
         cachedCropBox.x,
@@ -127,6 +134,10 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         cachedDestBox.width,
         cachedDestBox.height
       )
+
+      if (normalized.mirror) {
+        ctx.restore()
+      }
     },
   }
 }

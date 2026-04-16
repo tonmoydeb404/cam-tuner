@@ -8,7 +8,7 @@ type Props = {
 
 export const ZoomControl = ({ value, onChange }: Props) => {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <Label className="text-xs font-semibold tracking-wider uppercase">
           Zoom
@@ -27,11 +27,6 @@ export const ZoomControl = ({ value, onChange }: Props) => {
         }
         className="w-full **:data-[slot=slider-track]:bg-gray-300 dark:**:data-[slot=slider-track]:bg-muted"
       />
-      <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-        <button onClick={() => onChange(1)}>1x</button>
-        <button onClick={() => onChange(2)}>2x</button>
-        <button onClick={() => onChange(3)}>3x</button>
-      </div>
     </div>
   )
 }

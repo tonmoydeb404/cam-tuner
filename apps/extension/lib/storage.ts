@@ -56,3 +56,7 @@ export async function setAlign(align: AlignPosition): Promise<void> {
 export async function setBarColor(barColor: string): Promise<void> {
   await setTunerConfig({ barColor })
 }
+
+export async function setMirror(mirror: boolean): Promise<void> {
+  await setTunerConfig({ mirror })
+}

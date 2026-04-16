@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { tunerConfigToCropConfig, tunerUpdateToCropUpdate } from "../config"
 import type { TunerConfig } from "../../tuner-types"
 import { DEFAULT_TUNER_CONFIG } from "../../tuner-types"
+import { tunerConfigToCropConfig, tunerUpdateToCropUpdate } from "../config"
 
 describe("tunerConfigToCropConfig", () => {
   it("converts default config", () => {
@@ -12,6 +12,7 @@ describe("tunerConfigToCropConfig", () => {
       alignX: "center",
       alignY: "center",
       barColor: "#000000",
+      mirror: false,
     })
   })
 
@@ -21,6 +22,7 @@ describe("tunerConfigToCropConfig", () => {
       zoom: 2.5,
       align: "top-left",
       barColor: "#ff0000",
+      mirror: true,
     }
     expect(tunerConfigToCropConfig(config)).toEqual({
       aspectRatio: 4 / 3,
@@ -28,6 +30,7 @@ describe("tunerConfigToCropConfig", () => {
       alignX: "left",
       alignY: "top",
       barColor: "#ff0000",
+      mirror: true,
     })
   })
 

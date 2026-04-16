@@ -14,6 +14,7 @@ import {
   setAlign,
   setAspectRatio,
   setBarColor,
+  setMirror,
   setZoom,
   virtualCamEnabled,
 } from "../../lib/storage"
@@ -67,7 +68,7 @@ export default function App() {
 
       <div
         className={cn(
-          "mb-2 space-y-5",
+          "mb-2 space-y-4",
           !enabled && "pointer-events-none opacity-50"
         )}
       >
@@ -91,6 +92,11 @@ export default function App() {
           onBarColorChange={async (v) => {
             setConfig((c) => ({ ...c, barColor: v }))
             await setBarColor(v)
+          }}
+          mirror={config.mirror}
+          onMirrorChange={async (v) => {
+            setConfig((c) => ({ ...c, mirror: v }))
+            await setMirror(v)
           }}
         />
       </div>

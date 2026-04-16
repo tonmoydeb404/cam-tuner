@@ -8,6 +8,15 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "2.0.9",
+    date: "2026-04-16",
+    title: "Mirror & What's New",
+    highlights: [
+      "Added mirror/flip control to the tuner for horizontal camera mirroring",
+      "Added a What's New page to the web app showcasing release history",
+    ],
+  },
+  {
     version: "2.0.8",
     date: "2026-04-13",
     title: "Stability & Dependency Update",

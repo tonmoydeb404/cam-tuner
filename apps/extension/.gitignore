@@ -17,6 +17,10 @@ stats-*.json
 .wxt
 web-ext.config.ts
 
+# MediaPipe WASM assets + standalone adapter are built from node_modules at build time (see scripts/)
+public/wasm
+public/mediapipe-adapter.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

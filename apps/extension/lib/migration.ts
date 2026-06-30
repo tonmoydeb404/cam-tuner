@@ -107,6 +107,7 @@ export async function migrateFromV1(): Promise<void> {
       zoom:
         typeof crop.zoom === "number" ? crop.zoom : DEFAULT_TUNER_CONFIG.zoom,
       align: mapAlign(crop.align),
+      mirror: DEFAULT_TUNER_CONFIG.mirror,
       barColor:
         typeof crop.letterboxBgColor === "string" && crop.letterboxBgColor
           ? crop.letterboxBgColor

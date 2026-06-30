@@ -22,6 +22,9 @@ export interface TunerControlFieldsProps {
   /** Whether to horizontally flip the output */
   mirror: boolean
   onMirrorChange: (value: boolean) => void
+  /** Whether Center Stage face tracking is enabled (optional — omit to hide) */
+  centerStageEnabled?: boolean
+  onCenterStageChange?: (value: boolean) => void
 }
 
 /**
@@ -40,8 +43,32 @@ export const TunerControlFields = ({
   onBarColorChange,
   mirror,
   onMirrorChange,
+  centerStageEnabled,
+  onCenterStageChange,
 }: TunerControlFieldsProps) => (
   <>
+    {/* Center Stage (only when provided) */}
+    {centerStageEnabled !== undefined && onCenterStageChange && (
+      <>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-semibold tracking-wider uppercase">
+              Center Stage
+            </Label>
+            <span className="text-xs text-muted-foreground">
+              Auto-frames to keep faces centered
+            </span>
+          </div>
+          <Switch
+            checked={centerStageEnabled}
+            onCheckedChange={onCenterStageChange}
+            aria-label="Toggle Center Stage face tracking"
+          />
+        </div>
+        <div className="h-px bg-border" />
+      </>
+    )}
+
     {/* Aspect Ratio */}
     <div className="flex flex-col gap-3">
       <Label className="text-xs font-semibold tracking-wider uppercase">

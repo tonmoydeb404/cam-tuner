@@ -17,6 +17,12 @@ export interface TunerConfig {
   align: AlignPosition
   barColor: string
   mirror: boolean
+  /**
+   * Whether Center Stage (face-tracking auto-framing) is on.
+   * Optional for backward compatibility with configs persisted before
+   * the feature existed (treated as false when undefined).
+   */
+  centerStageEnabled?: boolean
 }
 
 export const ASPECT_RATIO_OPTIONS: AspectRatio[] = [
@@ -51,4 +57,5 @@ export const DEFAULT_TUNER_CONFIG: TunerConfig = {
   align: "center",
   mirror: false,
   barColor: "#000000",
+  centerStageEnabled: false,
 }

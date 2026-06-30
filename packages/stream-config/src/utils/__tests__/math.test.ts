@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { calculateCropBox, calculateDestinationBox } from "../math"
+import {
+  calculateAlignOffset,
+  calculateCenteredOffset,
+  calculateCropBox,
+  calculateDestinationBox,
+  clamp01,
+} from "../math"
 import type { Box, CropConfig, Size } from "../math"
 
 const HD: Size = { width: 1920, height: 1080 }
@@ -140,5 +146,120 @@ describe("calculateDestinationBox", () => {
     expect(result.height).toBe(1080)
     expect(result.x).toBe(0)
     expect(result.y).toBe(0)
+  })
+})
+
+describe("clamp01", () => {
+  it("clamps values below 0 to 0", () => {
+    expect(clamp01(-0.5)).toBe(0)
+  })
+
+  it("clamps values above 1 to 1", () => {
+    expect(clamp01(1.5)).toBe(1)
+  })
+
+  it("passes through values within 0..1", () => {
+    expect(clamp01(0.3)).toBe(0.3)
+  })
+
+  it("collapses NaN to 0", () => {
+    expect(clamp01(NaN)).toBe(0)
+  })
+})
+
+describe("calculateAlignOffset", () => {
+  it("returns 0 for start (left/top) discrete alignment", () => {
+    expect(calculateAlignOffset(400, "left")).toBe(0)
+    expect(calculateAlignOffset(400, "top")).toBe(0)
+  })
+
+  it("returns full available for end (right/bottom) discrete alignment", () => {
+    expect(calculateAlignOffset(400, "right")).toBe(400)
+    expect(calculateAlignOffset(400, "bottom")).toBe(400)
+  })
+
+  it("returns half for center discrete alignment", () => {
+    expect(calculateAlignOffset(400, "center")).toBe(200)
+  })
+
+  it("uses continuous value when provided (overrides discrete)", () => {
+    // 0.25 of 400 = 100
+    expect(calculateAlignOffset(400, "center", 0.25)).toBe(100)
+    // discrete ignored when continuous present
+    expect(calculateAlignOffset(400, "left", 0.75)).toBe(300)
+  })
+
+  it("clamps continuous values outside 0..1", () => {
+    expect(calculateAlignOffset(400, "center", 1.5)).toBe(400)
+    expect(calculateAlignOffset(400, "center", -0.2)).toBe(0)
+  })
+})
+
+describe("calculateCropBox with alignCenter", () => {
+  it("centers crop on alignCenter 0.5 (matches discrete center)", () => {
+    const config: CropConfig = { ...CENTER, zoom: 2, alignCenter: { x: 0.5, y: 0.5 } }
+    const discrete = calculateCropBox(HD, { ...CENTER, zoom: 2 })
+    const continuous = calculateCropBox(HD, config)
+    expect(continuous).toEqual(discrete)
+  })
+
+  it("shifts crop horizontally toward the right for high x", () => {
+    const left = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 0, y: 0.5 } })
+    const right = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 1, y: 0.5 } })
+    // higher x shifts the crop box further right
+    expect(right.x).toBeGreaterThan(left.x)
+    expect(right.x + right.width).toBeLessThanOrEqual(1920)
+  })
+
+  it("places crop at far right for alignCenter x = 1", () => {
+    const box = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 1, y: 0.5 } })
+    expect(box.x).toBe(1920 - box.width)
+  })
+
+  it("shifts crop vertically toward the bottom for high y", () => {
+    const top = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 0.5, y: 0 } })
+    const bottom = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 0.5, y: 1 } })
+    expect(bottom.y).toBeGreaterThan(top.y)
+  })
+
+  it("falls back to discrete align when alignCenter is undefined", () => {
+    const box = calculateCropBox(HD, { ...CENTER, zoom: 2, alignX: "left", alignY: "top" })
+    expect(box.x).toBe(0)
+    expect(box.y).toBe(0)
+  })
+
+  it("centers an off-center subject while panning room exists", () => {
+    // zoom 2 on 1920-wide → zoomWidth 960, panning range [0, 960].
+    // Subject at x=0.6 (1152px) is centerable: crop start = 1152 - 480 = 672.
+    const box = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 0.6, y: 0.5 } })
+    expect(box.x).toBe(672)
+    // The subject lands at the exact center of the crop (not at 0.6 of it).
+    expect(0.6 * 1920 - box.x).toBe(box.width / 2)
+  })
+
+  it("pins to the frame edge (keeps subject in frame) when there is no room to center", () => {
+    // Subject at x=0.9 (1728px) can't be centered; crop clamps to the right edge.
+    const box = calculateCropBox(HD, { ...CENTER, zoom: 2, alignCenter: { x: 0.9, y: 0.5 } })
+    expect(box.x).toBe(1920 - box.width)
+    expect(box.x + box.width).toBe(1920)
+  })
+})
+
+describe("calculateCenteredOffset", () => {
+  it("centers a mid-frame subject", () => {
+    // subject 0.5 of 1000 = 500; zoomSize 400 → start 500-200 = 300
+    expect(calculateCenteredOffset(0.5, 400, 1000)).toBe(300)
+  })
+
+  it("clamps to the left edge", () => {
+    expect(calculateCenteredOffset(0.1, 400, 1000)).toBe(0)
+  })
+
+  it("clamps to the right edge", () => {
+    expect(calculateCenteredOffset(0.9, 400, 1000)).toBe(600)
+  })
+
+  it("returns 0 when the zoomed box is at least as large as the frame", () => {
+    expect(calculateCenteredOffset(0.5, 1200, 1000)).toBe(0)
   })
 })

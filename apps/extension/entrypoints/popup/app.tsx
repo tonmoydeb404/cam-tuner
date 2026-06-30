@@ -14,6 +14,7 @@ import {
   setAlign,
   setAspectRatio,
   setBarColor,
+  setCenterStageEnabled,
   setMirror,
   setZoom,
   virtualCamEnabled,
@@ -97,6 +98,11 @@ export default function App() {
           onMirrorChange={async (v) => {
             setConfig((c) => ({ ...c, mirror: v }))
             await setMirror(v)
+          }}
+          centerStageEnabled={config.centerStageEnabled === true}
+          onCenterStageChange={async (v) => {
+            setConfig((c) => ({ ...c, centerStageEnabled: v }))
+            await setCenterStageEnabled(v)
           }}
         />
       </div>

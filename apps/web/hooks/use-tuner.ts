@@ -12,6 +12,7 @@ import {
   tunerUpdateToCropUpdate,
 } from "@workspace/stream-config"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useCenterStage } from "./use-center-stage"
 import { useDebouncedCallback } from "./use-debounced-callback"
 import { useStreamModifier } from "./use-stream-modifier"
 
@@ -24,6 +25,7 @@ export interface UseTunerReturn {
   setAlign: (v: AlignPosition) => void
   setBarColor: (v: string) => void
   setMirror: (v: boolean) => void
+  setCenterStageEnabled: (v: boolean) => void
   resetConfig: () => void
   aspectRatioClass: string
   objectPosition: string
@@ -89,6 +91,12 @@ export function useTuner(
     configRef
   )
 
+  useCenterStage(
+    modifierRef,
+    outputStream,
+    config.centerStageEnabled === true
+  )
+
   // Sync config from extension storage via content script messages
   useEffect(() => {
     if (!syncExtension) return
@@ -138,6 +146,12 @@ export function useTuner(
     syncToExtension,
     modifierRef
   )
+  const setCenterStageEnabled = useConfigSetter(
+    "centerStageEnabled",
+    setConfig,
+    syncToExtension,
+    modifierRef
+  )
 
   const resetConfig = useCallback(() => {
     setConfig(DEFAULT_TUNER_CONFIG)
@@ -155,6 +169,7 @@ export function useTuner(
     setAlign,
     setBarColor,
     setMirror,
+    setCenterStageEnabled,
     resetConfig,
     aspectRatioClass: ASPECT_RATIO_CLASS[config.aspectRatio],
     objectPosition: ALIGN_OBJECT_POSITION[config.align],

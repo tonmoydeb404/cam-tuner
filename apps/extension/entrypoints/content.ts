@@ -9,9 +9,14 @@ import {
 const CAMTUNER_EVENT = "camtuner:config-update"
 const CAMTUNER_REQUEST = "camtuner:request-config"
 
+// Computed in the ISOLATED world (where browser.runtime is available) and
+// forwarded to the MAIN world injector, which needs the local WASM URL for
+// MediaPipe but cannot access chrome.runtime itself.
+const WASM_URL = (browser.runtime.getURL as (path: string) => string)("wasm")
+
 function sendToPage(config: any, enabled: boolean, cameraLabel: string | null) {
   window.postMessage(
-    { type: CAMTUNER_EVENT, config, enabled, cameraLabel },
+    { type: CAMTUNER_EVENT, config, enabled, cameraLabel, wasmUrl: WASM_URL },
     window.location.origin
   )
 }

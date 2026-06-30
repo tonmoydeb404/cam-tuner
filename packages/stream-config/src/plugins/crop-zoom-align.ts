@@ -19,6 +19,8 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
     alignY: config.alignY || "center",
     barColor: config.barColor || "#000000",
     mirror: config.mirror ?? false,
+    alignCenter: config.alignCenter,
+    zoomOverride: config.zoomOverride,
   }
 }
 
@@ -97,7 +99,10 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
       const srcWidth = videoEl.videoWidth || canvasWidth
       const srcHeight = videoEl.videoHeight || canvasHeight
 
-      // Recompute boxes only when config or source dimensions change
+      // Recompute boxes only when config or source dimensions change.
+      // alignCenter and zoomOverride are compared separately because Center Stage
+      // updates them every frame; without this check the cached crop box would
+      // go stale.
       if (
         cachedConfig === null ||
         cachedSrcWidth !== srcWidth ||
@@ -106,7 +111,10 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         cachedConfig.zoom !== normalized.zoom ||
         cachedConfig.alignX !== normalized.alignX ||
         cachedConfig.alignY !== normalized.alignY ||
-        cachedConfig.barColor !== normalized.barColor
+        cachedConfig.barColor !== normalized.barColor ||
+        cachedConfig.alignCenter?.x !== normalized.alignCenter?.x ||
+        cachedConfig.alignCenter?.y !== normalized.alignCenter?.y ||
+        cachedConfig.zoomOverride !== normalized.zoomOverride
       ) {
         recompute(normalized, srcWidth, srcHeight)
       }

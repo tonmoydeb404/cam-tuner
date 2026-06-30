@@ -10,6 +10,7 @@ export default defineBackground(() => {
     } else if (details.reason === "update") {
       console.debug("CamTuner extension updated")
       await migrateFromV1()
+      if (import.meta.env.DEV) return
       const webUrl = import.meta.env.VITE_WEB_URL
       if (!webUrl) throw new Error("VITE_WEB_URL is not set")
       const { version } = browser.runtime.getManifest()

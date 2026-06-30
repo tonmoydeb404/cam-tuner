@@ -35,6 +35,8 @@ const PreviewSidebar = ({ webcam, tuner }: Props) => {
               onBarColorChange={tuner.setBarColor}
               mirror={tuner.config.mirror}
               onMirrorChange={tuner.setMirror}
+              centerStageEnabled={tuner.config.centerStageEnabled === true}
+              onCenterStageChange={tuner.setCenterStageEnabled}
             />
 
             <PreviewActions webcam={webcam} tuner={tuner} />

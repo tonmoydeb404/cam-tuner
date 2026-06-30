@@ -14,6 +14,13 @@ export type Box = {
 export type AlignX = "left" | "center" | "right"
 export type AlignY = "top" | "center" | "bottom"
 
+/**
+ * Continuous alignment point, normalized 0..1 on each axis (0.5 = true center).
+ * When present on a CropConfig it overrides the discrete alignX/alignY grid,
+ * enabling sub-pixel auto-framing such as Center Stage.
+ */
+export type AlignCenter = { x: number; y: number }
+
 export type CropConfig = {
   aspectRatio: number // e.g. 16/9 for wide, 1 for square
   zoom: number // 1.0 to 3.0+
@@ -21,6 +28,56 @@ export type CropConfig = {
   alignY: AlignY
   barColor: string // CSS color for letterbox bars
   mirror?: boolean // horizontal flip
+  alignCenter?: AlignCenter // overrides alignX/alignY for sub-pixel auto-framing
+  zoomOverride?: number // overrides user zoom for auto-framing (Center Stage)
+}
+
+/**
+ * Clamps a value into the 0..1 range. NaN collapses to 0 for safety.
+ */
+export function clamp01(value: number): number {
+  if (isNaN(value)) return 0
+  return Math.max(0, Math.min(1, value))
+}
+
+/**
+ * Resolves a crop offset within `available` pixels.
+ *
+ * A continuous `continuous` value (normalized 0..1) takes precedence over the
+ * discrete 9-point grid when provided — this is what lets Center Stage position
+ * the crop with sub-pixel precision. Otherwise it falls back to start/center/end.
+ */
+export function calculateAlignOffset(
+  available: number,
+  discrete: AlignX | AlignY,
+  continuous?: number
+): number {
+  if (continuous !== undefined) {
+    return Math.round(available * clamp01(continuous))
+  }
+  if (discrete === "left" || discrete === "top") return 0
+  if (discrete === "right" || discrete === "bottom") return available
+  return Math.round(available / 2)
+}
+
+/**
+ * Centers the crop on a source-normalized point (0..1) and clamps it to the
+ * frame edges. This is the Center Stage positioning strategy: keep the subject
+ * centered while there is panning room, and pin to the nearest edge (subject
+ * still fully in frame) once that room runs out.
+ *
+ * `sourceNorm` is the subject's position as a fraction of the original frame
+ * (e.g. a face centroid), `zoomSize` is the cropped dimension in source pixels.
+ */
+export function calculateCenteredOffset(
+  sourceNorm: number,
+  zoomSize: number,
+  originalSize: number
+): number {
+  const available = originalSize - zoomSize
+  if (available <= 0) return 0
+  const desired = sourceNorm * originalSize - zoomSize / 2
+  return Math.round(Math.max(0, Math.min(desired, available)))
 }
 
 /**
@@ -32,7 +89,7 @@ export function calculateCropBox(
   originalSize: Size,
   cropConfig: CropConfig
 ): Box {
-  const { aspectRatio, zoom, alignX, alignY } = cropConfig
+  const { aspectRatio, zoom, zoomOverride, alignX, alignY, alignCenter } = cropConfig
   const originalAspect = originalSize.width / originalSize.height
 
   // 1. Calculate the base crop dimensions (zoom = 1) that fit inside the original size
@@ -51,29 +108,23 @@ export function calculateCropBox(
   }
 
   // 2. Apply digital zoom (zoom > 1 makes the viewing box smaller, "zooming in")
-  const actualZoom = Math.max(1, zoom)
+  // zoomOverride (from Center Stage) takes precedence over the user's zoom.
+  const effectiveZoom = zoomOverride ?? zoom
+  const actualZoom = Math.max(1, effectiveZoom)
   const zoomWidth = Math.round(cropWidth / actualZoom)
   const zoomHeight = Math.round(cropHeight / actualZoom)
 
-  // 3. Calculate horizontal alignment offset
-  let offsetX = 0
-  if (alignX === "left") {
-    offsetX = 0
-  } else if (alignX === "right") {
-    offsetX = originalSize.width - zoomWidth
-  } else {
-    offsetX = Math.round((originalSize.width - zoomWidth) / 2)
-  }
-
-  // 4. Calculate vertical alignment offset
-  let offsetY = 0
-  if (alignY === "top") {
-    offsetY = 0
-  } else if (alignY === "bottom") {
-    offsetY = originalSize.height - zoomHeight
-  } else {
-    offsetY = Math.round((originalSize.height - zoomHeight) / 2)
-  }
+  // 3 & 4. Calculate alignment offsets.
+  // alignCenter (continuous 0..1, the subject's source position) overrides the
+  // discrete 9-point grid. It is interpreted as "center the subject here, then
+  // clamp to the frame" — true Center Stage behavior — rather than a naive
+  // proportional pan that would leave an off-center subject off-center.
+  const offsetX = alignCenter
+    ? calculateCenteredOffset(alignCenter.x, zoomWidth, originalSize.width)
+    : calculateAlignOffset(originalSize.width - zoomWidth, alignX)
+  const offsetY = alignCenter
+    ? calculateCenteredOffset(alignCenter.y, zoomHeight, originalSize.height)
+    : calculateAlignOffset(originalSize.height - zoomHeight, alignY)
 
   // Validate to perfectly ensure bounds aren't broken by NaN or floating points
   const safeX = isNaN(offsetX)

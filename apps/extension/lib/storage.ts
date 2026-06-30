@@ -60,3 +60,7 @@ export async function setBarColor(barColor: string): Promise<void> {
 export async function setMirror(mirror: boolean): Promise<void> {
   await setTunerConfig({ mirror })
 }
+
+export async function setCenterStageEnabled(enabled: boolean): Promise<void> {
+  await setTunerConfig({ centerStageEnabled: enabled })
+}

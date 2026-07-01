@@ -76,20 +76,21 @@ export function smoothCenter(
 /**
  * Options for the critically-damped zoom spring.
  *
- * Unlike `smoothZoom` (a lerp + hard deadzone that stutters when the target
- * wobbles across the deadzone edge), the spring glides in and out with zero
- * overshoot and parks exactly when settled — eliminating sub-pixel crop-box
- * flicker during zoom transitions.
+ * The spring glides toward its target with zero overshoot and snaps exactly to
+ * rest on arrival — eliminating sub-pixel crop-box flicker. Unlike a hard
+ * deadzone it tracks moving targets smoothly instead of freezing and then
+ * jumping once a threshold is crossed (which caused visible "pumping").
  */
 export type SpringZoomOptions = {
   /** Time constant in seconds. Lower = snappier. Default ~0.22. */
   timeConstant?: number
-  /** Park to rest once within this zoom delta of the target. Default 0.008. */
+  /** Snap to rest once within this zoom delta of the target. Default 0.006. */
   settleEpsilon?: number
-  /** Park to rest once speed (zoom/sec) drops below this. Default 0.02. */
+  /** Snap to rest once speed (zoom/sec) drops below this. Default 0.015. */
   settleVelocity?: number
-  /** Re-engage from rest only once the target drifts beyond this. Default 0.03. */
-  reengageThreshold?: number
+  /** Max integration step (seconds). Larger frame deltas are sub-stepped so an
+   *  uneven / throttled rAF cadence can't make the spring ring. Default 1/60. */
+  maxStep?: number
 }
 
 export type ZoomStepResult = { value: number; settled: boolean }
@@ -105,47 +106,47 @@ export type ZoomSmoother = {
  * across frames (keep the returned object).
  *
  * Behaviour:
- *  - While parked (settled), the value is returned *exactly* unchanged so the
- *    caller can push it every frame without triggering downstream rounding.
- *  - It re-engages only once the target drifts past `reengageThreshold`, then
- *    glides toward it without overshoot and re-parks on arrival.
+ *  - Always integrates toward the target (sub-stepped for large `dt`), so a
+ *    moving target glides smoothly without overshoot.
+ *  - Snaps to rest exactly (value := target, velocity := 0) once settled, so a
+ *    steady target yields a perfectly stable, drift-free value frame to frame.
  */
 export function createZoomSmoother(
   initial: number,
   options?: SpringZoomOptions
 ): ZoomSmoother {
   const tau = options?.timeConstant ?? 0.22
-  const settleEpsilon = options?.settleEpsilon ?? 0.008
-  const settleVelocity = options?.settleVelocity ?? 0.02
-  const reengageThreshold = options?.reengageThreshold ?? 0.03
+  const settleEpsilon = options?.settleEpsilon ?? 0.006
+  const settleVelocity = options?.settleVelocity ?? 0.015
+  const maxStep = options?.maxStep ?? 1 / 60
 
   const w0 = 1 / tau // natural angular frequency; critical damping => dampingRatio = 1
 
   let value = initial
   let velocity = 0
-  let parked = Math.abs(velocity) < settleVelocity
 
   return {
     step(target, dt) {
-      // Frozen at rest: hold the exact value until the target meaningfully moves.
-      if (parked && Math.abs(target - value) <= reengageThreshold) {
-        return { value, settled: true }
+      // Sub-step large frame deltas. Semi-implicit Euler is only accurate while
+      // w0·dt stays small; without this, a throttled tab (dt up to ~0.1s) would
+      // push w0·dt to ~0.45 and the "critically-damped" spring would ring.
+      let remaining = Math.max(0, dt)
+      while (remaining > 1e-6) {
+        const step = Math.min(remaining, maxStep)
+        // a = w0^2 * (target - value) - 2*w0*velocity
+        const accel = w0 * w0 * (target - value) - 2 * w0 * velocity
+        velocity += accel * step
+        value += velocity * step
+        remaining -= step
       }
-      parked = false
 
-      // Semi-implicit Euler integration of a critically-damped spring.
-      // a = w0^2 * (target - value) - 2*w0*velocity
-      const accel = w0 * w0 * (target - value) - 2 * w0 * velocity
-      velocity += accel * dt
-      value += velocity * dt
-
-      // Park exactly on arrival to kill residual sub-pixel drift (rest flicker).
+      // Snap to rest exactly on arrival to kill residual sub-pixel drift.
       if (
         Math.abs(value - target) < settleEpsilon &&
         Math.abs(velocity) < settleVelocity
       ) {
         velocity = 0
-        parked = true
+        value = target
         return { value, settled: true }
       }
       return { value, settled: false }

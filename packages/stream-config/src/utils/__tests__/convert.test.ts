@@ -13,6 +13,7 @@ describe("tunerConfigToCropConfig", () => {
       alignY: "center",
       barColor: "#000000",
       mirror: false,
+      letterbox: true,
     })
   })
 
@@ -31,6 +32,7 @@ describe("tunerConfigToCropConfig", () => {
       alignY: "top",
       barColor: "#ff0000",
       mirror: true,
+      letterbox: true,
     })
   })
 
@@ -40,6 +42,14 @@ describe("tunerConfigToCropConfig", () => {
       barColor: "",
     })
     expect(result.barColor).toBe("#000000")
+  })
+
+  it("passes letterbox: false through to the crop config", () => {
+    const result = tunerConfigToCropConfig({
+      ...DEFAULT_TUNER_CONFIG,
+      letterbox: false,
+    })
+    expect(result.letterbox).toBe(false)
   })
 })
 
@@ -68,6 +78,12 @@ describe("tunerUpdateToCropUpdate", () => {
   it("converts barColor update", () => {
     expect(tunerUpdateToCropUpdate({ barColor: "#abc" })).toEqual({
       barColor: "#abc",
+    })
+  })
+
+  it("converts letterbox update", () => {
+    expect(tunerUpdateToCropUpdate({ letterbox: false })).toEqual({
+      letterbox: false,
     })
   })
 

@@ -4,7 +4,12 @@
  * duplicated across the web hook and the extension injector.
  */
 
-import type { AlignPosition, TunerConfig } from "../tuner-types"
+import type {
+  AlignPosition,
+  BackgroundConfig,
+  TunerConfig,
+} from "../tuner-types"
+import { DEFAULT_BACKGROUND_CONFIG } from "../tuner-types"
 import type { AlignX, AlignY, CropConfig } from "./math"
 
 /**
@@ -39,6 +44,24 @@ export function parseAlignPosition(align: AlignPosition): {
 }
 
 /**
+ * Resolves a (possibly partial / absent) BackgroundConfig into a full one,
+ * falling back to defaults. Used wherever we cannot assume the whole object
+ * is present (e.g. configs persisted before the feature existed).
+ */
+export function resolveBackgroundConfig(
+  config: Partial<BackgroundConfig> | undefined
+): BackgroundConfig {
+  if (!config) return { ...DEFAULT_BACKGROUND_CONFIG }
+  return {
+    mode: config.mode ?? DEFAULT_BACKGROUND_CONFIG.mode,
+    blurAmount:
+      config.blurAmount ?? DEFAULT_BACKGROUND_CONFIG.blurAmount,
+    imageId: config.imageId ?? DEFAULT_BACKGROUND_CONFIG.imageId,
+    quality: config.quality ?? DEFAULT_BACKGROUND_CONFIG.quality,
+  }
+}
+
+/**
  * Converts a TunerConfig (user-facing) into a CropConfig (plugin-facing).
  * This is the single source of truth for the mapping.
  */
@@ -53,6 +76,7 @@ export function tunerConfigToCropConfig(
     alignY,
     barColor: config.barColor || "#000000",
     mirror: config.mirror,
+    letterbox: config.letterbox ?? true,
   }
 }
 
@@ -81,6 +105,9 @@ export function tunerUpdateToCropUpdate(
   }
   if (update.mirror !== undefined) {
     result.mirror = update.mirror
+  }
+  if (update.letterbox !== undefined) {
+    result.letterbox = update.letterbox
   }
 
   return result

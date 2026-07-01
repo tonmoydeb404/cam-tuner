@@ -139,15 +139,29 @@ describe("createZoomSmoother (critically-damped spring)", () => {
     expect(smoother.step(2.0, 1 / 60).settled).toBe(true)
   })
 
-  it("re-engages only once the target drifts past the re-engage threshold", () => {
+  it("tracks small target drift smoothly instead of freezing (no pumping)", () => {
     const smoother = createZoomSmoother(1.0)
     // Park at 2.0.
     for (let i = 0; i < 600; i++) smoother.step(2.0, 1 / 60)
-    const parked = smoother.step(2.0, 1 / 60).value
+    expect(smoother.step(2.0, 1 / 60).value).toBe(2.0)
 
-    // A sub-threshold nudge stays frozen.
-    expect(smoother.step(2.01, 1 / 60).value).toBe(parked)
-    // A larger move (beyond the 0.03 default threshold) re-engages and moves.
-    expect(smoother.step(2.2, 1 / 60).value).not.toBe(parked)
+    // A small nudge is followed smoothly — no hard freeze that would accumulate
+    // into a later jump (the old park/re-engage "sawtooth" that pumped zoom).
+    const nudged = smoother.step(2.05, 1 / 60).value
+    expect(nudged).not.toBe(2.0)
+    // ...and over a few frames it converges to the new target.
+    let last = nudged
+    for (let i = 0; i < 600; i++) last = smoother.step(2.05, 1 / 60).value
+    expect(Math.abs(last - 2.05)).toBeLessThan(0.01)
+  })
+
+  it("stays stable (no ringing) at large frame deltas via sub-stepping", () => {
+    const smoother = createZoomSmoother(1.0)
+    const values: number[] = []
+    // dt = 0.1s (a throttled tab) for ~5s — without sub-stepping the spring
+    // would ring past the target at this w0·dt.
+    for (let i = 0; i < 50; i++) values.push(smoother.step(2.0, 0.1).value)
+    expect(Math.max(...values)).toBeLessThanOrEqual(2.0 + 1e-6)
+    expect(Math.abs(values[values.length - 1]! - 2.0)).toBeLessThan(0.01)
   })
 })

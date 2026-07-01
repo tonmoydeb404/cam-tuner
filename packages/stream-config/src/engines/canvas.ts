@@ -1,4 +1,5 @@
 import { StreamPlugin } from "../types"
+import type { Size } from "../utils/math"
 
 export interface ProcessorEngine {
   start(): MediaStream
@@ -63,18 +64,50 @@ export class CanvasEngine implements ProcessorEngine {
   }
 
   private processFrame() {
-    if (this.video.readyState < 2 || this.canvas.width === 0) return
+    if (this.video.readyState < 2) return
+    const sourceWidth = this.video.videoWidth
+    const sourceHeight = this.video.videoHeight
+    if (sourceWidth === 0 || sourceHeight === 0) return
+
+    const sourceSize: Size = { width: sourceWidth, height: sourceHeight }
+
+    // Let any plugin (e.g. background-effects) replace the raw <video> with a
+    // composited source. prepareSource runs for ALL plugins first, chained in
+    // insertion order, so the result is available to every drawCanvas call
+    // regardless of plugin order.
+    let effectiveSource: CanvasImageSource = this.video
+    for (const { plugin, config } of this.plugins) {
+      const next: CanvasImageSource | null | undefined = plugin.prepareSource?.(
+        effectiveSource,
+        config
+      )
+      if (next) effectiveSource = next
+    }
+
+    // Determine the desired output size. A plugin may declare a custom output
+    // size (e.g. crop-zoom-align in non-letterbox mode resizing the canvas to
+    // exactly the cropped region). The first plugin to return a non-null size
+    // wins; otherwise we keep the output at the source resolution.
+    let desired = sourceSize
+    for (const { plugin, config } of this.plugins) {
+      const size = plugin.getOutputSize?.(sourceSize, config)
+      if (size) {
+        desired = size
+        break
+      }
+    }
+
     if (
-      this.canvas.width !== this.video.videoWidth ||
-      this.canvas.height !== this.video.videoHeight
+      this.canvas.width !== desired.width ||
+      this.canvas.height !== desired.height
     ) {
-      this.canvas.width = this.video.videoWidth
-      this.canvas.height = this.video.videoHeight
+      this.canvas.width = desired.width
+      this.canvas.height = desired.height
     }
     for (const { plugin, config } of this.plugins) {
       plugin.drawCanvas?.(
         this.ctx,
-        this.video,
+        effectiveSource,
         this.canvas.width,
         this.canvas.height,
         config

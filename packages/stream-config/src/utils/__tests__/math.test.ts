@@ -5,6 +5,7 @@ import {
   calculateCropBox,
   calculateDestinationBox,
   clamp01,
+  getSourceSize,
 } from "../math"
 import type { Box, CropConfig, Size } from "../math"
 
@@ -261,5 +262,38 @@ describe("calculateCenteredOffset", () => {
 
   it("returns 0 when the zoomed box is at least as large as the frame", () => {
     expect(calculateCenteredOffset(0.5, 1200, 1000)).toBe(0)
+  })
+})
+
+describe("getSourceSize", () => {
+  it("reads dimensions from an HTMLVideoElement-like source", () => {
+    const source = { videoWidth: 1280, videoHeight: 720 } as CanvasImageSource
+    expect(getSourceSize(source)).toEqual({ width: 1280, height: 720 })
+  })
+
+  it("reads dimensions from a canvas-like source (width/height)", () => {
+    const source = { width: 1080, height: 1080 } as CanvasImageSource
+    expect(getSourceSize(source)).toEqual({ width: 1080, height: 1080 })
+  })
+
+  it("reads dimensions from a VideoFrame-like source (displayWidth)", () => {
+    const source = {
+      displayWidth: 1920,
+      displayHeight: 1080,
+    } as CanvasImageSource
+    expect(getSourceSize(source)).toEqual({ width: 1920, height: 1080 })
+  })
+
+  it("reads dimensions from an image-like source (naturalWidth)", () => {
+    const source = {
+      naturalWidth: 640,
+      naturalHeight: 480,
+    } as CanvasImageSource
+    expect(getSourceSize(source)).toEqual({ width: 640, height: 480 })
+  })
+
+  it("falls back to {0,0} when no dimension fields are present", () => {
+    const source = {} as CanvasImageSource
+    expect(getSourceSize(source)).toEqual({ width: 0, height: 0 })
   })
 })

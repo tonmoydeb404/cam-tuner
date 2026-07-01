@@ -117,6 +117,55 @@ describe("center-stage plugin", () => {
     expect(lastAlignCenter(updates).alignCenter).toEqual({ x: 0.5, y: 0.5 })
   })
 
+  it("normalizes face position by the SOURCE resolution, not the output canvas (letterbox-off)", async () => {
+    // Face boxes are returned in source pixel space. A face centered in a
+    // 1920x1080 source must normalize to (0.5, 0.5) even when the output canvas
+    // is the smaller crop-box (letterbox-off), otherwise Center Stage frames
+    // against the wrong reference and drifts.
+    const sourceVideo = {
+      videoWidth: 1920,
+      videoHeight: 1080,
+    } as HTMLVideoElement
+    // center = (960, 540) → exact center of 1920x1080
+    const centeredFace: FaceBox = { x: 860, y: 440, width: 200, height: 200 }
+    const { modifier, updates } = createMockModifier()
+    const plugin = createCenterStagePlugin(
+      modifier,
+      createPassthroughDetector(() => [centeredFace]),
+      { smoothingFactor: 1, deadzone: 0, detectIntervalMs: 0 }
+    )
+
+    // Canvas is the 4:3 crop-box (1440x1080) — narrower than the 1920x1080
+    // source. Buggy code would yield x ≈ 0.667 (960 / 1440).
+    plugin.drawCanvas?.(stubCtx, sourceVideo, 1440, 1080, { enabled: true })
+    await flush()
+    plugin.drawCanvas?.(stubCtx, sourceVideo, 1440, 1080, { enabled: true })
+
+    expect(lastAlignCenter(updates).alignCenter).toEqual({ x: 0.5, y: 0.5 })
+  })
+
+  it("maps an off-center source face to the correct source-relative fraction (letterbox-off)", async () => {
+    // Face center at source x=1440 (0.75 of 1920), y=540 (0.5 of 1080).
+    const sourceVideo = {
+      videoWidth: 1920,
+      videoHeight: 1080,
+    } as HTMLVideoElement
+    const offCenterFace: FaceBox = { x: 1340, y: 440, width: 200, height: 200 }
+    const { modifier, updates } = createMockModifier()
+    const plugin = createCenterStagePlugin(
+      modifier,
+      createPassthroughDetector(() => [offCenterFace]),
+      { smoothingFactor: 1, deadzone: 0, detectIntervalMs: 0 }
+    )
+
+    // Canvas = 1440x1080 crop-box. Buggy code would clamp x to 1.0 (1440/1440).
+    plugin.drawCanvas?.(stubCtx, sourceVideo, 1440, 1080, { enabled: true })
+    await flush()
+    plugin.drawCanvas?.(stubCtx, sourceVideo, 1440, 1080, { enabled: true })
+
+    expect(lastAlignCenter(updates).alignCenter).toEqual({ x: 0.75, y: 0.5 })
+  })
+
   it("does not start a second detection while one is pending", async () => {
     let started = 0
     const resolvers: Array<(faces: FaceBox[]) => void> = []
@@ -195,6 +244,49 @@ describe("center-stage plugin", () => {
     )
     await runFor(nearPlugin, 0.1)
     expect(lastZoomOverride(near.updates)).toBe(1)
+  })
+
+  it("keeps auto-zoom stable (no pumping) for a jittered static face", async () => {
+    // Simulate realistic MediaPipe box-size noise (±10%) on an otherwise static
+    // face — large enough to make a naive zoom target pump in and out.
+    let call = 0
+    const detector = createPassthroughDetector(() => {
+      call++
+      const jitter = ((call % 5) - 2) * 10 // -20..20 px each axis (~±10%)
+      return [
+        {
+          x: 400 + jitter,
+          y: 400 - jitter,
+          width: 200 + jitter,
+          height: 200 - jitter,
+        },
+      ]
+    })
+    const { modifier, updates } = createMockModifier()
+    const plugin = createCenterStagePlugin(modifier, detector, {
+      detectIntervalMs: 0,
+    })
+
+    const zooms: number[] = []
+    const start = Date.now()
+    let guard = 0
+    // Drive ~2.5s so the critically-damped spring (tau ~0.22s) fully converges
+    // and parks before we measure the settling tail.
+    while ((Date.now() - start) / 1000 < 2.5 && guard < 700) {
+      plugin.drawCanvas?.(stubCtx, stubVideo, 1000, 1000, { enabled: true })
+      await new Promise((r) => setTimeout(r, 8))
+      await flush()
+      const z = lastZoomOverride(updates)
+      if (z !== undefined) zooms.push(z)
+      guard++
+    }
+
+    // Once parked, quantization + change-dedup make the output exactly constant
+    // — no sawtooth pumping. The final window must hold rock-steady.
+    const tail = zooms.slice(-Math.floor(zooms.length * 0.3))
+    expect(tail.length).toBeGreaterThan(0)
+    const spread = Math.max(...tail) - Math.min(...tail)
+    expect(spread).toBeLessThanOrEqual(0.005)
   })
 
   it("destroys the detector and clears the override on destroy", () => {

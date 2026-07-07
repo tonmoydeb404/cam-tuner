@@ -1,17 +1,11 @@
 import type {
   AlignPosition,
   AspectRatio,
-  BackgroundConfig,
   ZoomMode,
 } from "@workspace/stream-config"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
-import {
-  type BackgroundPreset,
-  type BackgroundUpload,
-  BackgroundControl,
-} from "@workspace/ui/components/tuner/background-control"
 import { AlignControl } from "@workspace/ui/components/tuner/align-control"
 import { AspectRatioControl } from "@workspace/ui/components/tuner/aspect-ratio-control"
 import { ZoomControl } from "@workspace/ui/components/tuner/zoom-control"
@@ -46,13 +40,6 @@ export interface TunerControlFieldsProps {
   /** Whether Center Stage face tracking is enabled (optional — omit to hide) */
   centerStageEnabled?: boolean
   onCenterStageChange?: (value: boolean) => void
-  /** Background blur / image-replacement settings (optional — omit to hide) */
-  background?: BackgroundConfig
-  onBackgroundChange?: (partial: Partial<BackgroundConfig>) => void
-  backgroundPresets?: BackgroundPreset[]
-  backgroundUploads?: BackgroundUpload[]
-  onBackgroundUpload?: (file: File) => void
-  onRemoveBackgroundUpload?: (id: string) => void
 }
 
 /**
@@ -81,12 +68,6 @@ export const TunerControlFields = ({
   onLetterboxChange,
   centerStageEnabled,
   onCenterStageChange,
-  background,
-  onBackgroundChange,
-  backgroundPresets,
-  backgroundUploads,
-  onBackgroundUpload,
-  onRemoveBackgroundUpload,
 }: TunerControlFieldsProps) => (
   <>
     {/* Center Stage (only when provided) */}
@@ -107,21 +88,6 @@ export const TunerControlFields = ({
             aria-label="Toggle Center Stage face tracking"
           />
         </div>
-        <div className="h-px bg-border" />
-      </>
-    )}
-
-    {/* Background effects (only when provided) */}
-    {background && onBackgroundChange && (
-      <>
-        <BackgroundControl
-          background={background}
-          onChange={onBackgroundChange}
-          presets={backgroundPresets}
-          uploads={backgroundUploads}
-          onUpload={onBackgroundUpload}
-          onRemoveUpload={onRemoveBackgroundUpload}
-        />
         <div className="h-px bg-border" />
       </>
     )}

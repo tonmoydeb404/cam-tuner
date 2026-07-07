@@ -8,10 +8,8 @@ export type Size = { width: number; height: number }
  * Reads the intrinsic pixel dimensions of any CanvasImageSource.
  *
  * The crop-zoom-align plugin needs the *source* dimensions to compute crop
- * geometry, but when a `prepareSource` plugin (e.g. background-effects)
- * replaces the raw `<video>` with a composited `<canvas>`, `videoWidth` is no
- * longer available. This duck-types the source so crop math stays correct
- * regardless of which source type is drawn.
+ * geometry. This duck-types the source so crop math stays correct regardless
+ * of which source type is drawn.
  */
 export function getSourceSize(source: CanvasImageSource): Size {
   const s = source as unknown as Record<string, unknown>

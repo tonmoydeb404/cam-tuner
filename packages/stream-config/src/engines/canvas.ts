@@ -71,7 +71,7 @@ export class CanvasEngine implements ProcessorEngine {
 
     const sourceSize: Size = { width: sourceWidth, height: sourceHeight }
 
-    // Let any plugin (e.g. background-effects) replace the raw <video> with a
+    // Let any plugin (e.g. background-filter) replace the raw <video> with a
     // composited source. prepareSource runs for ALL plugins first, chained in
     // insertion order, so the result is available to every drawCanvas call
     // regardless of plugin order.

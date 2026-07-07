@@ -1,10 +1,13 @@
 "use client"
 
+import { processUploadedImage } from "@workspace/stream-config"
 import { UseTunerReturn } from "@/hooks/use-tuner"
 import { UseWebcamReturn } from "@/hooks/use-webcam"
+import { removeBgImage, storeBgImage } from "@/lib/extension-bridge"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { CameraSourceSelect } from "@workspace/ui/components/tuner/camera-source-select"
-import { TunerControlFields } from "@workspace/ui/components/tuner/tuner-control-fields"
+import { PluginPanel } from "@workspace/ui/components/tuner/plugin-panel"
+import { useEffect, useState } from "react"
 import PreviewActions from "./actions"
 
 type Props = {
@@ -12,7 +15,55 @@ type Props = {
   tuner: UseTunerReturn
 }
 
+type UploadEntry = { id: string; name: string; thumb: string }
+
 const PreviewSidebar = ({ webcam, tuner }: Props) => {
+  const [uploads, setUploads] = useState<UploadEntry[]>([])
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "camtuner:store-bg-result" && event.data.id) {
+        setUploads((prev) =>
+          prev.some((u) => u.id === event.data.id)
+            ? prev
+            : [
+                ...prev,
+                {
+                  id: event.data.id,
+                  name: "Upload",
+                  thumb: "",
+                },
+              ]
+        )
+      }
+    }
+    window.addEventListener("message", handler)
+    return () => window.removeEventListener("message", handler)
+  }, [])
+
+  const handleUpload = async (file: File) => {
+    const processed = await processUploadedImage(file)
+    setUploads((prev) => [
+      ...prev,
+      { id: processed.id, name: processed.name, thumb: processed.dataUrl },
+    ])
+    const storedId = await storeBgImage(
+      processed.name,
+      processed.dataUrl,
+      processed.id
+    )
+    const finalId = storedId ?? processed.id
+    tuner.updateConfig({ backgroundImage: finalId })
+  }
+
+  const handleRemoveUpload = async (id: string) => {
+    setUploads((prev) => prev.filter((u) => u.id !== id))
+    await removeBgImage(id)
+    if (tuner.config.backgroundImage === id) {
+      tuner.updateConfig({ backgroundImage: null })
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-6 md:w-80">
       <Card className="bg-muted dark:bg-card">
@@ -24,33 +75,16 @@ const PreviewSidebar = ({ webcam, tuner }: Props) => {
               onDeviceChange={webcam.setSelectedDeviceId}
             />
 
-            <TunerControlFields
-              aspectRatio={tuner.config.aspectRatio}
-              onAspectRatioChange={tuner.setAspectRatio}
-              zoom={tuner.config.zoom}
-              onZoomChange={tuner.setZoom}
-              zoomMode={tuner.config.zoomMode ?? "fixed"}
-              onZoomModeChange={tuner.setZoomMode}
-              autoZoomMin={tuner.config.autoZoomMin ?? 1}
-              onAutoZoomMinChange={tuner.setAutoZoomMin}
-              autoZoomMax={tuner.config.autoZoomMax ?? 2.5}
-              onAutoZoomMaxChange={tuner.setAutoZoomMax}
-              align={tuner.config.align}
-              onAlignChange={tuner.setAlign}
-              barColor={tuner.config.barColor ?? "#000000"}
-              onBarColorChange={tuner.setBarColor}
-              mirror={tuner.config.mirror}
-              onMirrorChange={tuner.setMirror}
-              letterbox={tuner.config.letterbox ?? true}
-              onLetterboxChange={tuner.setLetterbox}
-              centerStageEnabled={tuner.config.centerStageEnabled === true}
-              onCenterStageChange={tuner.setCenterStageEnabled}
-              background={tuner.config.background ?? { mode: "none", blurAmount: 14, imageId: null, quality: "auto" }}
-              onBackgroundChange={tuner.setBackground}
-              backgroundPresets={tuner.backgroundPresets}
-              backgroundUploads={tuner.backgroundUploads}
-              onBackgroundUpload={tuner.onBackgroundUpload}
-              onRemoveBackgroundUpload={tuner.onRemoveBackgroundUpload}
+            <PluginPanel
+              config={tuner.config}
+              onConfigChange={tuner.updateConfig}
+              extraProps={{
+                "core:background-filter": {
+                  uploads,
+                  onUpload: handleUpload,
+                  onRemoveUpload: handleRemoveUpload,
+                },
+              }}
             />
 
             <PreviewActions webcam={webcam} tuner={tuner} />

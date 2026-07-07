@@ -8,6 +8,8 @@ export type AspectRatio = "16:9" | "4:3" | "1:1" | "9:16"
  */
 export type ZoomMode = "auto" | "fixed"
 
+export type BackgroundMode = "none" | "blur" | "image"
+
 export type AlignPosition =
   | "top-left"
   | "top-center"
@@ -18,39 +20,6 @@ export type AlignPosition =
   | "bottom-left"
   | "bottom-center"
   | "bottom-right"
-
-/**
- * Background effect mode.
- * - "none"  — no effect (the plugin is a no-op, zero cost).
- * - "blur"  — blur the background behind the person.
- * - "image" — replace the background with a selected image.
- */
-export type BackgroundMode = "none" | "blur" | "image"
-
-/**
- * Quality / performance strategy for the matting backend.
- * - "auto"        — macOS-grade RVM on WebGPU, MediaPipe binary elsewhere.
- * - "high"        — force RVM (WebGPU preferred, WebGL fallback).
- * - "performance" — force MediaPipe binary (always smooth).
- */
-export type BackgroundQuality = "auto" | "high" | "performance"
-
-export interface BackgroundConfig {
-  mode: BackgroundMode
-  /** Gaussian blur radius in px (blur mode only). Clamped to 4–40. */
-  blurAmount: number
-  /** Preset id or uploaded-image id (image mode only). */
-  imageId: string | null
-  /** Which matting backend to prefer. */
-  quality: BackgroundQuality
-}
-
-export const DEFAULT_BACKGROUND_CONFIG: BackgroundConfig = {
-  mode: "none",
-  blurAmount: 14,
-  imageId: null,
-  quality: "auto",
-}
 
 export interface TunerConfig {
   aspectRatio: AspectRatio
@@ -71,12 +40,6 @@ export interface TunerConfig {
    */
   letterbox?: boolean
   /**
-   * Background blur / image-replacement settings. Optional for backward
-   * compatibility with configs persisted before the feature existed
-   * (treated as "none" when undefined).
-   */
-  background?: BackgroundConfig
-  /**
    * Whether face detection drives the zoom ("auto") or the manual `zoom`
    * value is used ("fixed"). Optional for backward compatibility (defaults
    * to "fixed"). Independent of `centerStageEnabled`.
@@ -91,6 +54,9 @@ export interface TunerConfig {
    * Default 2.5.
    */
   autoZoomMax?: number
+  backgroundMode?: BackgroundMode
+  blurStrength?: number
+  backgroundImage?: string | null
 }
 
 export const ASPECT_RATIO_OPTIONS: AspectRatio[] = [
@@ -127,8 +93,10 @@ export const DEFAULT_TUNER_CONFIG: TunerConfig = {
   barColor: "#000000",
   centerStageEnabled: false,
   letterbox: true,
-  background: { ...DEFAULT_BACKGROUND_CONFIG },
   zoomMode: "fixed",
   autoZoomMin: 1.0,
   autoZoomMax: 2.5,
+  backgroundMode: "none",
+  blurStrength: 14,
+  backgroundImage: null,
 }

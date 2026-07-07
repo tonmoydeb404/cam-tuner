@@ -6,10 +6,8 @@
 
 import type {
   AlignPosition,
-  BackgroundConfig,
   TunerConfig,
 } from "../tuner-types"
-import { DEFAULT_BACKGROUND_CONFIG } from "../tuner-types"
 import type { AlignX, AlignY, CropConfig } from "./math"
 
 /**
@@ -41,24 +39,6 @@ export function parseAlignPosition(align: AlignPosition): {
   else if (align.includes("bottom")) alignY = "bottom"
 
   return { alignX, alignY }
-}
-
-/**
- * Resolves a (possibly partial / absent) BackgroundConfig into a full one,
- * falling back to defaults. Used wherever we cannot assume the whole object
- * is present (e.g. configs persisted before the feature existed).
- */
-export function resolveBackgroundConfig(
-  config: Partial<BackgroundConfig> | undefined
-): BackgroundConfig {
-  if (!config) return { ...DEFAULT_BACKGROUND_CONFIG }
-  return {
-    mode: config.mode ?? DEFAULT_BACKGROUND_CONFIG.mode,
-    blurAmount:
-      config.blurAmount ?? DEFAULT_BACKGROUND_CONFIG.blurAmount,
-    imageId: config.imageId ?? DEFAULT_BACKGROUND_CONFIG.imageId,
-    quality: config.quality ?? DEFAULT_BACKGROUND_CONFIG.quality,
-  }
 }
 
 /**

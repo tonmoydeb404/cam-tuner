@@ -9,9 +9,7 @@ export default defineConfig({
     sourcesTemplate: "cam-tuner-{{version}}-sources.zip",
   },
   manifest: {
-    // `unlimitedStorage` so uploaded background images (data URLs) can exceed
-    // the default ~10MB storage.local quota.
-    permissions: ["storage", "unlimitedStorage"],
+    permissions: ["storage"],
     host_permissions: [
       import.meta.env.VITE_WEB_URL
         ? `${import.meta.env.VITE_WEB_URL}/*`
@@ -19,23 +17,23 @@ export default defineConfig({
       "*://*/*",
     ],
     name: "CamTuner",
-    // MediaPipe (Center Stage) + ONNX Runtime (RVM background matte) compile
-    // WebAssembly on extension pages. MV3 requires 'wasm-unsafe-eval'
-    // (NOT 'unsafe-eval', which is blocked).
+    // MediaPipe (Center Stage) compiles WebAssembly on extension pages. MV3
+    // requires 'wasm-unsafe-eval' (NOT 'unsafe-eval', which is blocked).
     content_security_policy: {
-      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+      extension_pages:
+        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     },
-    // Local WASM assets + on-demand adapters + background preset images must be
-    // reachable from the MAIN-world content script (loaded via import()/fetch()
-    // when Center Stage or a background effect is enabled).
+    // Local WASM assets + the on-demand MediaPipe adapter must be reachable
+    // from the MAIN-world content script (loaded via import()/fetch() when
+    // Center Stage is enabled).
     web_accessible_resources: [
       {
         resources: [
           "wasm/*",
-          "ort-wasm/*",
           "mediapipe-adapter.js",
-          "matting-adapter.js",
-          "backgrounds/*",
+          "mediapipe-segmenter-adapter.js",
+          "rvm-segmenter-adapter.js",
+          "rvm-mobilenetv3-fp32.onnx",
         ],
         matches: ["<all_urls>"],
       },

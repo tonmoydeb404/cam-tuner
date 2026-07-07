@@ -15,7 +15,7 @@ export interface StreamPlugin<ConfigType = unknown> {
   getOutputSize?: (sourceSize: Size, config: ConfigType) => Size | null
   /**
    * Transforms the frame SOURCE before any plugin draws, letting a plugin
-   * (e.g. background-effects) replace the raw `<video>` with a composited
+   * (e.g. background-filter) replace the raw `<video>` with a composited
    * canvas. The engine runs every plugin's `prepareSource` in insertion order,
    * chaining results (each receives the previous plugin's output), BEFORE
    * resolving the output size and calling `drawCanvas`.

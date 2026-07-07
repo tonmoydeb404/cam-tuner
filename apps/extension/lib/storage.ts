@@ -2,10 +2,9 @@ import { storage } from "#imports"
 import {
   type AlignPosition,
   type AspectRatio,
-  type BackgroundConfig,
+  type BackgroundMode,
   type TunerConfig,
   type ZoomMode,
-  DEFAULT_BACKGROUND_CONFIG,
   DEFAULT_TUNER_CONFIG,
 } from "@workspace/stream-config"
 
@@ -33,13 +32,6 @@ export const selectedCameraLabel = storage.defineItem<string | null>(
   }
 )
 
-/**
- * User-uploaded background images. Stored in extension storage (shared between
- * the popup gallery and the ISOLATED content bridge); presets live as bundled
- * files in public/backgrounds and are NOT stored here. The MAIN-world injector
- * fetches these on demand via a postMessage round-trip (it cannot read
- * extension storage directly).
- */
 export type StoredBackgroundImage = {
   id: string
   name: string
@@ -105,19 +97,20 @@ export async function setLetterbox(letterbox: boolean): Promise<void> {
   await setTunerConfig({ letterbox })
 }
 
-/**
- * Merges a partial background config into the persisted TunerConfig.background,
- * preserving any fields not supplied. Used by every background control.
- */
-export async function setBackground(
-  background: Partial<BackgroundConfig>
+export async function setBackgroundMode(
+  backgroundMode: BackgroundMode
 ): Promise<void> {
-  const current = await getTunerConfig()
-  const merged: BackgroundConfig = {
-    ...(current.background ?? DEFAULT_BACKGROUND_CONFIG),
-    ...background,
-  }
-  await setTunerConfig({ background: merged })
+  await setTunerConfig({ backgroundMode })
+}
+
+export async function setBlurStrength(blurStrength: number): Promise<void> {
+  await setTunerConfig({ blurStrength })
+}
+
+export async function setBackgroundImage(
+  backgroundImage: string | null
+): Promise<void> {
+  await setTunerConfig({ backgroundImage })
 }
 
 export async function addBackgroundImage(

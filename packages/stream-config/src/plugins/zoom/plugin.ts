@@ -1,7 +1,11 @@
 import { getFaceTrackingService } from "../../tracking/face-tracking-service"
 import type { StreamModifier, StreamPlugin } from "../../types"
 import { CROP_PLUGIN_ID } from "../crop/manifest"
-import { DEFAULT_ZOOM_PLUGIN_CONFIG, type ZoomPluginConfig } from "./types"
+import {
+  DEFAULT_ZOOM_PLUGIN_CONFIG,
+  type ZoomPluginConfig,
+  type ZoomPluginOptions,
+} from "./types"
 
 export const ZOOM_PLUGIN_ID = "core:zoom"
 
@@ -21,7 +25,8 @@ const DEFAULT_PADDING = 0.3
  * detection result within the same frame interval.
  */
 export function createZoomPlugin(
-  modifier: StreamModifier
+  modifier: StreamModifier,
+  options?: ZoomPluginOptions
 ): StreamPlugin<ZoomPluginConfig> {
   let lastZoom: number | undefined = undefined
   let lastZoomOverride: number | undefined = undefined
@@ -31,7 +36,9 @@ export function createZoomPlugin(
 
     drawCanvas(_ctx, source, width, height, config: Partial<ZoomPluginConfig>) {
       const zoom = config.zoom ?? DEFAULT_ZOOM_PLUGIN_CONFIG.zoom
-      const zoomMode = config.zoomMode ?? DEFAULT_ZOOM_PLUGIN_CONFIG.zoomMode
+      const zoomMode = options?.disableAuto
+        ? "fixed"
+        : (config.zoomMode ?? DEFAULT_ZOOM_PLUGIN_CONFIG.zoomMode)
       const autoZoomMin =
         config.autoZoomMin ?? DEFAULT_ZOOM_PLUGIN_CONFIG.autoZoomMin
       const autoZoomMax =
@@ -59,6 +66,15 @@ export function createZoomPlugin(
       if (!zoomChanged) return
       lastZoom = zoom
       lastZoomOverride = zoomOverride
+
+      if (options?.enableDebug) {
+        console.debug(
+          "[core:zoom] zoom=%s zoomMode=%s zoomOverride=%s",
+          zoom,
+          zoomMode,
+          zoomOverride
+        )
+      }
 
       try {
         modifier.updatePluginConfig(CROP_PLUGIN_ID, { zoom, zoomOverride })

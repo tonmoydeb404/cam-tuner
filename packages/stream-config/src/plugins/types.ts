@@ -10,6 +10,7 @@ export interface PluginContext {
 export interface PluginUIProps {
   config: TunerConfig
   onConfigChange: (update: Partial<TunerConfig>) => void
+  options?: Record<string, boolean | undefined>
 }
 
 export interface PluginManifest {
@@ -27,4 +28,6 @@ export interface PluginManifest {
   executionOrder: number
   /** Order in the UI panel (lower renders first). */
   uiOrder: number
+  /** Initialization-time feature flags for this plugin instance. */
+  options?: Record<string, boolean | undefined>
 }

@@ -1,5 +1,13 @@
 import type { ZoomMode } from "../../tuner-types"
 
+export interface ZoomPluginOptions {
+  /** Disable the automatic zoom mode; zoomMode is always treated as "fixed". */
+  disableAuto?: boolean
+  /** Emit per-frame debug logs via console.debug. */
+  enableDebug?: boolean
+  [key: string]: boolean | undefined
+}
+
 export type ZoomPluginConfig = {
   zoom: number
   zoomMode: ZoomMode

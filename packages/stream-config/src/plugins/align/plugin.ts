@@ -3,7 +3,11 @@ import type { StreamModifier, StreamPlugin } from "../../types"
 import { parseAlignPosition } from "../../utils/config"
 import type { AlignCenter } from "../../utils/math"
 import { CROP_PLUGIN_ID } from "../crop/manifest"
-import { DEFAULT_ALIGN_PLUGIN_CONFIG, type AlignPluginConfig } from "./types"
+import {
+  DEFAULT_ALIGN_PLUGIN_CONFIG,
+  type AlignPluginConfig,
+  type AlignPluginOptions,
+} from "./types"
 
 export const ALIGN_PLUGIN_ID = "core:align"
 
@@ -27,7 +31,8 @@ const DEFAULT_PADDING = 0.3
  * advances the smoothing tick for the pan channel.
  */
 export function createAlignPlugin(
-  modifier: StreamModifier
+  modifier: StreamModifier,
+  options?: AlignPluginOptions
 ): StreamPlugin<AlignPluginConfig> {
   let lastAlignX: string | undefined = undefined
   let lastAlignY: string | undefined = undefined
@@ -45,9 +50,10 @@ export function createAlignPlugin(
       config: Partial<AlignPluginConfig>
     ) {
       const align = config.align ?? DEFAULT_ALIGN_PLUGIN_CONFIG.align
-      const centerStageEnabled =
-        config.centerStageEnabled ??
-        DEFAULT_ALIGN_PLUGIN_CONFIG.centerStageEnabled
+      const centerStageEnabled = options?.disableAuto
+        ? false
+        : (config.centerStageEnabled ??
+          DEFAULT_ALIGN_PLUGIN_CONFIG.centerStageEnabled)
       const { alignX, alignY } = parseAlignPosition(align)
 
       let alignCenter: AlignCenter | undefined = undefined
@@ -92,6 +98,16 @@ export function createAlignPlugin(
       lastAlignX = alignX
       lastAlignY = alignY
       lastAlignCenter = alignCenter
+
+      if (options?.enableDebug) {
+        console.debug(
+          "[core:align] alignX=%s alignY=%s centerStage=%s alignCenter=%o",
+          alignX,
+          alignY,
+          centerStageEnabled,
+          alignCenter
+        )
+      }
 
       try {
         modifier.updatePluginConfig(CROP_PLUGIN_ID, {

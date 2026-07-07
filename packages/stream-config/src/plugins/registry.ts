@@ -1,9 +1,8 @@
-import { alignManifest } from "./align"
-import { backgroundManifest } from "./background/manifest"
-import { cropManifest } from "./crop/manifest"
+import { createAlignManifest } from "./align/manifest"
+import { createCropManifest } from "./crop/manifest"
 import { mirrorManifest } from "./mirror/manifest"
 import type { PluginManifest } from "./types"
-import { zoomManifest } from "./zoom/manifest"
+import { createZoomManifest } from "./zoom/manifest"
 
 /**
  * The canonical plugin registry.  The array order here is purely for
@@ -15,11 +14,15 @@ import { zoomManifest } from "./zoom/manifest"
  *
  * UI panel order (ascending uiOrder):
  *   crop (1) → align (2) → zoom (3) → mirror (4) → background (5)
+ *
+ * To customise plugin options, call the manifest factory functions directly
+ * and compose your own registry array, e.g.:
+ *   [createZoomManifest({ disableAuto: true }), createCropManifest(), ...]
  */
 export const PLUGIN_REGISTRY: PluginManifest[] = [
-  backgroundManifest,
+  // createBackgroundManifest(),
   mirrorManifest,
-  zoomManifest,
-  alignManifest,
-  cropManifest,
+  createZoomManifest({ disableAuto: true }),
+  createAlignManifest({ disableAuto: true }),
+  createCropManifest(),
 ]

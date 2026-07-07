@@ -6,7 +6,11 @@ import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
 import { AspectRatioControl } from "@workspace/ui/components/tuner/aspect-ratio-control"
 
-export const CropControl = ({ config, onConfigChange }: PluginUIProps) => (
+export const CropControl = ({
+  config,
+  onConfigChange,
+  options,
+}: PluginUIProps) => (
   <>
     <div className="flex flex-col gap-3">
       <Label className="text-xs font-semibold tracking-wider uppercase">
@@ -18,25 +22,27 @@ export const CropControl = ({ config, onConfigChange }: PluginUIProps) => (
       />
     </div>
 
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex flex-col gap-1">
-        <Label className="text-xs font-semibold tracking-wider uppercase">
-          Letterbox
-        </Label>
-        <span className="text-xs text-muted-foreground">
-          {(config.letterbox ?? true)
-            ? "Pad cropped area with bars"
-            : "Crop to exact size, no bars"}
-        </span>
+    {!options?.disableLetterbox && (
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs font-semibold tracking-wider uppercase">
+            Letterbox
+          </Label>
+          <span className="text-xs text-muted-foreground">
+            {(config.letterbox ?? true)
+              ? "Pad cropped area with bars"
+              : "Crop to exact size, no bars"}
+          </span>
+        </div>
+        <Switch
+          checked={config.letterbox ?? true}
+          onCheckedChange={(v: boolean) => onConfigChange({ letterbox: v })}
+          aria-label="Toggle letterbox bars"
+        />
       </div>
-      <Switch
-        checked={config.letterbox ?? true}
-        onCheckedChange={(v: boolean) => onConfigChange({ letterbox: v })}
-        aria-label="Toggle letterbox bars"
-      />
-    </div>
+    )}
 
-    {(config.letterbox ?? true) ? (
+    {!options?.disableLetterbox && (config.letterbox ?? true) ? (
       <div className="flex items-center justify-between gap-4">
         <Label className="text-xs font-semibold tracking-wider uppercase">
           Bar Color

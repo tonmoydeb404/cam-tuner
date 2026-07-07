@@ -1,13 +1,13 @@
 "use client"
 
-import { BACKGROUND_PRESETS } from "@workspace/stream-config"
-import type { BackgroundMode, PluginUIProps } from "@workspace/stream-config"
 import { IconUpload, IconX } from "@tabler/icons-react"
+import type { BackgroundMode, PluginUIProps } from "@workspace/stream-config"
+import { BACKGROUND_PRESETS } from "@workspace/stream-config"
 import { Button } from "@workspace/ui/components/button"
 import { Label } from "@workspace/ui/components/label"
 import { Slider } from "@workspace/ui/components/slider"
-import { useRef } from "react"
 import { cn } from "@workspace/ui/lib/utils"
+import { useRef } from "react"
 
 export interface BackgroundFilterControlProps extends PluginUIProps {
   presets?: typeof BACKGROUND_PRESETS
@@ -25,6 +25,7 @@ const MODES: Array<{ value: BackgroundMode; label: string }> = [
 export const BackgroundFilterControl = ({
   config,
   onConfigChange,
+  options,
   presets = BACKGROUND_PRESETS,
   uploads = [],
   onUpload,
@@ -35,6 +36,12 @@ export const BackgroundFilterControl = ({
   const blurAmount = config.blurStrength ?? 14
   const activeImage = config.backgroundImage
 
+  const visibleModes = MODES.filter((m) => {
+    if (m.value === "blur" && options?.disableBlur) return false
+    if (m.value === "image" && options?.disableImage) return false
+    return true
+  })
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
@@ -42,7 +49,7 @@ export const BackgroundFilterControl = ({
           Background
         </Label>
         <div className="grid grid-cols-3 gap-2">
-          {MODES.map((m) => (
+          {visibleModes.map((m) => (
             <Button
               key={m.value}
               size="sm"
@@ -137,13 +144,9 @@ export const BackgroundFilterControl = ({
                 src={upload.thumb}
                 label={upload.name}
                 active={activeImage === upload.id}
-                onClick={() =>
-                  onConfigChange({ backgroundImage: upload.id })
-                }
+                onClick={() => onConfigChange({ backgroundImage: upload.id })}
                 onRemove={
-                  onRemoveUpload
-                    ? () => onRemoveUpload(upload.id)
-                    : undefined
+                  onRemoveUpload ? () => onRemoveUpload(upload.id) : undefined
                 }
               />
             ))}
@@ -198,7 +201,7 @@ function Thumb({
               onRemove()
             }
           }}
-          className="absolute right-0.5 top-0.5 rounded bg-background/80 p-0.5 text-foreground hover:bg-background"
+          className="absolute top-0.5 right-0.5 rounded bg-background/80 p-0.5 text-foreground hover:bg-background"
         >
           <IconX size={11} />
         </span>

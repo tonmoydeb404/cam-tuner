@@ -6,12 +6,17 @@ import { ZoomControl } from "@workspace/ui/components/tuner/zoom-control"
 export const ZoomPluginControl = ({
   config,
   onConfigChange,
+  options,
 }: PluginUIProps) => (
   <ZoomControl
     value={config.zoom}
     onChange={(v: number) => onConfigChange({ zoom: v })}
-    mode={config.zoomMode ?? "fixed"}
-    onModeChange={(v: ZoomMode) => onConfigChange({ zoomMode: v })}
+    mode={options?.disableAuto ? undefined : (config.zoomMode ?? "fixed")}
+    onModeChange={
+      options?.disableAuto
+        ? undefined
+        : (v: ZoomMode) => onConfigChange({ zoomMode: v })
+    }
     autoZoomMin={config.autoZoomMin ?? 1}
     onAutoZoomMinChange={(v: number) => onConfigChange({ autoZoomMin: v })}
     autoZoomMax={config.autoZoomMax ?? 2.5}

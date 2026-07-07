@@ -28,6 +28,7 @@ export const PluginPanel = ({
             key={manifest.id}
             config={config}
             onConfigChange={onConfigChange}
+            options={manifest.options}
             {...(extraProps?.[manifest.id] ?? {})}
           />
         )

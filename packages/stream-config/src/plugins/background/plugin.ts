@@ -18,7 +18,22 @@ export function createBackgroundPlugin(
   implOptions?: BackgroundFilterOptions,
   pluginOptions?: BackgroundPluginOptions
 ): StreamPlugin<BackgroundFilterConfig> {
-  const inner = createBackgroundFilterPlugin(segmenter, implOptions)
+  const mergedOptions: BackgroundFilterOptions = {
+    ...implOptions,
+    ...(pluginOptions?.maskFeather !== undefined && {
+      maskFeather: pluginOptions.maskFeather,
+    }),
+    ...(pluginOptions?.thresholdLow !== undefined && {
+      thresholdLow: pluginOptions.thresholdLow,
+    }),
+    ...(pluginOptions?.thresholdHigh !== undefined && {
+      thresholdHigh: pluginOptions.thresholdHigh,
+    }),
+    ...(pluginOptions?.lightWrapAlpha !== undefined && {
+      lightWrapAlpha: pluginOptions.lightWrapAlpha,
+    }),
+  }
+  const inner = createBackgroundFilterPlugin(segmenter, mergedOptions)
   const plugin: StreamPlugin<BackgroundFilterConfig> = {
     ...inner,
     id: BACKGROUND_PLUGIN_ID,

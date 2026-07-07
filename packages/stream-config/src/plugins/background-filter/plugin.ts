@@ -21,22 +21,26 @@
  *
  * When `mode === "none"` prepareSource returns null → zero cost.
  */
+import type { StreamPlugin } from "../../types"
+import type { Size } from "../../utils/math"
+import { getSourceSize } from "../../utils/math"
 import type { PersonSegmenter } from "./segmenter"
 import type { BackgroundFilterConfig } from "./types"
-import { resolveBackgroundConfig, clampBlur } from "./types"
-import { getSourceSize } from "../../utils/math"
-import type { Size } from "../../utils/math"
-import type { StreamPlugin } from "../../types"
+import { clampBlur, resolveBackgroundConfig } from "./types"
 
 export const BACKGROUND_FILTER_PLUGIN_ID = "core:background-filter"
 
 export type BackgroundFilterOptions = {
-  resolveImage?: (
-    imageId: string
-  ) => Promise<CanvasImageSource | null>
+  resolveImage?: (imageId: string) => Promise<CanvasImageSource | null>
   segmentIntervalMs?: number
   maskFeather?: number
   temporalAlpha?: number
+  /** Lower confidence threshold for the smoothstep edge ramp (default 0.12). Lower = more inclusive mask. */
+  thresholdLow?: number
+  /** Upper confidence threshold for the smoothstep edge ramp (default 0.55). Raise to tighten/narrow the transition band. */
+  thresholdHigh?: number
+  /** Opacity of the light-wrap bleed layer (default 0.35). 0 disables it entirely for hard edges. */
+  lightWrapAlpha?: number
 }
 
 const DEFAULT_SEGMENT_INTERVAL_MS = 0
@@ -50,9 +54,7 @@ const LIGHT_WRAP_ALPHA = 0.35
 const LIGHT_WRAP_BLUR_MIN = 8
 
 function now(): number {
-  return typeof performance !== "undefined"
-    ? performance.now()
-    : Date.now()
+  return typeof performance !== "undefined" ? performance.now() : Date.now()
 }
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -88,9 +90,13 @@ export function createBackgroundFilterPlugin(
   segmenter: PersonSegmenter,
   options?: BackgroundFilterOptions
 ): StreamPlugin<BackgroundFilterConfig> {
-  const segmentInterval = options?.segmentIntervalMs ?? DEFAULT_SEGMENT_INTERVAL_MS
+  const segmentInterval =
+    options?.segmentIntervalMs ?? DEFAULT_SEGMENT_INTERVAL_MS
   const maskFeather = options?.maskFeather ?? DEFAULT_MASK_FEATHER
   const temporalAlpha = options?.temporalAlpha ?? DEFAULT_TEMPORAL_ALPHA
+  const thresholdLow = options?.thresholdLow ?? THRESHOLD_LOW
+  const thresholdHigh = options?.thresholdHigh ?? THRESHOLD_HIGH
+  const lightWrapAlpha = options?.lightWrapAlpha ?? LIGHT_WRAP_ALPHA
   const resolveImage = options?.resolveImage
 
   let compositeCanvas: HTMLCanvasElement | null = null
@@ -135,7 +141,12 @@ export function createBackgroundFilterPlugin(
         : name === "person"
           ? personCtx
           : maskCtx
-    if (existing && existing.width === w && existing.height === h && existingCtx) {
+    if (
+      existing &&
+      existing.width === w &&
+      existing.height === h &&
+      existingCtx
+    ) {
       return { canvas: existing, ctx: existingCtx }
     }
     const canvas = existing ?? document.createElement("canvas")
@@ -178,7 +189,8 @@ export function createBackgroundFilterPlugin(
           const a = temporalAlpha
           const inv = 1 - a
           for (let i = 0; i < data.length; i++) {
-            smoothedMatte[i] = a * (data[i] ?? 0) + inv * (smoothedMatte[i] ?? 0)
+            smoothedMatte[i] =
+              a * (data[i] ?? 0) + inv * (smoothedMatte[i] ?? 0)
           }
         } else {
           smoothedMatte = new Float32Array(data)
@@ -231,7 +243,7 @@ export function createBackgroundFilterPlugin(
       dst[o] = 255
       dst[o + 1] = 255
       dst[o + 2] = 255
-      dst[o + 3] = smoothstep(THRESHOLD_LOW, THRESHOLD_HIGH, src[i] ?? 0) * 255
+      dst[o + 3] = smoothstep(thresholdLow, thresholdHigh, src[i] ?? 0) * 255
     }
     ctx.putImageData(imageData, 0, 0)
   }
@@ -301,7 +313,7 @@ export function createBackgroundFilterPlugin(
       // Phase 5: Light wrap — blurred semi-transparent person fringe
       // Bleeds person edge colors into background for natural transition
       const wrapBlur = Math.max(LIGHT_WRAP_BLUR_MIN, maskFeather * 2)
-      comp.ctx.globalAlpha = LIGHT_WRAP_ALPHA
+      comp.ctx.globalAlpha = lightWrapAlpha
       comp.ctx.filter = `blur(${wrapBlur}px)`
       comp.ctx.drawImage(person.canvas, 0, 0, W, H)
       comp.ctx.globalAlpha = 1

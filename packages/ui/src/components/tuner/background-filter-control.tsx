@@ -48,7 +48,7 @@ export const BackgroundFilterControl = ({
         <Label className="text-xs font-semibold tracking-wider uppercase">
           Background
         </Label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-2">
           {visibleModes.map((m) => (
             <Button
               key={m.value}
@@ -63,6 +63,7 @@ export const BackgroundFilterControl = ({
                 }
                 onConfigChange(patch)
               }}
+              className={""}
             >
               {m.label}
             </Button>

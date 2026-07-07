@@ -1,10 +1,11 @@
 "use client"
 
-import { processUploadedImage } from "@workspace/stream-config"
 import { UseTunerReturn } from "@/hooks/use-tuner"
 import { UseWebcamReturn } from "@/hooks/use-webcam"
 import { removeBgImage, storeBgImage } from "@/lib/extension-bridge"
-import { Card, CardContent } from "@workspace/ui/components/card"
+import { processUploadedImage } from "@workspace/stream-config"
+import { Card, CardFooter, CardHeader } from "@workspace/ui/components/card"
+import { ScrollArea } from "@workspace/ui/components/scroll-area"
 import { CameraSourceSelect } from "@workspace/ui/components/tuner/camera-source-select"
 import { PluginPanel } from "@workspace/ui/components/tuner/plugin-panel"
 import { useEffect, useState } from "react"
@@ -67,14 +68,16 @@ const PreviewSidebar = ({ webcam, tuner }: Props) => {
   return (
     <div className="flex w-full flex-col gap-6 md:w-80">
       <Card className="bg-muted dark:bg-card">
-        <CardContent>
-          <div className="flex flex-col gap-6">
-            <CameraSourceSelect
-              devices={webcam.devices}
-              selectedDeviceId={webcam.selectedDeviceId}
-              onDeviceChange={webcam.setSelectedDeviceId}
-            />
+        <CardHeader>
+          <CameraSourceSelect
+            devices={webcam.devices}
+            selectedDeviceId={webcam.selectedDeviceId}
+            onDeviceChange={webcam.setSelectedDeviceId}
+          />
+        </CardHeader>
 
+        <ScrollArea className="max-h-125 px-6">
+          <div className="flex flex-col gap-6">
             <PluginPanel
               config={tuner.config}
               onConfigChange={tuner.updateConfig}
@@ -86,10 +89,12 @@ const PreviewSidebar = ({ webcam, tuner }: Props) => {
                 },
               }}
             />
-
-            <PreviewActions webcam={webcam} tuner={tuner} />
           </div>
-        </CardContent>
+        </ScrollArea>
+
+        <CardFooter className="flex-col items-stretch">
+          <PreviewActions webcam={webcam} tuner={tuner} />
+        </CardFooter>
       </Card>
     </div>
   )

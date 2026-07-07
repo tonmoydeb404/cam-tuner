@@ -26,7 +26,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^25.1.0",
+    "@types/node": "^25.2.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@workspace/eslint-config": "workspace:^",

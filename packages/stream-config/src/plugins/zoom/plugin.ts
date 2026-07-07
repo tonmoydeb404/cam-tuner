@@ -20,9 +20,10 @@ const DEFAULT_PADDING = 0.3
  * into the crop plugin via the shared modifier.
  *
  * Auto-zoom reads the latest zoom result from the shared FaceTrackingService
- * singleton.  The zoom plugin runs at executionOrder 8, before the align
- * plugin (9), so it calls processFrame first; align will re-use the cached
- * detection result within the same frame interval.
+ * singleton.  The zoom plugin runs at executionOrder 3, before align (4) and
+ * background (5), so its prepareSource captures the raw video frame before any
+ * compositing, and its drawCanvas calls processFrame first; align will re-use
+ * the cached detection result within the same frame interval.
  */
 export function createZoomPlugin(
   modifier: StreamModifier,
@@ -30,9 +31,19 @@ export function createZoomPlugin(
 ): StreamPlugin<ZoomPluginConfig> {
   let lastZoom: number | undefined = undefined
   let lastZoomOverride: number | undefined = undefined
+  // Capture the raw (pre-background-composite) source so face detection always
+  // runs on the unprocessed video frame.  prepareSource runs before any plugin
+  // has modified the source (executionOrder 4, before background at 5), so the
+  // reference stored here is always the raw <video> element.
+  let rawSource: CanvasImageSource | null = null
 
   return {
     id: ZOOM_PLUGIN_ID,
+
+    prepareSource(source) {
+      rawSource = source
+      return null
+    },
 
     drawCanvas(_ctx, source, width, height, config: Partial<ZoomPluginConfig>) {
       const zoom = config.zoom ?? DEFAULT_ZOOM_PLUGIN_CONFIG.zoom
@@ -50,7 +61,11 @@ export function createZoomPlugin(
       if (zoomActive) {
         const service = getFaceTrackingService()
         if (service.hasDetector()) {
-          service.processFrame(source, width, height, {
+          // Prefer the raw source captured in prepareSource over the
+          // (potentially composited/blurred) effectiveSource so that face
+          // detection always sees an unmodified video frame.
+          const detectionSource = rawSource ?? source
+          service.processFrame(detectionSource, width, height, {
             centerActive: false,
             zoomActive: true,
             minZoom: autoZoomMin,

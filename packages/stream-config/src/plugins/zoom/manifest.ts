@@ -17,7 +17,7 @@ export function createZoomManifest(
     }),
     isActive: () => true,
     configFields: ["zoom", "zoomMode", "autoZoomMin", "autoZoomMax"],
-    executionOrder: 8,
+    executionOrder: 3,
     uiOrder: 3,
     options,
   }

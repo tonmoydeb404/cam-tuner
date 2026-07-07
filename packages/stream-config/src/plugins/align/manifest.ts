@@ -17,7 +17,7 @@ export function createAlignManifest(
     }),
     isActive: () => true,
     configFields: ["align", "centerStageEnabled"],
-    executionOrder: 9,
+    executionOrder: 4,
     uiOrder: 2,
     options,
   }

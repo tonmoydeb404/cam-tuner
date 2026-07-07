@@ -1,6 +1,7 @@
 import { createAlignManifest } from "./align/manifest"
+import { createBackgroundManifest } from "./background"
 import { createCropManifest } from "./crop/manifest"
-import { createDebugOverlayManifest } from "./debug-overlay/manifest"
+import { createDebugOverlayManifest } from "./debug-overlay"
 import { mirrorManifest } from "./mirror/manifest"
 import type { PluginManifest } from "./types"
 import { createZoomManifest } from "./zoom/manifest"
@@ -11,7 +12,15 @@ import { createZoomManifest } from "./zoom/manifest"
  * field, and UI panel order is driven by `uiOrder`.
  *
  * Execution pipeline (ascending executionOrder):
- *   background (5) → mirror (7) → zoom (8) → align (9) → crop (10) → debug-overlay (11)
+ *   zoom (3) → align (4) → background (5) → mirror (7) → crop (10) → debug-overlay (11)
+ *
+ * zoom (3) and align (4) run before background (5) so their prepareSource hooks
+ * capture the raw video frame before the background plugin composites it.
+ * Face detection for auto-zoom and center-stage therefore always sees an
+ * unmodified frame, avoiding the stale-mask and canvas-mutation issues that
+ * degrade detection when blur is active.
+ * zoom runs before align so its drawCanvas sets the correct dt for the spring
+ * smoother before align's smoothing tick advances the pan channel.
  *
  * UI panel order (ascending uiOrder):
  *   crop (1) → align (2) → zoom (3) → mirror (4) → background (5)
@@ -21,10 +30,10 @@ import { createZoomManifest } from "./zoom/manifest"
  *   [createZoomManifest({ disableAuto: true }), createCropManifest(), ...]
  */
 export const PLUGIN_REGISTRY: PluginManifest[] = [
-  // createBackgroundManifest(),
+  createBackgroundManifest(),
   mirrorManifest,
-  createZoomManifest({ enableDebug: true }),
-  createAlignManifest({ disableAuto: true }),
+  createZoomManifest({}),
+  createAlignManifest({ disableAuto: false }),
   createCropManifest(),
   createDebugOverlayManifest(),
 ]

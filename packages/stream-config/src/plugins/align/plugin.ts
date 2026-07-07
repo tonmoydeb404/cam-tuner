@@ -25,10 +25,15 @@ const DEFAULT_PADDING = 0.3
  * and forwards the result into the crop plugin via the shared modifier.
  *
  * Auto-align reads from the shared FaceTrackingService singleton.  The align
- * plugin runs at executionOrder 9, after the zoom plugin (8).  If auto-zoom is
- * also active the zoom plugin will have already called processFrame; the align
- * plugin's call is then a no-op for detection (within-interval) but still
- * advances the smoothing tick for the pan channel.
+ * plugin runs at executionOrder 4, before background (5), so its prepareSource
+ * captures the raw video frame before the background plugin composites it.
+ * Face detection therefore always runs on an unmodified frame even when
+ * background blur or image replacement is active.
+ *
+ * If auto-zoom is also active the zoom plugin (executionOrder 3) will have
+ * already called processFrame; the align plugin's call is then a no-op for
+ * detection (within-interval) but still advances the smoothing tick for the
+ * pan channel.
  */
 export function createAlignPlugin(
   modifier: StreamModifier,
@@ -38,9 +43,18 @@ export function createAlignPlugin(
   let lastAlignY: string | undefined = undefined
   let lastAlignCenter: AlignCenter | undefined = undefined
   let wasActive = false
+  // Capture the raw (pre-background-composite) source so face detection always
+  // runs on the unprocessed video frame.  prepareSource runs at executionOrder 4,
+  // before the background plugin (5), so this is always the raw <video> element.
+  let rawSource: CanvasImageSource | null = null
 
   return {
     id: ALIGN_PLUGIN_ID,
+
+    prepareSource(source) {
+      rawSource = source
+      return null
+    },
 
     drawCanvas(
       _ctx,
@@ -61,7 +75,11 @@ export function createAlignPlugin(
       if (centerStageEnabled) {
         const service = getFaceTrackingService()
         if (service.hasDetector()) {
-          service.processFrame(source, width, height, {
+          // Prefer the raw source captured in prepareSource over the
+          // (potentially composited/blurred) effectiveSource so that face
+          // detection always sees an unmodified video frame.
+          const detectionSource = rawSource ?? source
+          service.processFrame(detectionSource, width, height, {
             centerActive: true,
             zoomActive: false,
             smoothingFactor: DEFAULT_SMOOTHING_FACTOR,

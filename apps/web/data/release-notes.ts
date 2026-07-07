@@ -3,10 +3,24 @@ export type ReleaseNote = {
   date: string // ISO date e.g. "2026-04-15"
   title: string
   breaking?: boolean
+  beta?: boolean
   highlights: string[]
 }
 
 export const releaseNotes: ReleaseNote[] = [
+  {
+    version: "2.1.0",
+    date: "2026-07-08",
+    title: "Center Stage & Background Effects",
+    breaking: true,
+    beta: true,
+    highlights: [
+      "Added Center Stage — AI-powered auto-framing that tracks your face and keeps you centered",
+      "Added background effects with blur and virtual background replacement, powered by RVM and MediaPipe segmentation",
+      "Refactored stream processing into a composable plugin system (align, zoom, mirror, background, center-stage)",
+      "New smooth face-tracking service with velocity-based framing for fluid, jitter-free camera movement",
+    ],
+  },
   {
     version: "2.0.9",
     date: "2026-04-16",

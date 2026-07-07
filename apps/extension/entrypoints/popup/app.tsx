@@ -1,21 +1,24 @@
-import { processUploadedImage } from "@workspace/stream-config"
-import { DEFAULT_TUNER_CONFIG, type TunerConfig } from "@workspace/stream-config"
+import { IconEye } from "@tabler/icons-react"
+import {
+  DEFAULT_TUNER_CONFIG,
+  processUploadedImage,
+  type TunerConfig,
+} from "@workspace/stream-config"
 import { Button } from "@workspace/ui/components/button"
 import { Switch } from "@workspace/ui/components/switch"
 import { PluginPanel } from "@workspace/ui/components/tuner/plugin-panel"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
-import { IconEye } from "@tabler/icons-react"
 import logo from "../../assets/icon.svg"
 import {
   addBackgroundImage,
   backgroundImages,
-  type StoredBackgroundImage,
   getTunerConfig,
   removeBackgroundImage,
   setTunerConfig,
   tunerConfig,
   virtualCamEnabled,
+  type StoredBackgroundImage,
 } from "../../lib/storage"
 
 export default function App() {

@@ -19,7 +19,7 @@ import type { SmoothingOptions } from "../framing/smoothing"
 import { createZoomSmoother, smoothCenter } from "../framing/smoothing"
 import type { AlignCenter, Size } from "../utils/math"
 import { getSourceSize } from "../utils/math"
-import type { FaceDetector } from "./types"
+import type { FaceBox, FaceDetector } from "./types"
 
 const DEFAULT_DETECT_INTERVAL_MS = 120
 const DEFAULT_TARGET_STABILIZATION = 0.18
@@ -58,6 +58,7 @@ export class FaceTrackingService {
   private detecting = false
   private lastAlignResult: AlignCenter | undefined = undefined
   private lastZoomResult: number | undefined = undefined
+  private lastFaces: FaceBox[] = []
 
   init(detector: FaceDetector): void {
     if (this.detector) {
@@ -77,6 +78,7 @@ export class FaceTrackingService {
     this.detecting = false
     this.lastAlignResult = undefined
     this.lastZoomResult = undefined
+    this.lastFaces = []
   }
 
   hasDetector(): boolean {
@@ -161,6 +163,11 @@ export class FaceTrackingService {
     return this.lastZoomResult
   }
 
+  /** Raw face bounding boxes (pixel coords in source frame) from the last detection pass. */
+  getLastFaces(): FaceBox[] {
+    return this.lastFaces
+  }
+
   destroy(): void {
     this.detector?.destroy()
     this.detector = null
@@ -188,6 +195,7 @@ export class FaceTrackingService {
     const frameSize = { ...this.frameSize }
     this.detector!.detect(source, width, height)
       .then((faces) => {
+        this.lastFaces = faces
         const rawCenter = computeFramingCenter(faces, frameSize)
         const rawZoom = computeFramingZoom(faces, frameSize, zoomOptions)
 

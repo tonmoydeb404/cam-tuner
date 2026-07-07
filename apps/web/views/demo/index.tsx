@@ -82,12 +82,20 @@ const DemoView = () => {
                   onAspectRatioChange={tuner.setAspectRatio}
                   zoom={tuner.config.zoom}
                   onZoomChange={tuner.setZoom}
+                  zoomMode={tuner.config.zoomMode ?? "fixed"}
+                  onZoomModeChange={tuner.setZoomMode}
+                  autoZoomMin={tuner.config.autoZoomMin ?? 1}
+                  onAutoZoomMinChange={tuner.setAutoZoomMin}
+                  autoZoomMax={tuner.config.autoZoomMax ?? 2.5}
+                  onAutoZoomMaxChange={tuner.setAutoZoomMax}
                   align={tuner.config.align}
                   onAlignChange={tuner.setAlign}
                   barColor={tuner.config.barColor ?? "#000000"}
                   onBarColorChange={tuner.setBarColor}
                   mirror={tuner.config.mirror}
                   onMirrorChange={tuner.setMirror}
+                  letterbox={tuner.config.letterbox ?? true}
+                  onLetterboxChange={tuner.setLetterbox}
                 />
 
                 <Button

@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-06-30T12:00:00Z",
+  "libraries": {
+    "mediapipe-tasks-vision": {
+      "files": [
+        {
+          "filename": "face-detector-api.md",
+          "topic": "FaceDetector API — installation, setup, detectForVideo, lifecycle, MV3 bundling, full code example",
+          "tech_stack": "Web/TypeScript/Browser Extension MV3",
+          "fetched": "2026-06-30T12:00:00Z",
+          "source": "Context7 API + GitHub source + npm registry"
+        },
+        {
+          "filename": "result-types.md",
+          "topic": "Exact TypeScript type definitions — BoundingBox, Detection, FaceDetectorResult, FaceDetectorOptions",
+          "tech_stack": "Web/TypeScript",
+          "fetched": "2026-06-30T12:00:00Z",
+          "source": "GitHub source (google-ai-edge/mediapipe .d.ts files)"
+        }
+      ]
+    }
+  }
+}

@@ -60,6 +60,11 @@ const TimelineSection = (props: Props) => {
                       Breaking Changes
                     </span>
                   )}
+                  {note.beta && (
+                    <span className="ml-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-2 py-0.5 text-[11px] font-semibold text-yellow-600 dark:text-yellow-400">
+                      Beta
+                    </span>
+                  )}
                 </div>
 
                 {/* Highlights */}

@@ -1,43 +1,77 @@
 import { IconEye } from "@tabler/icons-react"
 import {
   DEFAULT_TUNER_CONFIG,
+  processUploadedImage,
   type TunerConfig,
 } from "@workspace/stream-config"
 import { Button } from "@workspace/ui/components/button"
 import { Switch } from "@workspace/ui/components/switch"
-import { TunerControlFields } from "@workspace/ui/components/tuner/tuner-control-fields"
+import { PluginPanel } from "@workspace/ui/components/tuner/plugin-panel"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import logo from "../../assets/icon.svg"
 import {
+  addBackgroundImage,
+  backgroundImages,
   getTunerConfig,
-  setAlign,
-  setAspectRatio,
-  setBarColor,
-  setMirror,
-  setZoom,
+  removeBackgroundImage,
+  setTunerConfig,
+  tunerConfig,
   virtualCamEnabled,
+  type StoredBackgroundImage,
 } from "../../lib/storage"
 
 export default function App() {
   const [config, setConfig] = useState<TunerConfig>(DEFAULT_TUNER_CONFIG)
   const [enabled, setEnabled] = useState(false)
+  const [uploads, setUploads] = useState<StoredBackgroundImage[]>([])
 
   useEffect(() => {
     const load = async () => {
-      const [loaded, isEnabled] = await Promise.all([
+      const [loaded, isEnabled, stored] = await Promise.all([
         getTunerConfig(),
         virtualCamEnabled.getValue(),
+        backgroundImages.getValue(),
       ])
       setConfig(loaded)
       setEnabled(isEnabled)
+      setUploads(stored)
     }
     load()
+
+    const unwatchConfig = tunerConfig.watch((val) => setConfig(val))
+    const unwatchEnabled = virtualCamEnabled.watch((val) => setEnabled(val))
+    const unwatchUploads = backgroundImages.watch((val) => setUploads(val))
+    return () => {
+      unwatchConfig()
+      unwatchEnabled()
+      unwatchUploads()
+    }
   }, [])
 
   const handleToggle = async (value: boolean) => {
     setEnabled(value)
     await virtualCamEnabled.setValue(value)
+  }
+
+  const handleConfigChange = async (update: Partial<TunerConfig>) => {
+    setConfig((c) => ({ ...c, ...update }))
+    await setTunerConfig(update)
+  }
+
+  const handleUpload = async (file: File) => {
+    const processed = await processUploadedImage(file)
+    await addBackgroundImage(processed.name, processed.dataUrl, processed.id)
+    await setTunerConfig({ backgroundImage: processed.id })
+    setConfig((c) => ({ ...c, backgroundImage: processed.id }))
+  }
+
+  const handleRemoveUpload = async (id: string) => {
+    await removeBackgroundImage(id)
+    if (config.backgroundImage === id) {
+      await setTunerConfig({ backgroundImage: null })
+      setConfig((c) => ({ ...c, backgroundImage: null }))
+    }
   }
 
   const handlePreview = async () => {
@@ -72,31 +106,19 @@ export default function App() {
           !enabled && "pointer-events-none opacity-50"
         )}
       >
-        <TunerControlFields
-          aspectRatio={config.aspectRatio}
-          onAspectRatioChange={async (v) => {
-            setConfig((c) => ({ ...c, aspectRatio: v }))
-            await setAspectRatio(v)
-          }}
-          zoom={config.zoom}
-          onZoomChange={async (v) => {
-            setConfig((c) => ({ ...c, zoom: v }))
-            await setZoom(v)
-          }}
-          align={config.align}
-          onAlignChange={async (v) => {
-            setConfig((c) => ({ ...c, align: v }))
-            await setAlign(v)
-          }}
-          barColor={config.barColor}
-          onBarColorChange={async (v) => {
-            setConfig((c) => ({ ...c, barColor: v }))
-            await setBarColor(v)
-          }}
-          mirror={config.mirror}
-          onMirrorChange={async (v) => {
-            setConfig((c) => ({ ...c, mirror: v }))
-            await setMirror(v)
+        <PluginPanel
+          config={config}
+          onConfigChange={handleConfigChange}
+          extraProps={{
+            "core:background-filter": {
+              uploads: uploads.map((u) => ({
+                id: u.id,
+                name: u.name,
+                thumb: u.dataUrl,
+              })),
+              onUpload: handleUpload,
+              onRemoveUpload: handleRemoveUpload,
+            },
           }}
         />
       </div>

@@ -31,6 +31,7 @@ interface OldCropConfig {
   zoom?: number
   align?: "left" | "center" | "right"
   letterboxBgColor?: string | null
+  enableLetterbox?: boolean
 }
 
 interface OldSyncData {
@@ -107,10 +108,15 @@ export async function migrateFromV1(): Promise<void> {
       zoom:
         typeof crop.zoom === "number" ? crop.zoom : DEFAULT_TUNER_CONFIG.zoom,
       align: mapAlign(crop.align),
+      mirror: DEFAULT_TUNER_CONFIG.mirror,
       barColor:
         typeof crop.letterboxBgColor === "string" && crop.letterboxBgColor
           ? crop.letterboxBgColor
           : DEFAULT_TUNER_CONFIG.barColor,
+      letterbox:
+        typeof crop.enableLetterbox === "boolean"
+          ? crop.enableLetterbox
+          : DEFAULT_TUNER_CONFIG.letterbox,
     }
 
     // Write all new values first, then mark complete.

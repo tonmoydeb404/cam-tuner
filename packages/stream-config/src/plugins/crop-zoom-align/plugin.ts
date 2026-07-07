@@ -1,10 +1,12 @@
-import { StreamPlugin } from "../types"
+import { StreamPlugin } from "../../types"
 import {
   Box,
   calculateCropBox,
   calculateDestinationBox,
   CropConfig,
-} from "../utils/math"
+  getSourceSize,
+  Size,
+} from "../../utils/math"
 
 export const CROP_ZOOM_ALIGN_PLUGIN_ID = "core:crop-zoom-align"
 
@@ -19,6 +21,9 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
     alignY: config.alignY || "center",
     barColor: config.barColor || "#000000",
     mirror: config.mirror ?? false,
+    alignCenter: config.alignCenter,
+    zoomOverride: config.zoomOverride,
+    letterbox: config.letterbox ?? true,
   }
 }
 
@@ -52,6 +57,23 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
 
   return {
     id: CROP_ZOOM_ALIGN_PLUGIN_ID,
+
+    // Declares the output canvas size. In non-letterbox mode the output is the
+    // cropped region with no bars. The backing store is sized to the zoom=1 crop
+    // box — the largest the crop ever gets — and held STABLE as zoom changes, so
+    // the engine never re-dimensions the canvas mid-transition (which caused
+    // resolution stepping / clear-on-resize flicker). The zoomed crop is scaled
+    // to fill this stable canvas each frame in drawCanvas.
+    getOutputSize(sourceSize: Size, config: Partial<CropConfig>): Size | null {
+      const normalized = normalizeConfig(config)
+      if (normalized.letterbox) return null
+      const baseCrop = calculateCropBox(sourceSize, {
+        ...normalized,
+        zoom: 1,
+        zoomOverride: undefined,
+      })
+      return { width: baseCrop.width, height: baseCrop.height }
+    },
 
     // WebCodecs / Insertable Streams pipeline
     transformFrame(frame: VideoFrame, config: Partial<CropConfig>): VideoFrame {
@@ -88,16 +110,20 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
     // The cropped/zoomed region is drawn centered; remaining space gets a background fill.
     drawCanvas(
       ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D,
-      videoEl: HTMLVideoElement,
+      source: CanvasImageSource,
       canvasWidth: number,
       canvasHeight: number,
       config: Partial<CropConfig>
     ) {
       const normalized = normalizeConfig(config)
-      const srcWidth = videoEl.videoWidth || canvasWidth
-      const srcHeight = videoEl.videoHeight || canvasHeight
+      const size = getSourceSize(source)
+      const srcWidth = size.width || canvasWidth
+      const srcHeight = size.height || canvasHeight
 
-      // Recompute boxes only when config or source dimensions change
+      // Recompute boxes only when config or source dimensions change.
+      // alignCenter and zoomOverride are compared separately because Center Stage
+      // updates them every frame; without this check the cached crop box would
+      // go stale.
       if (
         cachedConfig === null ||
         cachedSrcWidth !== srcWidth ||
@@ -106,9 +132,39 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         cachedConfig.zoom !== normalized.zoom ||
         cachedConfig.alignX !== normalized.alignX ||
         cachedConfig.alignY !== normalized.alignY ||
-        cachedConfig.barColor !== normalized.barColor
+        cachedConfig.barColor !== normalized.barColor ||
+        cachedConfig.letterbox !== normalized.letterbox ||
+        cachedConfig.alignCenter?.x !== normalized.alignCenter?.x ||
+        cachedConfig.alignCenter?.y !== normalized.alignCenter?.y ||
+        cachedConfig.zoomOverride !== normalized.zoomOverride
       ) {
         recompute(normalized, srcWidth, srcHeight)
+      }
+
+      // Non-letterbox mode: the canvas has already been resized to the crop-box
+      // dimensions by the engine. Just draw the cropped region to fill it — no
+      // bars, no centering, no stretching.
+      if (!normalized.letterbox) {
+        if (normalized.mirror) {
+          ctx.save()
+          ctx.translate(canvasWidth, 0)
+          ctx.scale(-1, 1)
+        }
+        ctx.drawImage(
+          source,
+          cachedCropBox.x,
+          cachedCropBox.y,
+          cachedCropBox.width,
+          cachedCropBox.height,
+          0,
+          0,
+          canvasWidth,
+          canvasHeight
+        )
+        if (normalized.mirror) {
+          ctx.restore()
+        }
+        return
       }
 
       // Fill background only when there are actual bars to draw
@@ -124,7 +180,7 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
       }
 
       ctx.drawImage(
-        videoEl,
+        source,
         cachedCropBox.x,
         cachedCropBox.y,
         cachedCropBox.width,

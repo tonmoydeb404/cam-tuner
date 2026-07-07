@@ -20,5 +20,6 @@ export const centerStageManifest: PluginManifest = {
     "autoZoomMin",
     "autoZoomMax",
   ],
-  order: 20,
+  executionOrder: 20,
+  uiOrder: 2,
 }

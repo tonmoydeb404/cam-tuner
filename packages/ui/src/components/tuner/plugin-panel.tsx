@@ -1,8 +1,8 @@
 "use client"
 
 import { PLUGIN_REGISTRY, type PluginUIProps } from "@workspace/stream-config"
-import type { ComponentType } from "react"
 import { PLUGIN_UI_REGISTRY } from "@workspace/ui/components/tuner/plugin-ui-registry"
+import type { ComponentType } from "react"
 
 export interface PluginPanelProps extends PluginUIProps {
   /** Extra props to spread into specific plugin UI components (e.g. upload handlers). */
@@ -14,7 +14,7 @@ export const PluginPanel = ({
   onConfigChange,
   extraProps,
 }: PluginPanelProps) => {
-  const sorted = [...PLUGIN_REGISTRY].sort((a, b) => a.order - b.order)
+  const sorted = [...PLUGIN_REGISTRY].sort((a, b) => a.uiOrder - b.uiOrder)
 
   return (
     <>

@@ -1,26 +1,20 @@
 "use client"
 
+import type { ZoomMode } from "@workspace/stream-config"
 import {
   ALIGN_OBJECT_POSITION,
   type AlignPosition,
   ASPECT_RATIO_CLASS,
   type AspectRatio,
   type BackgroundMode,
-  CROP_ZOOM_ALIGN_PLUGIN_ID,
-  CENTER_STAGE_PLUGIN_ID,
-  BACKGROUND_FILTER_PLUGIN_ID,
   DEFAULT_TUNER_CONFIG,
   PLUGIN_REGISTRY,
   type TunerConfig,
-  resolveBackgroundConfig,
-  tunerConfigToCropConfig,
-  tunerUpdateToCropUpdate,
 } from "@workspace/stream-config"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { fetchBgImage } from "../lib/extension-bridge"
 import { useBackgroundFilter } from "./use-background-filter"
 import { useCenterStage } from "./use-center-stage"
-import type { ZoomMode } from "@workspace/stream-config"
 import { useDebouncedCallback } from "./use-debounced-callback"
 import { useStreamModifier } from "./use-stream-modifier"
 

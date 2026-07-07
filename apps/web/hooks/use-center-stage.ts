@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  CENTER_STAGE_PLUGIN_ID,
-  createCenterStagePlugin,
-  type StreamModifier,
-} from "@workspace/stream-config"
+import { getFaceTrackingService } from "@workspace/stream-config"
 import { useEffect, useRef } from "react"
 
 const CDN_WASM_URL =
@@ -23,108 +19,72 @@ export type UseCenterStageOptions = {
 }
 
 /**
- * Manages the Center Stage controller plugin on a StreamModifier.
+ * Manages the face detector lifecycle for the align and zoom plugins.
  *
- * Framing (panning) and auto-zoom are independent channels that share a single
- * face detector, so the plugin is attached while *either* is active and fed
- * each channel's flag independently at runtime.
+ * When either auto-framing or auto-zoom is active, this hook loads the
+ * MediaPipe face detector on demand and injects it into the shared
+ * FaceTrackingService singleton.  The align and zoom controller plugins
+ * read from that service each frame.
  *
- * Loads the MediaPipe adapter (and its ~146 KB runtime) ON DEMAND via dynamic
- * import — Next.js code-splits it into a separate chunk fetched only when a
- * face-tracking feature is enabled.
+ * Loads the adapter (~146 KB runtime) ON DEMAND via dynamic import — Next.js
+ * code-splits it into a separate chunk fetched only when needed.
  *
  * @param stream  The current output stream (acts as a "modifier ready" signal;
  *                a new object is created each time the modifier is rebuilt).
  */
 export function useCenterStage(
-  modifierRef: React.RefObject<StreamModifier | null>,
+  _modifierRef: React.RefObject<unknown>,
   stream: MediaStream | null,
   options: UseCenterStageOptions
 ) {
   const { centerStageEnabled, zoomMode, autoZoomMin, autoZoomMax } = options
-  // The plugin is needed while either channel is on.
   const active = centerStageEnabled || zoomMode === "auto"
 
-  // Latest config, read at attach time so the freshly created plugin starts
-  // with current values even if they changed during the async import.
   const optionsRef = useRef(options)
   optionsRef.current = options
-  const attachedRef = useRef(false)
+  const loadedRef = useRef(false)
 
-  // Attach / detach based on whether any face-tracking channel is active.
   useEffect(() => {
     if (!stream || !active) {
-      if (attachedRef.current) {
-        modifierRef.current?.removePlugin(CENTER_STAGE_PLUGIN_ID)
-        attachedRef.current = false
+      if (loadedRef.current) {
+        getFaceTrackingService().destroy()
+        loadedRef.current = false
       }
       return
     }
 
-    if (attachedRef.current) return
-    attachedRef.current = true
+    if (loadedRef.current) return
+    loadedRef.current = true
 
     let cancelled = false
     ;(async () => {
       try {
-        const { createMediaPipeFaceDetector } = await import(
-          "../lib/tracking/mediapipe-detector"
-        )
-        if (cancelled || !modifierRef.current) return
+        const { createMediaPipeFaceDetector } =
+          await import("../lib/tracking/mediapipe-detector")
+        if (cancelled) return
 
         const detector = createMediaPipeFaceDetector({
           filesetUrl: CDN_WASM_URL,
           modelAssetPath: FACE_MODEL_URL,
         })
-        if (cancelled || !modifierRef.current) {
+        if (cancelled) {
           detector.destroy()
           return
         }
 
-        const o = optionsRef.current
-        modifierRef.current.addPlugin(
-          createCenterStagePlugin(modifierRef.current, detector, {
-            enabled: o.centerStageEnabled,
-            zoomMode: o.zoomMode,
-            minZoom: o.autoZoomMin,
-            maxZoom: o.autoZoomMax,
-          }),
-          {
-            enabled: o.centerStageEnabled,
-            zoomMode: o.zoomMode,
-            minZoom: o.autoZoomMin,
-            maxZoom: o.autoZoomMax,
-          }
-        )
+        getFaceTrackingService().init(detector)
       } catch (error) {
         if (!cancelled) {
-          attachedRef.current = false
-          console.error("[CamTuner] Center Stage failed:", error)
+          loadedRef.current = false
+          console.error("[CamTuner] Face tracking failed:", error)
         }
       }
     })()
 
     return () => {
       cancelled = true
-      modifierRef.current?.removePlugin(CENTER_STAGE_PLUGIN_ID)
-      attachedRef.current = false
+      getFaceTrackingService().destroy()
+      loadedRef.current = false
     }
-  }, [modifierRef, stream, active])
-
-  // Push runtime config changes to the attached plugin without re-attaching.
-  useEffect(() => {
-    if (!attachedRef.current) return
-    modifierRef.current?.updatePluginConfig(CENTER_STAGE_PLUGIN_ID, {
-      enabled: centerStageEnabled,
-      zoomMode,
-      minZoom: autoZoomMin,
-      maxZoom: autoZoomMax,
-    })
-  }, [
-    modifierRef,
-    centerStageEnabled,
-    zoomMode,
-    autoZoomMin,
-    autoZoomMax,
-  ])
+  }, [stream, active])
 }

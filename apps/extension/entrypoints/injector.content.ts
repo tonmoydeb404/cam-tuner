@@ -1,17 +1,17 @@
 import {
-  BACKGROUND_FILTER_PLUGIN_ID,
+  BACKGROUND_PLUGIN_ID,
   BACKGROUND_PRESETS,
-  CENTER_STAGE_PLUGIN_ID,
-  createBackgroundFilterPlugin,
-  createCenterStagePlugin,
-  createCropZoomAlignPlugin,
+  createBackgroundPlugin,
   createStreamModifier,
-  CROP_ZOOM_ALIGN_PLUGIN_ID,
+  CROP_PLUGIN_ID,
   DEFAULT_TUNER_CONFIG,
+  getFaceTrackingService,
+  PLUGIN_REGISTRY,
   resolveBackgroundConfig,
   tunerConfigToCropConfig,
   type FaceDetector,
   type PersonSegmenter,
+  type PluginContext,
   type StreamModifier,
   type TunerConfig,
 } from "@workspace/stream-config"
@@ -53,7 +53,7 @@ export default defineContentScript({
     let wasmUrl: string | null = null
     const activeModifiers: StreamModifier[] = []
     const trackToModifier = new WeakMap<MediaStreamTrack, StreamModifier>()
-    const centerStageAttached = new WeakSet<StreamModifier>()
+    let faceDetectorLoaded = false
     const backgroundAttached = new WeakSet<StreamModifier>()
 
     let factoryPromise: Promise<DetectorFactory> | null = null
@@ -164,28 +164,26 @@ export default defineContentScript({
       if (idx !== -1) activeModifiers.splice(idx, 1)
     }
 
-    function centerStageActive(): boolean {
+    function faceTrackingActive(): boolean {
       return (
         currentConfig.centerStageEnabled === true ||
         currentConfig.zoomMode === "auto"
       )
     }
 
-    async function reconcileCenterStage(
-      modifier: StreamModifier
-    ): Promise<void> {
-      const want = centerStageActive()
+    async function reconcileFaceDetector(): Promise<void> {
+      const want = faceTrackingActive()
 
       if (!want) {
-        if (centerStageAttached.has(modifier)) {
-          modifier.removePlugin(CENTER_STAGE_PLUGIN_ID)
-          centerStageAttached.delete(modifier)
+        if (faceDetectorLoaded) {
+          getFaceTrackingService().destroy()
+          faceDetectorLoaded = false
         }
         return
       }
 
-      if (centerStageAttached.has(modifier) || !wasmUrl) return
-      centerStageAttached.add(modifier)
+      if (faceDetectorLoaded || !wasmUrl) return
+      faceDetectorLoaded = true
 
       try {
         const factory = await loadDetectorFactory()
@@ -193,28 +191,15 @@ export default defineContentScript({
           filesetUrl: wasmUrl,
           modelAssetPath: FACE_MODEL_URL,
         })
-        if (!activeModifiers.includes(modifier) || !centerStageActive()) {
+        if (!faceTrackingActive()) {
           detector.destroy()
-          centerStageAttached.delete(modifier)
+          faceDetectorLoaded = false
           return
         }
-        modifier.addPlugin(
-          createCenterStagePlugin(modifier, detector, {
-            enabled: currentConfig.centerStageEnabled === true,
-            zoomMode: currentConfig.zoomMode ?? "fixed",
-            minZoom: currentConfig.autoZoomMin ?? 1,
-            maxZoom: currentConfig.autoZoomMax ?? 2.5,
-          }),
-          {
-            enabled: currentConfig.centerStageEnabled === true,
-            zoomMode: currentConfig.zoomMode ?? "fixed",
-            minZoom: currentConfig.autoZoomMin ?? 1,
-            maxZoom: currentConfig.autoZoomMax ?? 2.5,
-          }
-        )
+        getFaceTrackingService().init(detector)
       } catch (error) {
-        centerStageAttached.delete(modifier)
-        console.error("[CamTuner] Center Stage failed to initialise:", error)
+        faceDetectorLoaded = false
+        console.error("[CamTuner] Face tracking failed to initialise:", error)
       }
     }
 
@@ -232,7 +217,7 @@ export default defineContentScript({
 
       if (!want) {
         if (backgroundAttached.has(modifier)) {
-          modifier.removePlugin(BACKGROUND_FILTER_PLUGIN_ID)
+          modifier.removePlugin(BACKGROUND_PLUGIN_ID)
           backgroundAttached.delete(modifier)
         }
         return
@@ -258,7 +243,7 @@ export default defineContentScript({
           return
         }
         modifier.addPlugin(
-          createBackgroundFilterPlugin(segmenter, {
+          createBackgroundPlugin(segmenter, {
             resolveImage: resolveBackgroundImage,
           }),
           resolveBackgroundConfig({
@@ -278,18 +263,29 @@ export default defineContentScript({
 
     function processStream(original: MediaStream): MediaStream {
       const modifier = createStreamModifier(original, true)
+      const context: PluginContext = { modifier, wasmUrl: null }
 
-      modifier.addPlugin(
-        createCropZoomAlignPlugin(),
-        tunerConfigToCropConfig(currentConfig)
-      )
+      // Derive active plugins from the registry — removing a manifest here
+      // immediately disables that plugin for all new streams.
+      const sortedManifests = [...PLUGIN_REGISTRY]
+        .filter((m) => !m.adapter)
+        .sort((a, b) => a.executionOrder - b.executionOrder)
+
+      for (const manifest of sortedManifests) {
+        const plugin = manifest.createPlugin(context)
+        const initialConfig =
+          manifest.id === CROP_PLUGIN_ID
+            ? tunerConfigToCropConfig(currentConfig)
+            : manifest.configMapper(currentConfig)
+        modifier.addPlugin(plugin, initialConfig)
+      }
 
       for (const track of modifier.outputStream.getTracks()) {
         trackToModifier.set(track, modifier)
       }
 
       activeModifiers.push(modifier)
-      void reconcileCenterStage(modifier)
+      void reconcileFaceDetector()
       void reconcileBackground(modifier)
       return modifier.outputStream
     }
@@ -346,21 +342,28 @@ export default defineContentScript({
 
       if (config) {
         currentConfig = config
+        void reconcileFaceDetector()
         for (const modifier of activeModifiers) {
-          void reconcileCenterStage(modifier)
           void reconcileBackground(modifier)
           modifier.updatePluginConfig(
-            CROP_ZOOM_ALIGN_PLUGIN_ID,
+            "core:crop",
             tunerConfigToCropConfig(currentConfig)
           )
-          modifier.updatePluginConfig(CENTER_STAGE_PLUGIN_ID, {
-            enabled: currentConfig.centerStageEnabled === true,
+          modifier.updatePluginConfig("core:mirror", {
+            mirror: currentConfig.mirror,
+          })
+          modifier.updatePluginConfig("core:zoom", {
+            zoom: currentConfig.zoom,
             zoomMode: currentConfig.zoomMode ?? "fixed",
-            minZoom: currentConfig.autoZoomMin ?? 1,
-            maxZoom: currentConfig.autoZoomMax ?? 2.5,
+            autoZoomMin: currentConfig.autoZoomMin ?? 1,
+            autoZoomMax: currentConfig.autoZoomMax ?? 2.5,
+          })
+          modifier.updatePluginConfig("core:align", {
+            align: currentConfig.align,
+            centerStageEnabled: currentConfig.centerStageEnabled ?? false,
           })
           modifier.updatePluginConfig(
-            BACKGROUND_FILTER_PLUGIN_ID,
+            BACKGROUND_PLUGIN_ID,
             resolveBackgroundConfig({
               mode: currentConfig.backgroundMode,
               blurAmount: currentConfig.blurStrength,

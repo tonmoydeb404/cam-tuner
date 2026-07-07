@@ -1,5 +1,5 @@
-import type { PluginManifest } from "../types"
 import { tunerConfigToCropConfig } from "../../utils/config"
+import type { PluginManifest } from "../types"
 import { CROP_ZOOM_ALIGN_PLUGIN_ID, createCropZoomAlignPlugin } from "./plugin"
 
 export const cropZoomAlignManifest: PluginManifest = {
@@ -17,5 +17,6 @@ export const cropZoomAlignManifest: PluginManifest = {
     "mirror",
     "letterbox",
   ],
-  order: 10,
+  executionOrder: 10,
+  uiOrder: 1,
 }

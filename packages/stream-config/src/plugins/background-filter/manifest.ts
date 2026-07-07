@@ -1,9 +1,9 @@
 import type { PluginManifest } from "../types"
-import type { PersonSegmenter } from "./segmenter"
 import {
   BACKGROUND_FILTER_PLUGIN_ID,
   createBackgroundFilterPlugin,
 } from "./plugin"
+import type { PersonSegmenter } from "./segmenter"
 import { resolveBackgroundConfig } from "./types"
 
 export const backgroundFilterManifest: PluginManifest = {
@@ -20,5 +20,6 @@ export const backgroundFilterManifest: PluginManifest = {
   isActive: (config) =>
     !!config.backgroundMode && config.backgroundMode !== "none",
   configFields: ["backgroundMode", "blurStrength", "backgroundImage"],
-  order: 5,
+  executionOrder: 5,
+  uiOrder: 5,
 }

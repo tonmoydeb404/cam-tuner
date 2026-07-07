@@ -1,5 +1,5 @@
-import type { StreamModifier, StreamPlugin } from "../types"
 import type { TunerConfig } from "../tuner-types"
+import type { StreamModifier, StreamPlugin } from "../types"
 
 export interface PluginContext {
   modifier: StreamModifier
@@ -23,5 +23,8 @@ export interface PluginManifest {
     load: (wasmUrl: string | null) => Promise<unknown>
     destroy?: () => void
   }
-  order: number
+  /** Order in the canvas/webcodecs execution pipeline (lower runs first). */
+  executionOrder: number
+  /** Order in the UI panel (lower renders first). */
+  uiOrder: number
 }

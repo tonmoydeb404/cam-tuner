@@ -1,9 +1,9 @@
 "use client"
 
 import {
-  BACKGROUND_FILTER_PLUGIN_ID,
+  BACKGROUND_PLUGIN_ID,
   BACKGROUND_PRESETS,
-  createBackgroundFilterPlugin,
+  createBackgroundPlugin,
   resolveBackgroundConfig,
   type BackgroundMode,
   type StreamModifier,
@@ -47,7 +47,7 @@ export function useBackgroundFilter(
   useEffect(() => {
     if (!stream || !active) {
       if (attachedRef.current) {
-        modifierRef.current?.removePlugin(BACKGROUND_FILTER_PLUGIN_ID)
+        modifierRef.current?.removePlugin(BACKGROUND_PLUGIN_ID)
         attachedRef.current = false
       }
       return
@@ -59,9 +59,8 @@ export function useBackgroundFilter(
     let cancelled = false
     ;(async () => {
       try {
-        const { createMediaPipeSegmenter } = await import(
-          "../lib/tracking/mediapipe-segmenter"
-        )
+        const { createMediaPipeSegmenter } =
+          await import("../lib/tracking/mediapipe-segmenter")
         if (cancelled || !modifierRef.current) return
 
         const segmenter = createMediaPipeSegmenter({
@@ -75,7 +74,7 @@ export function useBackgroundFilter(
 
         const o = optionsRef.current
         modifierRef.current.addPlugin(
-          createBackgroundFilterPlugin(segmenter, {
+          createBackgroundPlugin(segmenter, {
             resolveImage: async (id: string) => {
               if (id.startsWith("preset:")) {
                 const preset = BACKGROUND_PRESETS.find((p) => p.id === id)
@@ -106,7 +105,7 @@ export function useBackgroundFilter(
 
     return () => {
       cancelled = true
-      modifierRef.current?.removePlugin(BACKGROUND_FILTER_PLUGIN_ID)
+      modifierRef.current?.removePlugin(BACKGROUND_PLUGIN_ID)
       attachedRef.current = false
     }
   }, [modifierRef, stream, active])
@@ -114,7 +113,7 @@ export function useBackgroundFilter(
   useEffect(() => {
     if (!attachedRef.current) return
     modifierRef.current?.updatePluginConfig(
-      BACKGROUND_FILTER_PLUGIN_ID,
+      BACKGROUND_PLUGIN_ID,
       resolveBackgroundConfig({ mode, blurAmount, imageId })
     )
   }, [modifierRef, mode, blurAmount, imageId])

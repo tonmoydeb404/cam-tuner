@@ -20,6 +20,8 @@ const CAMTUNER_EVENT = "camtuner:config-update"
 const CAMTUNER_REQUEST = "camtuner:request-config"
 const CAMTUNER_FETCH_BG = "camtuner:fetch-bg"
 const CAMTUNER_FETCH_BG_RESULT = "camtuner:fetch-bg-result"
+const CAMTUNER_INJECT_ADAPTER = "camtuner:inject-adapter"
+const CAMTUNER_ADAPTER_INJECTED = "camtuner:adapter-injected"
 
 const FACE_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
@@ -48,6 +50,130 @@ export default defineContentScript({
   world: "MAIN",
   runAt: "document_start",
   main() {
+    // Some pages (e.g. Google Meet) enforce `require-trusted-types-for 'script'`
+    // which blocks any plain string passed to a script-loading sink: Worker(),
+    // importScripts(), script.src, etc.
+    //
+    // @mediapipe/tasks-vision bundles Google's Closure Library.  Closure wraps
+    // script URLs in Xi(), a helper that produces a plain JS object:
+    //   { g: <string | TrustedScriptURL>, toString() { return this.g + "" } }
+    // When that object hits a TT sink, the browser calls toString() → gets a
+    // plain string → enforcement blocks it.
+    //
+    // The Worker constructor runs in the main thread AND MediaPipe's Emscripten
+    // runtime calls importScripts() *inside* the spawned Worker — both inherit
+    // the page's TT enforcement.
+    //
+    // Fix A — "default" Trusted Types policy (broadest fix)
+    // The "default" policy is the browser's last-resort fallback invoked
+    // automatically whenever any TT sink (Worker(), importScripts(), script.src,
+    // eval(), etc.) receives a plain string — including inside Workers that
+    // inherit the page's enforcement.  We install it at document_start, before
+    // any page script, so the slot is guaranteed empty.
+    //
+    // createScriptURL: allow any URL — the WASM runtime loads scripts from
+    //   blob:, https://, and chrome-extension:// origins at runtime.
+    // createScript:    allow any script string — chrome.scripting.executeScript
+    //   with world:"MAIN" internally evaluates scripts; without this, the
+    //   injection would be blocked and our adapters could never load.
+    // createHTML:      intentionally absent → stays blocked, preserving the
+    //   page's innerHTML/template-injection protections.
+    ;(function installTrustedTypesDefaultPolicy() {
+      const tt = (self as any).trustedTypes
+      if (!tt?.createPolicy) return
+      try {
+        tt.createPolicy("default", {
+          createScriptURL: (url: string) => url,
+          createScript: (script: string) => script,
+        })
+      } catch {
+        // "default" may already exist or be forbidden by the page's
+        // trusted-types CSP directive.  The Worker patch below is the fallback.
+      }
+    })()
+
+    // Fix B — duplicate createPolicy caching
+    // If the page creates "goog#html" before MediaPipe runs (which Meet does),
+    // MediaPipe's own createPolicy("goog#html") call throws and Xi() falls back
+    // to raw strings.  Caching lets MediaPipe reuse the already-created policy
+    // and produce proper TrustedScriptURL objects.
+    ;(function patchTrustedTypesForDuplicatePolicies() {
+      const tt = (self as any).trustedTypes
+      if (!tt?.createPolicy) return
+      const cache = new Map<string, unknown>()
+      const original: (name: string, rules: unknown) => unknown =
+        tt.createPolicy.bind(tt)
+      try {
+        tt.createPolicy = function (name: string, rules: unknown) {
+          if (cache.has(name)) return cache.get(name)
+          const policy = original(name, rules)
+          cache.set(name, policy)
+          return policy
+        }
+      } catch {
+        // trustedTypes.createPolicy may be non-writable on some pages; ignore
+      }
+    })()
+
+    // Fix C — Worker constructor patch
+    // Secondary fallback for pages where the "default" policy slot is already
+    // taken.  Unwraps Closure Library TrustedScriptURL wrappers (.g property)
+    // and converts chrome-extension:// strings through a named policy so the
+    // native Worker constructor receives a proper TrustedScriptURL.
+    // Note: this does NOT cover importScripts() inside spawned Workers —
+    // Fix A (default policy) is required for that case.
+    ;(function patchWorkerForExtensionUrls() {
+      const tt = (self as any).trustedTypes
+      const NativeWorker = (self as any).Worker
+      if (!tt || !NativeWorker) return
+
+      let policy: { createScriptURL: (u: string) => unknown } | null = null
+      for (const name of ["camtuner-wasm", "camtuner"]) {
+        try {
+          policy = tt.createPolicy(name, {
+            createScriptURL: (url: string) => url,
+          })
+          break
+        } catch {
+          // Policy name forbidden by CSP or already taken — try next.
+        }
+      }
+      if (!policy) return
+
+      function resolveUrl(raw: unknown): unknown {
+        // Closure Library wrapper: { g: <TrustedScriptURL | string> }
+        if (raw != null && typeof raw === "object") {
+          const inner = (raw as any).g
+          if (inner != null) {
+            if (tt.isScriptURL(inner)) return inner // native TrustedScriptURL
+            if (
+              typeof inner === "string" &&
+              inner.startsWith("chrome-extension://")
+            )
+              return policy!.createScriptURL(inner)
+          }
+          return raw
+        }
+        if (
+          typeof raw === "string" &&
+          raw.startsWith("chrome-extension://")
+        )
+          return policy!.createScriptURL(raw)
+        return raw
+      }
+
+      function PatchedWorker(this: Worker, url: unknown, options?: unknown) {
+        return new NativeWorker(resolveUrl(url), options)
+      }
+      PatchedWorker.prototype = NativeWorker.prototype
+      Object.setPrototypeOf(PatchedWorker, NativeWorker)
+      try {
+        ;(self as any).Worker = PatchedWorker
+      } catch {
+        // Worker may be non-writable on some pages; ignore.
+      }
+    })()
+
     let enabled = true
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     let wasmUrl: string | null = null
@@ -56,16 +182,52 @@ export default defineContentScript({
     let faceDetectorLoaded = false
     const backgroundAttached = new WeakSet<StreamModifier>()
 
+    // Pending requests waiting for camtuner:adapter-injected responses.
+    const pendingAdapterRequests = new Map<string, (ok: boolean) => void>()
+    let adapterReqCounter = 0
+
+    // Request the ISOLATED-world bridge to inject an adapter file via
+    // chrome.scripting.executeScript(), which bypasses the host page's CSP.
+    // If the adapter's global is already present (injected earlier this
+    // session) we resolve immediately without a round-trip.
+    function injectAdapter(file: string): Promise<void> {
+      const globalKeys: Record<string, string> = {
+        "mediapipe-adapter.js": "__camtunerMediaPipeAdapter",
+        "mediapipe-segmenter-adapter.js": "__camtunerSegmenterAdapter",
+        "rvm-segmenter-adapter.js": "__camtunerRVMAdapter",
+      }
+      if ((self as any)[globalKeys[file]]) return Promise.resolve()
+
+      const reqId = `adapter-${++adapterReqCounter}`
+      return new Promise((resolve, reject) => {
+        pendingAdapterRequests.set(reqId, (ok) => {
+          if (ok) resolve()
+          else reject(new Error(`Adapter injection failed: ${file}`))
+        })
+        window.postMessage(
+          { type: CAMTUNER_INJECT_ADAPTER, file, reqId },
+          window.location.origin
+        )
+        setTimeout(() => {
+          if (pendingAdapterRequests.has(reqId)) {
+            pendingAdapterRequests.delete(reqId)
+            reject(new Error(`Adapter injection timed out: ${file}`))
+          }
+        }, 10_000)
+      })
+    }
+
     let factoryPromise: Promise<DetectorFactory> | null = null
     function loadDetectorFactory(): Promise<DetectorFactory> {
       if (!factoryPromise) {
-        if (!wasmUrl) {
-          return Promise.reject(new Error("Extension URL not available"))
-        }
-        const adapterUrl = wasmUrl.replace("/wasm", "/mediapipe-adapter.js")
-        factoryPromise = import(/* @vite-ignore */ adapterUrl).then(
-          (m: any) => m.createMediaPipeFaceDetector as DetectorFactory
-        )
+        factoryPromise = injectAdapter("mediapipe-adapter.js").then(() => {
+          const g = (self as any).__camtunerMediaPipeAdapter
+          if (!g?.createMediaPipeFaceDetector)
+            throw new Error(
+              "__camtunerMediaPipeAdapter not set after injection"
+            )
+          return g.createMediaPipeFaceDetector as DetectorFactory
+        })
       }
       return factoryPromise
     }
@@ -73,16 +235,16 @@ export default defineContentScript({
     let segmenterFactoryPromise: Promise<SegmenterFactory> | null = null
     function loadSegmenterFactory(): Promise<SegmenterFactory> {
       if (!segmenterFactoryPromise) {
-        if (!wasmUrl) {
-          return Promise.reject(new Error("Extension URL not available"))
-        }
-        const adapterUrl = wasmUrl.replace(
-          "/wasm",
-          "/mediapipe-segmenter-adapter.js"
-        )
-        segmenterFactoryPromise = import(/* @vite-ignore */ adapterUrl).then(
-          (m: any) => m.createMediaPipeSegmenter as SegmenterFactory
-        )
+        segmenterFactoryPromise = injectAdapter(
+          "mediapipe-segmenter-adapter.js"
+        ).then(() => {
+          const g = (self as any).__camtunerSegmenterAdapter
+          if (!g?.createMediaPipeSegmenter)
+            throw new Error(
+              "__camtunerSegmenterAdapter not set after injection"
+            )
+          return g.createMediaPipeSegmenter as SegmenterFactory
+        })
       }
       return segmenterFactoryPromise
     }
@@ -90,12 +252,13 @@ export default defineContentScript({
     let rvmFactoryPromise: Promise<RVMSegmenterFactory> | null = null
     function loadRVMFactory(): Promise<RVMSegmenterFactory> {
       if (!rvmFactoryPromise) {
-        if (!wasmUrl) {
-          return Promise.reject(new Error("Extension URL not available"))
-        }
-        const adapterUrl = wasmUrl.replace("/wasm", "/rvm-segmenter-adapter.js")
-        rvmFactoryPromise = import(/* @vite-ignore */ adapterUrl).then(
-          (m: any) => m.createRVMSegmenter as RVMSegmenterFactory
+        rvmFactoryPromise = injectAdapter("rvm-segmenter-adapter.js").then(
+          () => {
+            const g = (self as any).__camtunerRVMAdapter
+            if (!g?.createRVMSegmenter)
+              throw new Error("__camtunerRVMAdapter not set after injection")
+            return g.createRVMSegmenter as RVMSegmenterFactory
+          }
         )
       }
       return rvmFactoryPromise
@@ -321,6 +484,16 @@ export default defineContentScript({
     }
 
     window.addEventListener("message", (event: MessageEvent) => {
+      if (event.data?.type === CAMTUNER_ADAPTER_INJECTED) {
+        const { reqId, ok } = event.data
+        const resolver = pendingAdapterRequests.get(reqId)
+        if (resolver) {
+          pendingAdapterRequests.delete(reqId)
+          resolver(ok === true)
+        }
+        return
+      }
+
       if (event.data?.type === CAMTUNER_FETCH_BG_RESULT) {
         const { reqId, dataUrl } = event.data
         const resolve = pendingBgRequests.get(reqId)

@@ -244,9 +244,11 @@ export function createRVMSegmenter(
     },
 
     destroy(): void {
-      void (
-        session as ort.InferenceSession & { release?: () => void }
-      ).release?.()
+      if (session) {
+        void (
+          session as ort.InferenceSession & { release?: () => void }
+        ).release?.()
+      }
       session = null
       initPromise = null
       r1 = r2 = r3 = r4 = null

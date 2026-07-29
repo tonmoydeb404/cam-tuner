@@ -9,7 +9,7 @@ export default defineConfig({
     sourcesTemplate: "cam-tuner-{{version}}-sources.zip",
   },
   manifest: {
-    permissions: ["storage"],
+    permissions: ["storage", "scripting"],
     host_permissions: [
       import.meta.env.VITE_WEB_URL
         ? `${import.meta.env.VITE_WEB_URL}/*`

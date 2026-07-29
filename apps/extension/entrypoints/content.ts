@@ -106,6 +106,36 @@ async function handleMessage(event: MessageEvent) {
     return
   }
 
+  // Bridge: MAIN-world injector requests adapter script injection via the
+  // background service worker (which bypasses host-page CSP).
+  if (event.data?.type === "camtuner:inject-adapter") {
+    const { file, reqId } = event.data as { file: string; reqId: string }
+    // Allowlist prevents a malicious page script from triggering injection of
+    // arbitrary extension files.
+    const ALLOWED_ADAPTERS = [
+      "mediapipe-adapter.js",
+      "mediapipe-segmenter-adapter.js",
+      "rvm-segmenter-adapter.js",
+    ]
+    if (!ALLOWED_ADAPTERS.includes(file)) return
+    browser.runtime
+      .sendMessage({ type: "inject-adapter", file })
+      .then((result: unknown) => {
+        const ok = (result as Record<string, unknown>)?.ok === true
+        window.postMessage(
+          { type: "camtuner:adapter-injected", reqId, ok },
+          window.location.origin
+        )
+      })
+      .catch(() => {
+        window.postMessage(
+          { type: "camtuner:adapter-injected", reqId, ok: false },
+          window.location.origin
+        )
+      })
+    return
+  }
+
   if (event.data?.type === CAMTUNER_FETCH_BG) {
     const { id, reqId } = event.data
     try {

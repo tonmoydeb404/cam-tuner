@@ -23,9 +23,15 @@ await rm(detectorOut, { force: true })
 await rm(segmenterOut, { force: true })
 await rm(rvmOut, { force: true })
 
+// Build as IIFE (not ESM) so Chrome can inject them via
+// chrome.scripting.executeScript({ files: [...] }), which bypasses the host
+// page's CSP. ESM modules loaded with dynamic import() are subject to the
+// page's script-src policy (e.g. Google Meet blocks chrome-extension:// URLs).
+// Each IIFE sets a well-known global that the MAIN-world injector reads after
+// the background service worker has finished injecting the file.
 const baseOptions = {
   bundle: true,
-  format: "esm",
+  format: "iife",
   platform: "browser",
   target: "es2022",
   sourcemap: false,
@@ -35,18 +41,21 @@ const baseOptions = {
 
 await build({
   ...baseOptions,
+  globalName: "__camtunerMediaPipeAdapter",
   entryPoints: [resolve(root, "lib/tracking/mediapipe-detector.ts")],
   outfile: detectorOut,
 })
 
 await build({
   ...baseOptions,
+  globalName: "__camtunerSegmenterAdapter",
   entryPoints: [resolve(root, "lib/tracking/mediapipe-segmenter-adapter.ts")],
   outfile: segmenterOut,
 })
 
 await build({
   ...baseOptions,
+  globalName: "__camtunerRVMAdapter",
   entryPoints: [resolve(root, "lib/tracking/rvm-segmenter-adapter.ts")],
   outfile: rvmOut,
   // onnxruntime-web/webgl is pure-JS (no WASM); mark Node built-ins external

@@ -9,6 +9,14 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "2.1.1",
+    date: "2026-07-29",
+    title: "Temporarily Disabled Background Blur",
+    highlights: [
+      "Background blur has been temporarily disabled while we address stability issues — it will return in a future update",
+    ],
+  },
+  {
     version: "2.1.0",
     date: "2026-07-08",
     title: "Center Stage & Background Effects",

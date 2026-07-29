@@ -9,6 +9,14 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.0.2",
+    date: "2026-07-29",
+    title: "Model Loading Fix",
+    highlights: [
+      "Fixed an issue where AI models failed to load correctly, preventing Center Stage and background effects from initializing",
+    ],
+  },
+  {
     version: "3.0.1",
     date: "2026-07-29",
     title: "Temporarily Disabled Background Blur",

@@ -1,5 +1,4 @@
 import { createAlignManifest } from "./align/manifest"
-import { createBackgroundManifest } from "./background"
 import { createCropManifest } from "./crop/manifest"
 import { mirrorManifest } from "./mirror/manifest"
 import type { PluginManifest } from "./types"
@@ -29,7 +28,7 @@ import { createZoomManifest } from "./zoom/manifest"
  *   [createZoomManifest({ disableAuto: true }), createCropManifest(), ...]
  */
 export const PLUGIN_REGISTRY: PluginManifest[] = [
-  createBackgroundManifest({ disableImage: true }),
+  // createBackgroundManifest({ disableImage: true }),
   mirrorManifest,
   createZoomManifest({}),
   createAlignManifest({ disableAuto: false }),

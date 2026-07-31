@@ -122,14 +122,20 @@ async function handleMessage(event: MessageEvent) {
       .sendMessage({ type: "inject-adapter", file })
       .then((result: unknown) => {
         const ok = (result as Record<string, unknown>)?.ok === true
+        const error = (result as Record<string, unknown>)?.error
         window.postMessage(
-          { type: "camtuner:adapter-injected", reqId, ok },
+          { type: "camtuner:adapter-injected", reqId, ok, error },
           window.location.origin
         )
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         window.postMessage(
-          { type: "camtuner:adapter-injected", reqId, ok: false },
+          {
+            type: "camtuner:adapter-injected",
+            reqId,
+            ok: false,
+            error: String(error),
+          },
           window.location.origin
         )
       })

@@ -171,6 +171,27 @@ export default defineContentScript({
       }
     })()
 
+    // Fix D — silence noisy MediaPipe/Emscripten glog output.
+    // The MediaPipe WASM runtime (Google's prebuilt binary) routes its native
+    // glog lines (e.g. "W0731 08:39:51 ... gl_context.cc:1118] OpenGL error
+    // checking is disabled") through Emscripten's default stderr handler,
+    // which calls console.error. These are harmless init-time diagnostics,
+    // but console.error calls originating from an injected extension script
+    // get flagged in chrome://extensions' "Errors" panel. We can't patch the
+    // prebuilt WASM binary, so filter these specific glog-formatted lines
+    // before they reach the real console.error.
+    ;(function silenceMediaPipeGlogNoise() {
+      const GLOG_PATTERN = /^[EWI]\d{4}\s+[\d:.]+\s+\d+\s+\S+\.(cc|h):\d+\]/
+      const nativeError = console.error.bind(console)
+      console.error = (...args: unknown[]) => {
+        if (typeof args[0] === "string" && GLOG_PATTERN.test(args[0])) {
+          console.debug(...args)
+          return
+        }
+        nativeError(...args)
+      }
+    })()
+
     let enabled = true
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     let wasmUrl: string | null = null
@@ -180,7 +201,10 @@ export default defineContentScript({
     const backgroundAttached = new WeakSet<StreamModifier>()
 
     // Pending requests waiting for camtuner:adapter-injected responses.
-    const pendingAdapterRequests = new Map<string, (ok: boolean) => void>()
+    const pendingAdapterRequests = new Map<
+      string,
+      (ok: boolean, error?: string) => void
+    >()
     let adapterReqCounter = 0
 
     // Request the ISOLATED-world bridge to inject an adapter file via
@@ -197,9 +221,14 @@ export default defineContentScript({
 
       const reqId = `adapter-${++adapterReqCounter}`
       return new Promise((resolve, reject) => {
-        pendingAdapterRequests.set(reqId, (ok) => {
+        pendingAdapterRequests.set(reqId, (ok, error) => {
           if (ok) resolve()
-          else reject(new Error(`Adapter injection failed: ${file}`))
+          else
+            reject(
+              new Error(
+                `Adapter injection failed: ${file}${error ? ` (${error})` : ""}`
+              )
+            )
         })
         window.postMessage(
           { type: CAMTUNER_INJECT_ADAPTER, file, reqId },
@@ -490,11 +519,11 @@ export default defineContentScript({
 
     window.addEventListener("message", (event: MessageEvent) => {
       if (event.data?.type === CAMTUNER_ADAPTER_INJECTED) {
-        const { reqId, ok } = event.data
+        const { reqId, ok, error } = event.data
         const resolver = pendingAdapterRequests.get(reqId)
         if (resolver) {
           pendingAdapterRequests.delete(reqId)
-          resolver(ok === true)
+          resolver(ok === true, error)
         }
         return
       }

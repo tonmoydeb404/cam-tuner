@@ -180,7 +180,10 @@ export default defineContentScript({
     const backgroundAttached = new WeakSet<StreamModifier>()
 
     // Pending requests waiting for camtuner:adapter-injected responses.
-    const pendingAdapterRequests = new Map<string, (ok: boolean) => void>()
+    const pendingAdapterRequests = new Map<
+      string,
+      (ok: boolean, error?: string) => void
+    >()
     let adapterReqCounter = 0
 
     // Request the ISOLATED-world bridge to inject an adapter file via
@@ -197,9 +200,14 @@ export default defineContentScript({
 
       const reqId = `adapter-${++adapterReqCounter}`
       return new Promise((resolve, reject) => {
-        pendingAdapterRequests.set(reqId, (ok) => {
+        pendingAdapterRequests.set(reqId, (ok, error) => {
           if (ok) resolve()
-          else reject(new Error(`Adapter injection failed: ${file}`))
+          else
+            reject(
+              new Error(
+                `Adapter injection failed: ${file}${error ? ` (${error})` : ""}`
+              )
+            )
         })
         window.postMessage(
           { type: CAMTUNER_INJECT_ADAPTER, file, reqId },
@@ -490,11 +498,11 @@ export default defineContentScript({
 
     window.addEventListener("message", (event: MessageEvent) => {
       if (event.data?.type === CAMTUNER_ADAPTER_INJECTED) {
-        const { reqId, ok } = event.data
+        const { reqId, ok, error } = event.data
         const resolver = pendingAdapterRequests.get(reqId)
         if (resolver) {
           pendingAdapterRequests.delete(reqId)
-          resolver(ok === true)
+          resolver(ok === true, error)
         }
         return
       }

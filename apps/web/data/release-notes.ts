@@ -9,6 +9,14 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.0.3",
+    date: "2026-07-31",
+    title: "Microphone Access Fix",
+    highlights: [
+      "Fixed a bug where CamTuner blocked microphone access — audio tracks from getUserMedia are now correctly preserved through the stream pipeline",
+    ],
+  },
+  {
     version: "3.0.2",
     date: "2026-07-29",
     title: "Model Loading Fix",

@@ -154,10 +154,7 @@ export default defineContentScript({
           }
           return raw
         }
-        if (
-          typeof raw === "string" &&
-          raw.startsWith("chrome-extension://")
-        )
+        if (typeof raw === "string" && raw.startsWith("chrome-extension://"))
           return policy!.createScriptURL(raw)
         return raw
       }
@@ -450,6 +447,14 @@ export default defineContentScript({
       activeModifiers.push(modifier)
       void reconcileFaceDetector()
       void reconcileBackground(modifier)
+
+      // Preserve audio tracks from the original stream — the modifier only
+      // produces video output.
+      for (const audioTrack of original.getAudioTracks()) {
+        modifier.outputStream.addTrack(audioTrack)
+        trackToModifier.set(audioTrack, modifier)
+      }
+
       return modifier.outputStream
     }
 

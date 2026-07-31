@@ -171,6 +171,27 @@ export default defineContentScript({
       }
     })()
 
+    // Fix D — silence noisy MediaPipe/Emscripten glog output.
+    // The MediaPipe WASM runtime (Google's prebuilt binary) routes its native
+    // glog lines (e.g. "W0731 08:39:51 ... gl_context.cc:1118] OpenGL error
+    // checking is disabled") through Emscripten's default stderr handler,
+    // which calls console.error. These are harmless init-time diagnostics,
+    // but console.error calls originating from an injected extension script
+    // get flagged in chrome://extensions' "Errors" panel. We can't patch the
+    // prebuilt WASM binary, so filter these specific glog-formatted lines
+    // before they reach the real console.error.
+    ;(function silenceMediaPipeGlogNoise() {
+      const GLOG_PATTERN = /^[EWI]\d{4}\s+[\d:.]+\s+\d+\s+\S+\.(cc|h):\d+\]/
+      const nativeError = console.error.bind(console)
+      console.error = (...args: unknown[]) => {
+        if (typeof args[0] === "string" && GLOG_PATTERN.test(args[0])) {
+          console.debug(...args)
+          return
+        }
+        nativeError(...args)
+      }
+    })()
+
     let enabled = true
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     let wasmUrl: string | null = null

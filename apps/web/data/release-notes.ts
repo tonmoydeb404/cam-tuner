@@ -9,6 +9,15 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.0.4",
+    date: "2026-08-04",
+    title: "Adapter Injection Reliability",
+    highlights: [
+      "Improved error handling around MediaPipe adapter injection, with clearer recovery when loading fails",
+      "Silenced noisy MediaPipe/Emscripten glog output that was cluttering the browser console",
+    ],
+  },
+  {
     version: "3.0.3",
     date: "2026-07-31",
     title: "Microphone Access Fix",

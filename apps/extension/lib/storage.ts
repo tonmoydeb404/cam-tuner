@@ -89,6 +89,10 @@ export async function setMirror(mirror: boolean): Promise<void> {
   await setTunerConfig({ mirror })
 }
 
+export async function setFlipVertical(flipVertical: boolean): Promise<void> {
+  await setTunerConfig({ flipVertical })
+}
+
 export async function setCenterStageEnabled(enabled: boolean): Promise<void> {
   await setTunerConfig({ centerStageEnabled: enabled })
 }

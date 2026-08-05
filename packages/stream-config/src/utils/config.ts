@@ -4,10 +4,7 @@
  * duplicated across the web hook and the extension injector.
  */
 
-import type {
-  AlignPosition,
-  TunerConfig,
-} from "../tuner-types"
+import type { AlignPosition, TunerConfig } from "../tuner-types"
 import type { AlignX, AlignY, CropConfig } from "./math"
 
 /**
@@ -56,6 +53,7 @@ export function tunerConfigToCropConfig(
     alignY,
     barColor: config.barColor || "#000000",
     mirror: config.mirror,
+    flipVertical: config.flipVertical ?? false,
     letterbox: config.letterbox ?? true,
   }
 }
@@ -85,6 +83,9 @@ export function tunerUpdateToCropUpdate(
   }
   if (update.mirror !== undefined) {
     result.mirror = update.mirror
+  }
+  if (update.flipVertical !== undefined) {
+    result.flipVertical = update.flipVertical
   }
   if (update.letterbox !== undefined) {
     result.letterbox = update.letterbox

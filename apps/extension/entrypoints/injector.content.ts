@@ -559,6 +559,9 @@ export default defineContentScript({
           modifier.updatePluginConfig("core:mirror", {
             mirror: currentConfig.mirror,
           })
+          modifier.updatePluginConfig("core:flip-vertical", {
+            flipVertical: currentConfig.flipVertical ?? false,
+          })
           modifier.updatePluginConfig("core:zoom", {
             zoom: currentConfig.zoom,
             zoomMode: currentConfig.zoomMode ?? "fixed",

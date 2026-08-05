@@ -1,5 +1,6 @@
 import { createAlignManifest } from "./align/manifest"
 import { createCropManifest } from "./crop/manifest"
+import { flipVerticalManifest } from "./flip-vertical/manifest"
 import { mirrorManifest } from "./mirror/manifest"
 import type { PluginManifest } from "./types"
 import { createZoomManifest } from "./zoom/manifest"
@@ -10,7 +11,7 @@ import { createZoomManifest } from "./zoom/manifest"
  * field, and UI panel order is driven by `uiOrder`.
  *
  * Execution pipeline (ascending executionOrder):
- *   zoom (3) → align (4) → background (5) → mirror (7) → crop (10) → debug-overlay (11)
+ *   zoom (3) → align (4) → background (5) → flip-vertical (6) → mirror (7) → crop (10) → debug-overlay (11)
  *
  * zoom (3) and align (4) run before background (5) so their prepareSource hooks
  * capture the raw video frame before the background plugin composites it.
@@ -19,9 +20,11 @@ import { createZoomManifest } from "./zoom/manifest"
  * degrade detection when blur is active.
  * zoom runs before align so its drawCanvas sets the correct dt for the spring
  * smoother before align's smoothing tick advances the pan channel.
+ * flip-vertical and mirror are both crop-config controllers with no ordering
+ * dependency between them — they write independent CropConfig fields.
  *
  * UI panel order (ascending uiOrder):
- *   crop (1) → align (2) → zoom (3) → mirror (4) → background (5)
+ *   crop (1) → align (2) → zoom (3) → mirror (4) → flip-vertical (4.5) → background (5)
  *
  * To customise plugin options, call the manifest factory functions directly
  * and compose your own registry array, e.g.:
@@ -30,6 +33,7 @@ import { createZoomManifest } from "./zoom/manifest"
 export const PLUGIN_REGISTRY: PluginManifest[] = [
   // createBackgroundManifest({ disableImage: true }),
   mirrorManifest,
+  flipVerticalManifest,
   createZoomManifest({}),
   createAlignManifest({ disableAuto: false }),
   createCropManifest(),

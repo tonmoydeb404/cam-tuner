@@ -19,24 +19,24 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.35",
-    "@tabler/icons-react": "^3.41.1",
+    "@tabler/icons-react": "^3.46.0",
     "@workspace/stream-config": "workspace:*",
     "@workspace/ui": "workspace:*",
     "onnxruntime-web": "^1.27.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@wxt-dev/auto-icons": "^1.1.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@wxt-dev/auto-icons": "^1.1.2",
     "@wxt-dev/module-react": "^1.2.2",
-    "autoprefixer": "^10.4.27",
+    "autoprefixer": "^10.5.4",
     "esbuild": "^0.27.7",
-    "postcss": "^8.5.16",
-    "tailwindcss": "^4.1.18",
+    "postcss": "^8.5.25",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "wxt": "^0.20.19"
+    "wxt": "^0.20.27"
   }
 }

@@ -21,6 +21,7 @@ function normalizeConfig(config: Partial<CropConfig>): CropConfig {
     alignY: config.alignY || "center",
     barColor: config.barColor || "#000000",
     mirror: config.mirror ?? false,
+    flipVertical: config.flipVertical ?? false,
     alignCenter: config.alignCenter,
     zoomOverride: config.zoomOverride,
     letterbox: config.letterbox ?? true,
@@ -145,10 +146,12 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
       // dimensions by the engine. Just draw the cropped region to fill it — no
       // bars, no centering, no stretching.
       if (!normalized.letterbox) {
-        if (normalized.mirror) {
+        const flipX = normalized.mirror
+        const flipY = normalized.flipVertical
+        if (flipX || flipY) {
           ctx.save()
-          ctx.translate(canvasWidth, 0)
-          ctx.scale(-1, 1)
+          ctx.translate(flipX ? canvasWidth : 0, flipY ? canvasHeight : 0)
+          ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1)
         }
         ctx.drawImage(
           source,
@@ -161,7 +164,7 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
           canvasWidth,
           canvasHeight
         )
-        if (normalized.mirror) {
+        if (flipX || flipY) {
           ctx.restore()
         }
         return
@@ -173,10 +176,12 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         ctx.fillRect(0, 0, srcWidth, srcHeight)
       }
 
-      if (normalized.mirror) {
+      const flipX = normalized.mirror
+      const flipY = normalized.flipVertical
+      if (flipX || flipY) {
         ctx.save()
-        ctx.translate(canvasWidth, 0)
-        ctx.scale(-1, 1)
+        ctx.translate(flipX ? canvasWidth : 0, flipY ? canvasHeight : 0)
+        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1)
       }
 
       ctx.drawImage(
@@ -191,7 +196,7 @@ export function createCropZoomAlignPlugin(): StreamPlugin<CropConfig> {
         cachedDestBox.height
       )
 
-      if (normalized.mirror) {
+      if (flipX || flipY) {
         ctx.restore()
       }
     },

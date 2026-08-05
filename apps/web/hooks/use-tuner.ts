@@ -28,6 +28,7 @@ export interface UseTunerReturn {
   setAlign: (v: AlignPosition) => void
   setBarColor: (v: string) => void
   setMirror: (v: boolean) => void
+  setFlipVertical: (v: boolean) => void
   setCenterStageEnabled: (v: boolean) => void
   setLetterbox: (v: boolean) => void
   setZoomMode: (v: ZoomMode) => void
@@ -138,6 +139,7 @@ export function useTuner(
   const setAlign = useConfigSetter("align", updateConfig)
   const setBarColor = useConfigSetter("barColor", updateConfig)
   const setMirror = useConfigSetter("mirror", updateConfig)
+  const setFlipVertical = useConfigSetter("flipVertical", updateConfig)
   const setCenterStageEnabled = useConfigSetter(
     "centerStageEnabled",
     updateConfig
@@ -180,6 +182,7 @@ export function useTuner(
     setAlign,
     setBarColor,
     setMirror,
+    setFlipVertical,
     setCenterStageEnabled,
     setLetterbox,
     setZoomMode,

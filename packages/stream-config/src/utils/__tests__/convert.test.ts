@@ -13,6 +13,7 @@ describe("tunerConfigToCropConfig", () => {
       alignY: "center",
       barColor: "#000000",
       mirror: false,
+      flipVertical: false,
       letterbox: true,
     })
   })
@@ -32,6 +33,7 @@ describe("tunerConfigToCropConfig", () => {
       alignY: "top",
       barColor: "#ff0000",
       mirror: true,
+      flipVertical: false,
       letterbox: true,
     })
   })

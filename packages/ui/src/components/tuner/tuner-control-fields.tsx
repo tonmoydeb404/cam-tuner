@@ -34,6 +34,9 @@ export interface TunerControlFieldsProps {
   /** Whether to horizontally flip the output */
   mirror: boolean
   onMirrorChange: (value: boolean) => void
+  /** Whether to vertically flip the output */
+  flipVertical: boolean
+  onFlipVerticalChange: (value: boolean) => void
   /** Whether to pad the cropped area with bars (letterbox) or output a pure crop */
   letterbox: boolean
   onLetterboxChange: (value: boolean) => void
@@ -64,6 +67,8 @@ export const TunerControlFields = ({
   onBarColorChange,
   mirror,
   onMirrorChange,
+  flipVertical,
+  onFlipVerticalChange,
   letterbox,
   onLetterboxChange,
   centerStageEnabled,
@@ -124,6 +129,18 @@ export const TunerControlFields = ({
         checked={mirror}
         onCheckedChange={onMirrorChange}
         aria-label="Flip output horizontally"
+      />
+    </div>
+
+    {/* Flip Vertical */}
+    <div className="flex items-center justify-between gap-4">
+      <Label className="text-xs font-semibold tracking-wider uppercase">
+        Flip Vertical
+      </Label>
+      <Switch
+        checked={flipVertical}
+        onCheckedChange={onFlipVerticalChange}
+        aria-label="Flip output vertically"
       />
     </div>
 

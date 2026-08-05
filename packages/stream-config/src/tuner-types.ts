@@ -28,6 +28,13 @@ export interface TunerConfig {
   barColor: string
   mirror: boolean
   /**
+   * Whether to vertically flip the output. Optional for backward
+   * compatibility with configs persisted before the feature existed
+   * (treated as false when undefined). Combine with `mirror` to correct a
+   * physically upside-down camera (full 180° rotation).
+   */
+  flipVertical?: boolean
+  /**
    * Whether Center Stage (face-tracking auto-framing) is on.
    * Optional for backward compatibility with configs persisted before
    * the feature existed (treated as false when undefined).
@@ -90,6 +97,7 @@ export const DEFAULT_TUNER_CONFIG: TunerConfig = {
   zoom: 1,
   align: "center",
   mirror: false,
+  flipVertical: false,
   barColor: "#000000",
   centerStageEnabled: false,
   letterbox: true,

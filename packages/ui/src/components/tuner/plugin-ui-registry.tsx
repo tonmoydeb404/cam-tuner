@@ -2,6 +2,7 @@ import {
   ALIGN_PLUGIN_ID,
   BACKGROUND_PLUGIN_ID,
   CROP_PLUGIN_ID,
+  FLIP_VERTICAL_PLUGIN_ID,
   MIRROR_PLUGIN_ID,
   ZOOM_PLUGIN_ID,
   type PluginUIProps,
@@ -10,6 +11,7 @@ import { AlignPluginControl } from "@workspace/ui/components/tuner/align-plugin-
 import type { BackgroundFilterControlProps } from "@workspace/ui/components/tuner/background-filter-control"
 import { BackgroundFilterControl } from "@workspace/ui/components/tuner/background-filter-control"
 import { CropControl } from "@workspace/ui/components/tuner/crop-control"
+import { FlipVerticalPluginControl } from "@workspace/ui/components/tuner/flip-vertical-plugin-control"
 import { MirrorPluginControl } from "@workspace/ui/components/tuner/mirror-plugin-control"
 import { ZoomPluginControl } from "@workspace/ui/components/tuner/zoom-plugin-control"
 import type { ComponentType } from "react"
@@ -22,6 +24,7 @@ export const PLUGIN_UI_REGISTRY: Record<
   [ALIGN_PLUGIN_ID]: AlignPluginControl,
   [ZOOM_PLUGIN_ID]: ZoomPluginControl,
   [MIRROR_PLUGIN_ID]: MirrorPluginControl,
+  [FLIP_VERTICAL_PLUGIN_ID]: FlipVerticalPluginControl,
   [BACKGROUND_PLUGIN_ID]: BackgroundFilterControl,
 }
 

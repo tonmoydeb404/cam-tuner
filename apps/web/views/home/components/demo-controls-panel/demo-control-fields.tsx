@@ -40,6 +40,8 @@ export const DemoControlFields = ({
       onBarColorChange={tuner.setBarColor}
       mirror={tuner.config.mirror}
       onMirrorChange={tuner.setMirror}
+      flipVertical={tuner.config.flipVertical ?? false}
+      onFlipVerticalChange={tuner.setFlipVertical}
       letterbox={tuner.config.letterbox ?? true}
       onLetterboxChange={tuner.setLetterbox}
     />

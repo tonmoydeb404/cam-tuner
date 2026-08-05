@@ -62,6 +62,7 @@ export type CropConfig = {
   alignY: AlignY
   barColor: string // CSS color for letterbox bars
   mirror?: boolean // horizontal flip
+  flipVertical?: boolean // vertical flip
   alignCenter?: AlignCenter // overrides alignX/alignY for sub-pixel auto-framing
   zoomOverride?: number // overrides user zoom for auto-framing (Center Stage)
   /**
@@ -129,7 +130,8 @@ export function calculateCropBox(
   originalSize: Size,
   cropConfig: CropConfig
 ): Box {
-  const { aspectRatio, zoom, zoomOverride, alignX, alignY, alignCenter } = cropConfig
+  const { aspectRatio, zoom, zoomOverride, alignX, alignY, alignCenter } =
+    cropConfig
   const originalAspect = originalSize.width / originalSize.height
 
   // 1. Calculate the base crop dimensions (zoom = 1) that fit inside the original size

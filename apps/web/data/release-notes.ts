@@ -9,6 +9,15 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.1.0",
+    date: "2026-08-05",
+    title: "Vertical Flip",
+    highlights: [
+      "Added vertical flip control to the tuner, alongside the existing horizontal mirror toggle",
+      "Upgraded dependencies across the extension and web app, including React, Next.js, Tailwind, and WXT",
+    ],
+  },
+  {
     version: "3.0.4",
     date: "2026-08-04",
     title: "Adapter Injection Reliability",

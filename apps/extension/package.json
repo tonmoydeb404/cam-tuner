@@ -23,8 +23,8 @@
     "@workspace/stream-config": "workspace:*",
     "@workspace/ui": "workspace:*",
     "onnxruntime-web": "^1.27.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

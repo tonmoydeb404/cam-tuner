@@ -48,10 +48,21 @@ export class CanvasEngine implements ProcessorEngine {
       polyfillLoop()
     }
 
-    this.outputStream = this.canvas.captureStream(0)
-    this.canvasTrack =
-      (this.outputStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | null) ??
-      null
+    // `requestFrame()` on CanvasCaptureMediaStreamTrack is a Chromium-only
+    // extension to the spec — Firefox's captureStream(0) track lacks it, so
+    // manual frame pushing throws. Fall back to automatic capture (no
+    // fps arg), which streams a frame on every canvas repaint natively.
+    const supportsManualCapture =
+      typeof CanvasCaptureMediaStreamTrack !== "undefined" &&
+      "requestFrame" in CanvasCaptureMediaStreamTrack.prototype
+
+    this.outputStream = supportsManualCapture
+      ? this.canvas.captureStream(0)
+      : this.canvas.captureStream()
+    this.canvasTrack = supportsManualCapture
+      ? ((this.outputStream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack | null) ??
+        null)
+      : null
     return this.outputStream
   }
 

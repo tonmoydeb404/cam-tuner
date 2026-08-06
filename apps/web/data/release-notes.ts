@@ -9,6 +9,15 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.1.1",
+    date: "2026-08-06",
+    title: "Firefox Popup Crash Fix",
+    highlights: [
+      "Fixed a Firefox-only crash where the popup failed to render with an 'Invalid hook call' error, caused by duplicate React and @base-ui/react copies being bundled",
+      "Pinned React, React DOM, and @base-ui/react to a single version across the extension, web app, and shared UI package",
+    ],
+  },
+  {
     version: "3.1.0",
     date: "2026-08-05",
     title: "Vertical Flip",

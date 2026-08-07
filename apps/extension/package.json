@@ -2,7 +2,7 @@
   "name": "@cam-tuner/extension",
   "description": "CamTuner browser extension for webcam configuration",
   "private": true,
-  "version": "3.1.1",
+  "version": "3.1.2",
   "type": "module",
   "scripts": {
     "copy:wasm": "node scripts/copy-mediapipe-wasm.mjs",

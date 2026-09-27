@@ -1,0 +1,4 @@
+# Regenerate brand consumers from brand.json and re-stage anything that drifted,
+# so a brand edit never lands half-synced.
+pnpm sync-brand || exit 1
+git add -u

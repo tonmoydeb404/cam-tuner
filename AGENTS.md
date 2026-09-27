@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Notes for AI agents working in this repo. pnpm + Turborepo monorepo for **CamTuner**, a browser extension that fine-tunes webcam feeds (crop/zoom/align, aspect ratio, letterbox, Center Stage, background effects).
+Notes for AI agents working in this repo. pnpm + Turborepo monorepo for **CamTuner**, a browser extension + Tauri 2 desktop app that fine-tune webcam feeds (crop/zoom/align, aspect ratio, letterbox, Center Stage, background effects).
 
 ## Commands
 
@@ -10,10 +10,13 @@ All run from repo root unless noted. Scripts are turbo-wrapped.
 pnpm install            # also runs `wxt prepare` in the extension (generates .wxt/)
 pnpm dev                # Chrome extension dev (WXT dev server on :3001)
 pnpm dev:firefox        # Firefox extension dev
+pnpm dev:desktop        # Tauri desktop app dev (needs Rust; Vite on :1420)
 pnpm build              # build all (extension -> web); build:firefox for Firefox
 pnpm lint               # eslint across workspaces
 pnpm typecheck          # tsc --noEmit across workspaces
 pnpm format             # prettier across workspaces
+pnpm sync-brand         # rewrite brand consumers from brand.json
+pnpm sync-brand:check   # exit 1 if any consumer drifted (CI enforces this)
 ```
 
 Run a task in one workspace:
@@ -39,6 +42,7 @@ Verify a change end-to-end: `pnpm lint && pnpm typecheck && pnpm turbo build && 
 | Path | Package name | Role |
 | --- | --- | --- |
 | `apps/extension` | `@cam-tuner/extension` | Main product. WXT (Vite) browser extension, MV3, Chrome + Firefox. |
+| `apps/desktop` | `@cam-tuner/desktop` | Tauri 2 desktop app. React 19 + Vite frontend (`src/`), Rust backend (`src-tauri/`, SQLite + tray + auto-updater). |
 | `apps/web` | `@cam-tuner/web` | Next.js 16 marketing + live-preview site (Turbopack). |
 | `packages/stream-config` | `@workspace/stream-config` | Core video-processing lib (Canvas & WebCodecs engines, plugins, framing, tracking). Bundled by tsup → `dist/`. |
 | `packages/ui` | `@workspace/ui` | Shared React components (Radix UI + shadcn + Base UI). |
@@ -59,12 +63,15 @@ Workspace aliases: `@cam-tuner/*` for apps, `@workspace/*` for packages. `ui` de
 - **The MediaPipe adapter is lazy-loaded** via `import(/* @vite-ignore */ url)` (for Center Stage tracking) because WXT builds content scripts as IIFE (which inlines dynamic imports). Keep the `@vite-ignore` comments — without them Vite tries to bundle the adapter and breaks the runtime URL loading.
 - **CSP uses `wasm-unsafe-eval`** (not `unsafe-eval`, which MV3 blocks). MediaPipe compiles WASM on extension pages — set in `wxt.config.ts`.
 - **`VITE_WEB_URL` is required.** Background script and manifest `host_permissions` use it; copy `.env.example` → `.env.local` in `apps/extension`. Release workflow injects it from `vars.VITE_WEB_URL`.
+- **Desktop app needs the Rust toolchain.** `pnpm dev:desktop` and `cargo check` (in `apps/desktop/src-tauri/`) require a stable Rust install; turbo `typecheck`/`lint`/`build` for `@cam-tuner/desktop` are Rust-free (tsc + Vite only).
+- **Brand files are generated — never edit them by hand.** `brand.json` (repo root) is the single source of truth for app name, slug, identifier, version, URLs, and copy. `pnpm sync-brand` rewrites all consumers: package.jsons, `tauri.conf.json`/`tauri.dev.conf.json`, `Cargo.toml`/`Cargo.lock`, `main.rs`, `apps/desktop/index.html`, `Casks/cam-tuner.rb`, `setup/*`, generated `brand.ts`/`brand.rs`, `apps/web/data/brand.ts`, `apps/extension/wxt.config.ts` (imports `lib/brand`), and README marker regions. It also **syncs icons**: `apps/extension/assets/icon.svg` is the canonical mark — it is copied to `apps/desktop/public/logo.svg` and regenerates the whole Tauri icon set (`tauri icon`), enforced byte-for-byte in `--check` mode (`icon.icns` exempt; mobile icon sets are not shipped). The pre-commit hook re-syncs; CI fails on drift. Surface-specific copy lives in `brand.json` under `web` / `extension`.
 
 ## Versioning & release
 
-- Versions are kept in lockstep across `package.json`, `apps/web/package.json`, `apps/extension/package.json` only. Shared packages (`stream-config`, `ui`, configs) are **not** version-synced.
-- Cut a release with `pnpm release:tag <major|minor|patch|x.y.z>` (`scripts/release-tag-sync.mjs`). Requires a clean git tree — it bumps, commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes.
-- Pushing a `v*` tag triggers `.github/workflows/release.yml`, which runs extension CI, zips Chrome + Firefox + sources (`wxt zip`), and attaches them to a GitHub Release.
+- `brand.json` → `version` is the single version source of truth. `pnpm sync-brand` propagates it to root/extension/web/desktop `package.json`s and `tauri.conf.json`/`Cargo.toml`. Shared packages (`stream-config`, `ui`, configs) are **not** version-synced.
+- Cut a release with `pnpm release:tag <major|minor|patch|x.y.z>` (`scripts/release-tag-sync.mjs`). Requires a clean git tree — it bumps `brand.json`, runs `sync-brand`, commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes.
+- Pushing a `v*` tag triggers `.github/workflows/release.yml`, which runs extension CI, zips Chrome + Firefox + sources (`wxt zip`), and attaches them to a GitHub Release; then builds the desktop app for macOS (aarch64 dmg), Linux (deb), and Windows (msi/nsis) via `tauri-action` and appends those artifacts, and updates `Casks/cam-tuner.rb` with the dmg sha256.
+- Desktop updater signing: a password-protected keypair lives at `~/.tauri/cam-tuner.key` (backup copies in the gitignored `.keys/` folder, including `.keys/cam-tuner.key.password`), and its pubkey is wired into `tauri.conf.json` → `plugins.updater.pubkey`. CI needs **both** secrets: `TAURI_SIGNING_PRIVATE_KEY` = contents of the key file, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = contents of the password file. Losing either the key or the password breaks all future desktop updates. To rotate: `pnpm --filter @cam-tuner/desktop tauri signer generate --password "<new>" --write-keys ~/.tauri/cam-tuner.key --ci --force`, refresh `.keys/`, and swap the pubkey. `tauri build` fails without the key env because `createUpdaterArtifacts` is enabled; `tauri dev` needs no key.
 - `--dry-run` previews; `--no-push` skips pushing.
 
 ## Style & config

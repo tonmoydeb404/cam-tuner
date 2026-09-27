@@ -1,0 +1,59 @@
+{
+  "name": "@cam-tuner/desktop",
+  "private": true,
+  "version": "3.1.2",
+  "type": "module",
+  "description": "CamTuner desktop app — Fine-tune your webcam — crop, zoom, align, and blur, as a cross-platform desktop app. Built with Tauri 2.",
+  "homepage": "https://tonmoydeb.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tonmoydeb404/cam-tuner.git",
+    "directory": "apps/desktop"
+  },
+  "keywords": [
+    "tauri",
+    "desktop",
+    "cam-tuner"
+  ],
+  "scripts": {
+    "dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "dev:vite": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings 0"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/poppins": "^5.3.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2",
+    "@tauri-apps/plugin-updater": "^2",
+    "@workspace/ui": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.23.0",
+    "next-themes": "^0.4.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "^7.18.2",
+    "semver": "^7.7.2",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^25.9.5",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@types/semver": "^7.7.0",
+    "@vitejs/plugin-react": "^4.6.0",
+    "@workspace/eslint-config": "workspace:*",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.4"
+  }
+}

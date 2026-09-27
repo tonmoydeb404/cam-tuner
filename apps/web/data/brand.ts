@@ -36,9 +36,21 @@ export const brand = {
     alt: "CamTuner — Professional Webcam Configurator",
   },
   footerLinks: [
-    { name: "Privacy", url: "/privacy" },
-    { name: "Terms", url: "/terms" },
-    { name: "Github", url: "https://github.com/tonmoydeb404/cam-tuner" },
-    { name: "Developer", url: "https://tonmoydeb.com" },
+    {
+      name: "Privacy",
+      url: "/privacy",
+    },
+    {
+      name: "Terms",
+      url: "/terms",
+    },
+    {
+      name: "Github",
+      url: "https://github.com/tonmoydeb404/cam-tuner",
+    },
+    {
+      name: "Developer",
+      url: "https://tonmoydeb.com",
+    },
   ],
 } as const

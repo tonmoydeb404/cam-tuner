@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CamTuner",
+  "version": "3.1.2",
+  "identifier": "app.camtuner",
+  "build": {
+    "beforeDevCommand": "pnpm dev:vite",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "CamTuner",
+        "hiddenTitle": true,
+        "width": 1100,
+        "height": 700,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "visible": false,
+        "skipTaskbar": false,
+        "alwaysOnTop": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/tonmoydeb404/cam-tuner/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcyRDc1ODA3ODE3MjZDNjIKUldSaWJIS0JCMWpYY2pnN0pyVXRodkF5dnRMQVRVMjZCaERTVXdFMFNuSDJPbzVsdEx4RFJzMFoK"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "publisher": "Tonmoy Deb",
+    "category": "public.app-category.developer-tools",
+    "shortDescription": "Fine-tune your webcam — crop, zoom, align, and blur, as a cross-platform desktop app.",
+    "longDescription": "CamTuner is a cross-platform desktop app for professional webcam framing: crop, zoom, and align your live camera feed, lock aspect ratios, keep yourself centered with Center Stage tracking, and blur or replace your background. Built with Tauri 2, React, and Rust.",
+    "copyright": "Copyright (c) 2026 Tonmoy Deb",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

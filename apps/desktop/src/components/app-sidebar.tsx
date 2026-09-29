@@ -1,9 +1,9 @@
-import { Home, PanelLeftIcon, Search, Settings } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { PanelLeftIcon, Search, Settings, Video } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 
-import { UpdateNotification } from "@/components/update-notification";
-import { useModal } from "@/context/modal-context";
-import { brand } from "@/lib/brand";
+import { UpdateNotification } from "@/components/update-notification"
+import { useModal } from "@/context/modal-context"
+import { brand } from "@/lib/brand"
 import {
   Sidebar,
   SidebarContent,
@@ -16,25 +16,25 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from "@workspace/ui/components/sidebar";
+} from "@workspace/ui/components/sidebar"
 
 type NavItem = {
-  path: string;
-  label: string;
-  icon: typeof Home;
-};
+  path: string
+  label: string
+  icon: typeof Video
+}
 
 // Add your app's routes here (and matching <Route> entries in app.tsx).
-const NAV_ITEMS: NavItem[] = [{ path: "/", label: "Home", icon: Home }];
+const NAV_ITEMS: NavItem[] = [{ path: "/", label: "Studio", icon: Video }]
 
 export function AppSidebar() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const sidebar = useSidebar();
-  const { settings, command } = useModal();
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const sidebar = useSidebar()
+  const { settings, command } = useModal()
 
   function handleNavClick(path: string) {
-    navigate(path);
+    navigate(path)
   }
 
   return (
@@ -57,10 +57,10 @@ export function AppSidebar() {
                 }}
               />
               <div className="grid flex-1 text-left leading-tight">
-                <span className="text-[0.92rem] font-[760] text-ink">
+                <span className="text-ink text-[0.92rem] font-[760]">
                   {brand.appName}
                 </span>
-                <span className="text-[0.68rem] text-faint">
+                <span className="text-faint text-[0.68rem]">
                   {brand.description.short}
                 </span>
               </div>
@@ -84,7 +84,7 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {NAV_ITEMS.map((item) => {
-                const isActive = pathname === item.path;
+                const isActive = pathname === item.path
 
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -97,7 +97,7 @@ export function AppSidebar() {
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
+                )
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -131,5 +131,5 @@ export function AppSidebar() {
 
       <SidebarRail />
     </Sidebar>
-  );
+  )
 }

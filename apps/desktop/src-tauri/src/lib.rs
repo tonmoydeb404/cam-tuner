@@ -5,6 +5,8 @@ mod commands;
 mod db;
 mod env;
 mod migrations;
+mod pipeline;
+mod preview;
 mod state;
 mod tray;
 
@@ -67,10 +69,13 @@ pub fn run() {
             std::fs::create_dir_all(&app_data_dir).ok();
             std::fs::create_dir_all(app_data_dir.join("logs")).ok();
 
-            let conn = db::open_connection(&app_data_dir)
-                .expect("failed to open database");
+            let conn = db::open_connection(&app_data_dir).expect("failed to open database");
 
-            app.manage(AppState::new(conn, app_data_dir));
+            // Hardware cameras (AVFoundation) plus the synthetic test
+            // pattern, behind one CaptureBackend trait.
+            let capture = camtuner_capture::default_backend();
+
+            app.manage(AppState::new(conn, app_data_dir, capture));
 
             let updater_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -97,6 +102,11 @@ pub fn run() {
             commands::greet,
             commands::get_settings,
             commands::set_setting,
+            commands::list_cameras,
+            commands::start_preview,
+            commands::stop_preview,
+            commands::get_tuner_config,
+            commands::set_tuner_config,
             commands::enable_autostart,
             commands::disable_autostart,
             commands::is_autostart_enabled,

@@ -1,8 +1,8 @@
-import { Home, Settings } from "lucide-react";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Settings, Video } from "lucide-react"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
-import { useModal } from "@/context/modal-context";
+import { useModal } from "@/context/modal-context"
 import {
   Command,
   CommandDialog,
@@ -11,35 +11,35 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@workspace/ui/components/command";
+} from "@workspace/ui/components/command"
 
 export function CommandPalette() {
-  const navigate = useNavigate();
-  const { command, settings } = useModal();
+  const navigate = useNavigate()
+  const { command, settings } = useModal()
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
-      const mod = event.metaKey || event.ctrlKey;
+      const mod = event.metaKey || event.ctrlKey
       if (mod && event.key === "k") {
-        event.preventDefault();
-        command.open();
+        event.preventDefault()
+        command.open()
       }
     }
 
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [command]);
+    window.addEventListener("keydown", handleShortcut)
+    return () => window.removeEventListener("keydown", handleShortcut)
+  }, [command])
 
   function go(path: string) {
-    navigate(path);
-    command.close();
+    navigate(path)
+    command.close()
   }
 
   return (
     <CommandDialog
       open={command.isOpen}
       onOpenChange={(open) => {
-        if (!open) command.close();
+        if (!open) command.close()
       }}
     >
       <Command>
@@ -49,13 +49,13 @@ export function CommandPalette() {
 
           <CommandGroup heading="Navigate">
             <CommandItem onSelect={() => go("/")}>
-              <Home />
-              <span>Home</span>
+              <Video />
+              <span>Studio</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                settings.open();
-                command.close();
+                settings.open()
+                command.close()
               }}
             >
               <Settings />
@@ -65,5 +65,5 @@ export function CommandPalette() {
         </CommandList>
       </Command>
     </CommandDialog>
-  );
+  )
 }

@@ -1,8 +1,9 @@
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 use camtuner_capture::CaptureBackend;
 use camtuner_core::config::TunerConfig;
+use camtuner_vcam::server::VcamServer;
 use rusqlite::Connection;
 
 use crate::pipeline::Pipeline;
@@ -12,7 +13,7 @@ use crate::preview::{PreviewBus, PreviewServer};
 pub struct AppState {
     pub db: Mutex<Connection>,
     pub app_data_dir: PathBuf,
-    /// Active capture backend (synthetic for now; AVFoundation later).
+    /// Active capture backend (hardware + synthetic via the composite).
     pub capture: Mutex<Box<dyn CaptureBackend>>,
     /// Running processing pipeline, if preview is live.
     pub pipeline: Mutex<Option<Pipeline>>,
@@ -20,6 +21,9 @@ pub struct AppState {
     pub preview_bus: Arc<PreviewBus>,
     /// Local MJPEG server, started with the first preview session.
     pub preview_server: Mutex<Option<PreviewServer>>,
+    /// Virtual-camera sink, swappable while the pipeline runs. Held outside
+    /// the pipeline so attach/detach works before it starts, too.
+    pub vcam: Arc<RwLock<Option<Arc<VcamServer>>>>,
 }
 
 impl AppState {
@@ -31,7 +35,18 @@ impl AppState {
             pipeline: Mutex::new(None),
             preview_bus: PreviewBus::new(),
             preview_server: Mutex::new(None),
+            vcam: Arc::new(RwLock::new(None)),
         }
+    }
+
+    /// Unix socket path the virtual-camera transport listens on. Dev builds
+    /// use a separate path so dev and installed apps never cross wires.
+    pub fn vcam_socket_path(&self) -> PathBuf {
+        let mut name = crate::brand::SLUG.to_string();
+        if cfg!(debug_assertions) {
+            name.push_str("-dev");
+        }
+        PathBuf::from("/var/tmp").join(format!("{name}-vcam.sock"))
     }
 
     /// Loads the persisted tuner config, falling back to defaults for

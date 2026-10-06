@@ -32,6 +32,7 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 rusqlite_migration = "1"
 camtuner-core = { path = "../../../crates/camtuner-core" }
 camtuner-capture = { path = "../../../crates/camtuner-capture" }
+camtuner-vcam = { path = "../../../crates/camtuner-vcam" }
 axum = "0.8"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "sync", "time"] }
 tokio-stream = { version = "0.1", features = ["sync"] }

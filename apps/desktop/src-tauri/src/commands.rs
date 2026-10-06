@@ -121,12 +121,13 @@ pub async fn start_preview(app: AppHandle, device_id: Option<String>) -> Result<
 
         let config = state.load_tuner_config();
         let bus = state.preview_bus.clone();
+        let vcam = state.vcam.clone();
         let stats_app = app.clone();
         let on_stats: crate::pipeline::StatsCallback = Arc::new(move |stats: PipelineStats| {
             let _ = stats_app.emit("pipeline://stats", &stats);
         });
 
-        let pipeline = Pipeline::start(stream, config, bus, Some(on_stats))?;
+        let pipeline = Pipeline::start(stream, config, bus, vcam, Some(on_stats))?;
         *state.pipeline.lock().map_err(map_err)? = Some(pipeline);
 
         if let Some(id) = &selected {
@@ -184,6 +185,245 @@ fn capture_error_message(err: CaptureError) -> String {
             format!("Failed to open camera: {reason}")
         }
     }
+}
+
+// ---- Virtual camera ----
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct VcamStatus {
+    /// Server bound and attached to a running pipeline.
+    pub streaming: bool,
+    /// Camera plugins currently connected (e.g. an app that opened the camera).
+    pub clients: usize,
+    /// Unix socket path clients connect to.
+    pub socket_path: String,
+}
+
+/// Well-known socket path the shipped plugin connects to by default. Dev
+/// builds bind a `-dev` socket and bridge it with a symlink here, so an
+/// installed plugin works against a dev app unchanged.
+fn vcam_link_path() -> std::path::PathBuf {
+    std::path::PathBuf::from("/var/tmp").join(format!("{}-vcam.sock", crate::brand::SLUG))
+}
+
+/// Best-effort symlink from the plugin's default socket path to ours.
+fn bridge_socket_path(actual: &std::path::Path) {
+    let link = vcam_link_path();
+    if link == actual {
+        return; // release build: paths already match
+    }
+    if link.is_symlink() || link.is_file() {
+        std::fs::remove_file(&link).ok();
+    }
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(actual, &link).ok();
+}
+
+fn unbridge_socket_path() {
+    let link = vcam_link_path();
+    if link.is_symlink() {
+        std::fs::remove_file(&link).ok();
+    }
+}
+
+/// Core toggle logic shared by the IPC command and the tray menu.
+pub async fn vcam_toggle(app: AppHandle) -> Result<VcamStatus, String> {
+    let streaming = vcam_status_inner(&app.state::<AppState>()).streaming;
+    if streaming {
+        vcam_stop(app).await
+    } else {
+        vcam_start(app, None).await
+    }
+}
+
+/// Starts (or ensures) the virtual camera: pipeline running, UDS server
+/// bound, sink attached. Reuses the preview pipeline — the preview MJPEG
+/// stream simply runs alongside.
+#[tauri::command]
+pub async fn vcam_start(app: AppHandle, device_id: Option<String>) -> Result<VcamStatus, String> {
+    start_preview(app.clone(), device_id).await?;
+
+    let state = app.state::<AppState>();
+    let socket_path = state.vcam_socket_path();
+    let server = {
+        let mut guard = state.vcam.write().map_err(map_err)?;
+        if let Some(existing) = guard.as_ref() {
+            existing.clone()
+        } else {
+            let server = camtuner_vcam::server::VcamServer::start(&socket_path).map_err(map_err)?;
+            *guard = Some(server.clone());
+            server
+        }
+    };
+
+    if let Ok(pipeline) = state.pipeline.lock() {
+        if let Some(running) = pipeline.as_ref() {
+            running.set_vcam(Some(server));
+        }
+    }
+
+    // Bridge the plugin's default socket path to ours (dev builds).
+    bridge_socket_path(&socket_path);
+
+    crate::tray::rebuild_menu(&app);
+    Ok(vcam_status_inner(&state))
+}
+
+/// Stops the virtual camera: detaches the sink and unbinds the socket.
+#[tauri::command]
+pub async fn vcam_stop(app: AppHandle) -> Result<VcamStatus, String> {
+    let state = app.state::<AppState>();
+    if let Ok(guard) = state.vcam.write() {
+        if let Some(server) = guard.as_ref() {
+            server.stop();
+        }
+    }
+    *state.vcam.write().map_err(map_err)? = None;
+    if let Ok(pipeline) = state.pipeline.lock() {
+        if let Some(running) = pipeline.as_ref() {
+            running.set_vcam(None);
+        }
+    }
+    unbridge_socket_path();
+    crate::tray::rebuild_menu(&app);
+    Ok(vcam_status_inner(&state))
+}
+
+#[tauri::command]
+pub async fn vcam_status(app: AppHandle) -> Result<VcamStatus, String> {
+    let state = app.state::<AppState>();
+    Ok(vcam_status_inner(&state))
+}
+
+fn vcam_status_inner(state: &tauri::State<'_, AppState>) -> VcamStatus {
+    let (attached, clients) = match state.vcam.read() {
+        Ok(guard) => match guard.as_ref() {
+            Some(server) => (true, server.client_count()),
+            None => (false, 0),
+        },
+        Err(_) => (false, 0),
+    };
+    let pipeline_running = state.pipeline.lock().map(|p| p.is_some()).unwrap_or(false);
+    VcamStatus {
+        streaming: attached && pipeline_running,
+        clients,
+        socket_path: state.vcam_socket_path().display().to_string(),
+    }
+}
+
+// ---- Virtual camera plugin install ----
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct VcamPluginStatus {
+    /// The CMIO bundle is present in /Library/CoreMediaIO/Plug-Ins/DAL.
+    pub installed: bool,
+    /// The installed bundle matches this build's plugin.
+    pub up_to_date: bool,
+    pub path: String,
+}
+
+fn plugin_workspace_path() -> Option<std::path::PathBuf> {
+    // Dev builds: the assemble-plugin output inside the repo.
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../crates/camtuner-vcam-dal/build");
+    let bundle = dir.join("CamTunerCamera.plugin");
+    bundle.exists().then_some(bundle)
+}
+
+fn plugin_source_path(app: &AppHandle) -> Option<std::path::PathBuf> {
+    // 1. Explicit override.
+    if let Ok(path) = std::env::var("CAMTUNER_VCAM_PLUGIN") {
+        if !path.is_empty() {
+            let path = std::path::PathBuf::from(path);
+            if path.exists() {
+                return Some(path);
+            }
+        }
+    }
+    // 2. Bundled resource (packaged apps).
+    if let Ok(dir) = app.path().resource_dir() {
+        let candidate = dir.join("CamTunerCamera.plugin");
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+    // 3. Workspace build output (dev).
+    plugin_workspace_path()
+}
+
+fn installed_bundle_path() -> std::path::PathBuf {
+    std::path::PathBuf::from("/Library/CoreMediaIO/Plug-Ins/DAL").join("CamTunerCamera.plugin")
+}
+
+fn read_bundle_version_marker(bundle: &std::path::Path) -> Option<String> {
+    std::fs::read_to_string(bundle.join("Contents/Info.plist")).ok()
+}
+
+#[tauri::command]
+pub async fn vcam_plugin_status(_app: AppHandle) -> Result<VcamPluginStatus, String> {
+    let installed_path = installed_bundle_path();
+    let installed = read_bundle_version_marker(&installed_path).is_some();
+    let up_to_date = match (installed, plugin_workspace_path()) {
+        (true, Some(source)) => {
+            read_bundle_version_marker(&installed_path) == read_bundle_version_marker(&source)
+        }
+        _ => false,
+    };
+    Ok(VcamPluginStatus {
+        installed,
+        up_to_date,
+        path: installed_path.display().to_string(),
+    })
+}
+
+/// Copies the plugin bundle into the CMIO DAL directory. Triggers a macOS
+/// administrator password prompt (osascript) — the only sanctioned way to
+/// modify that system directory.
+#[tauri::command]
+pub async fn vcam_plugin_install(app: AppHandle) -> Result<VcamPluginStatus, String> {
+    let Some(source) = plugin_source_path(&app) else {
+        return Err(
+            "Plugin bundle not found. Build it with `cargo run -p camtuner-vcam-dal \
+             --bin assemble-plugin -- --release` first."
+                .to_string(),
+        );
+    };
+    let target = installed_bundle_path();
+    let dir = target.parent().expect("install dir has a parent");
+    let script = format!(
+        "do shell script \"mkdir -p '{dir}' && rm -rf '{target}' && cp -R '{src}' '{target}'\" \
+         with administrator privileges",
+        dir = dir.display(),
+        target = target.display(),
+        src = source.display(),
+    );
+    let status = std::process::Command::new("osascript")
+        .arg("-e")
+        .arg(&script)
+        .status()
+        .map_err(map_err)?;
+    if !status.success() {
+        return Err("Install cancelled or failed".to_string());
+    }
+    vcam_plugin_status(app).await
+}
+
+#[tauri::command]
+pub async fn vcam_plugin_uninstall(app: AppHandle) -> Result<VcamPluginStatus, String> {
+    let target = installed_bundle_path();
+    let script = format!(
+        "do shell script \"rm -rf '{target}'\" with administrator privileges",
+        target = target.display(),
+    );
+    let status = std::process::Command::new("osascript")
+        .arg("-e")
+        .arg(&script)
+        .status()
+        .map_err(map_err)?;
+    if !status.success() {
+        return Err("Uninstall cancelled or failed".to_string());
+    }
+    vcam_plugin_status(app).await
 }
 
 // ---- Tuner config ----

@@ -26,6 +26,10 @@ pub enum PixelFormat {
     Nv12,
     /// 8-bit blue-green-red-alpha, tightly packed.
     Bgra,
+    /// Packed 4:2:2 (`'2vuy'`/UYVY): [U, Y0, V, Y1] per pixel pair. Output
+    /// format for CMIO virtual cameras — produced by [`Frame::nv12_to_uyvy`],
+    /// not a blit/convert input. Requires even dimensions.
+    Uyvy,
 }
 
 /// Errors surfaced by frame construction and frame-to-frame operations.
@@ -89,17 +93,24 @@ impl Frame {
                 // Chroma plane: w bytes per row (w/2 texels), h/2 rows.
                 flip_block(uv_buf, w, h / 2, NV12_CHROMA_TEXEL, horizontal, vertical);
             }
+            // Pixel pairs are 4-byte units ([U, Y0, V, Y1]); rows are w*2.
+            PixelFormat::Uyvy => {
+                flip_block(&mut self.data, w * 2, h, 4, horizontal, vertical);
+            }
         }
     }
 
-    /// Allocates a zeroed frame. NV12 requires even dimensions.
+    /// Allocates a zeroed frame. NV12 and UYVY require even dimensions.
     pub fn new(format: PixelFormat, width: u32, height: u32) -> Result<Self, FrameError> {
-        if format == PixelFormat::Nv12 && (!width.is_multiple_of(2) || !height.is_multiple_of(2)) {
+        if matches!(format, PixelFormat::Nv12 | PixelFormat::Uyvy)
+            && (!width.is_multiple_of(2) || !height.is_multiple_of(2))
+        {
             return Err(FrameError::OddDimensions { width, height });
         }
         let size = match format {
             PixelFormat::Nv12 => width as usize * height as usize * 3 / 2,
             PixelFormat::Bgra => width as usize * height as usize * 4,
+            PixelFormat::Uyvy => width as usize * height as usize * 2,
         };
         Ok(Self {
             format,
@@ -115,6 +126,10 @@ impl Frame {
 
     pub fn new_bgra(width: u32, height: u32) -> Result<Self, FrameError> {
         Self::new(PixelFormat::Bgra, width, height)
+    }
+
+    pub fn new_uyvy(width: u32, height: u32) -> Result<Self, FrameError> {
+        Self::new(PixelFormat::Uyvy, width, height)
     }
 
     /// Fills the entire frame with a solid color (the letterbox "bars" fill).
@@ -136,6 +151,15 @@ impl Frame {
                 for chroma in self.data[y_plane..].chunks_exact_mut(2) {
                     chroma[0] = u;
                     chroma[1] = v;
+                }
+            }
+            PixelFormat::Uyvy => {
+                let (y, u, v) = rgb_to_yuv601(color);
+                for pair in self.data.chunks_exact_mut(4) {
+                    pair[0] = u;
+                    pair[1] = y;
+                    pair[2] = v;
+                    pair[3] = y;
                 }
             }
         }
@@ -191,6 +215,12 @@ impl Frame {
                 self.blit_nv12(src, src_rect, dst_rect);
                 Ok(())
             }
+            // UYVY is a terminal output format (see [`PixelFormat::Uyvy`]);
+            // blitting into it has no pipeline use.
+            PixelFormat::Uyvy => Err(FrameError::FormatMismatch {
+                expected: PixelFormat::Nv12,
+                found: PixelFormat::Uyvy,
+            }),
         }
     }
     fn blit_bgra(&mut self, src: &Frame, src_rect: Rect, dst_rect: Rect) {
@@ -310,6 +340,55 @@ impl Frame {
             }
         }
     }
+    /// Converts an NV12 frame to UYVY (packed 4:2:2, `'2vuy'`) — the format
+    /// CMIO virtual cameras advertise. Chroma is upsampled by duplication
+    /// (each 2×2 chroma texel applies to its pixel pair), which matches what
+    /// capture hardware delivers without introducing resampling softness.
+    pub fn nv12_to_uyvy(&self) -> Result<Frame, FrameError> {
+        if self.format != PixelFormat::Nv12 {
+            return Err(FrameError::FormatMismatch {
+                expected: PixelFormat::Nv12,
+                found: self.format,
+            });
+        }
+        let (w, h) = (self.width as usize, self.height as usize);
+        let mut data = vec![0u8; w * h * 2];
+        let y_plane = &self.data[..w * h];
+        let uv_plane = &self.data[w * h..];
+
+        for row in 0..h {
+            let y_row = &y_plane[row * w..(row + 1) * w];
+            let uv_row = &uv_plane[(row / 2) * w..(row / 2) * w + w];
+            let out_row = &mut data[row * w * 2..(row + 1) * w * 2];
+            for pair in 0..w / 2 {
+                let (y0, y1) = (y_row[pair * 2], y_row[pair * 2 + 1]);
+                let (u, v) = (uv_row[pair * 2], uv_row[pair * 2 + 1]);
+                let o = pair * 4;
+                // UYVY: [U, Y0, V, Y1] per pixel pair.
+                out_row[o] = u;
+                out_row[o + 1] = y0;
+                out_row[o + 2] = v;
+                out_row[o + 3] = y1;
+            }
+            // Odd widths: replicate the last luma sample (NV12 requires even
+            // dims, but be safe rather than truncate).
+            if !w.is_multiple_of(2) {
+                let o = (w - 1) * 2;
+                out_row[o] = 128;
+                out_row[o + 1] = y_row[w - 1];
+                out_row[o + 2] = 128;
+                out_row[o + 3] = y_row[w - 1];
+            }
+        }
+
+        Ok(Frame {
+            format: PixelFormat::Uyvy,
+            width: self.width,
+            height: self.height,
+            data,
+        })
+    }
+
     /// Converts an NV12 frame to BGRA (BT.601 limited range). Alpha is 255.
     pub fn nv12_to_bgra(&self) -> Result<Frame, FrameError> {
         let mut out = Frame::new_bgra(self.width, self.height)?;
@@ -576,6 +655,84 @@ mod tests {
             let mut frame = Frame::new_bgra(2, 2).unwrap();
             frame.fill(RED);
             assert_eq!(&frame.data[..4], &[0, 0, 255, 255]);
+        }
+    }
+
+    mod uyvy {
+        use super::*;
+
+        #[test]
+        fn buffer_is_two_bytes_per_pixel_and_rejects_odd_dims() {
+            let frame = Frame::new_uyvy(8, 4).unwrap();
+            assert_eq!(frame.data.len(), 8 * 4 * 2);
+            assert_eq!(
+                Frame::new_uyvy(7, 4).unwrap_err(),
+                FrameError::OddDimensions {
+                    width: 7,
+                    height: 4
+                }
+            );
+        }
+
+        #[test]
+        fn nv12_to_uyvy_golden() {
+            // 4x2 NV12: luma rows + one chroma row (two texels).
+            let mut src = Frame::new_nv12(4, 2).unwrap();
+            src.data[..8].copy_from_slice(&[10, 20, 30, 40, 50, 60, 70, 80]);
+            src.data[8..].copy_from_slice(&[200, 100, 210, 110]);
+
+            let out = src.nv12_to_uyvy().unwrap();
+            assert_eq!(out.format, PixelFormat::Uyvy);
+            assert_eq!(out.width, 4);
+            assert_eq!(out.height, 2);
+            // Each chroma texel covers its pixel pair on both rows.
+            assert_eq!(
+                out.data,
+                vec![
+                    200, 10, 100, 20, 210, 30, 110, 40, //
+                    200, 50, 100, 60, 210, 70, 110, 80, //
+                ]
+            );
+        }
+
+        #[test]
+        fn uyvy_fill_matches_studio_swing() {
+            let mut frame = Frame::new_uyvy(4, 4).unwrap();
+            frame.fill(WHITE);
+            assert!(frame
+                .data
+                .chunks_exact(4)
+                .all(|p| p == [128, 235, 128, 235]));
+        }
+
+        #[test]
+        fn uyvy_flip_reverses_pixel_pairs() {
+            let mut src = Frame::new_nv12(4, 2).unwrap();
+            src.data[..8].copy_from_slice(&[10, 20, 30, 40, 50, 60, 70, 80]);
+            src.data[8..].copy_from_slice(&[200, 100, 210, 110]);
+            let mut out = src.nv12_to_uyvy().unwrap();
+            out.flip(true, false);
+            assert_eq!(
+                out.data,
+                vec![
+                    210, 30, 110, 40, 200, 10, 100, 20, //
+                    210, 70, 110, 80, 200, 50, 100, 60, //
+                ]
+            );
+        }
+
+        #[test]
+        fn uyvy_is_not_a_blit_or_convert_target() {
+            let mut uyvy = Frame::new_uyvy(4, 4).unwrap();
+            let nv12 = Frame::new_nv12(4, 4).unwrap();
+            assert!(matches!(
+                uyvy.blit_resample(&nv12, Rect::new(0, 0, 4, 4), Rect::new(0, 0, 4, 4)),
+                Err(FrameError::FormatMismatch { .. })
+            ));
+            assert!(matches!(
+                uyvy.nv12_to_uyvy(),
+                Err(FrameError::FormatMismatch { .. })
+            ));
         }
     }
 

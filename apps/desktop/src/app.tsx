@@ -7,6 +7,7 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom"
 import { ModalProvider } from "./context/modal-context"
 import { AppProvider, useApp } from "./context/app-context"
 import { StudioScreen } from "./screens/studio"
+import { VcamScreen } from "./screens/vcam"
 
 function LoadingShell() {
   return (
@@ -48,6 +49,7 @@ function AppRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<StudioScreen />} />
+        <Route path="vcam" element={<VcamScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

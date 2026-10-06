@@ -465,6 +465,7 @@ dependencies = [
  "axum",
  "camtuner-capture",
  "camtuner-core",
+ "camtuner-vcam",
  "jpeg-encoder",
  "rand",
  "rusqlite",
@@ -511,6 +512,15 @@ name = "camtuner-core"
 version = "0.1.0"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "camtuner-vcam"
+version = "0.1.0"
+dependencies = [
+ "camtuner-capture",
+ "camtuner-core",
+ "libc",
 ]
 
 [[package]]

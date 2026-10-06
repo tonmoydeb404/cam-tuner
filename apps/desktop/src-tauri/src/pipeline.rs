@@ -16,6 +16,7 @@ use camtuner_core::frame::{Frame, FrameError, PixelFormat};
 use camtuner_core::math::{calculate_crop_box, calculate_destination_box, CropConfig, Rect, Size};
 
 use crate::preview::{PreviewBus, PreviewFrame};
+use camtuner_vcam::server::VcamServer;
 
 /// Poll interval when the capture source is idle — keeps shutdown responsive
 /// without busy-spinning.
@@ -108,6 +109,9 @@ fn ensure_size(dst: &mut Option<Frame>, size: Size, format: PixelFormat) -> Resu
 pub struct Pipeline {
     stop: Arc<AtomicBool>,
     config: Arc<RwLock<TunerConfig>>,
+    /// Optional virtual-camera sink, swappable while running. Shared with
+    /// the caller so `set_vcam` works before and after `start`.
+    vcam: Arc<RwLock<Option<Arc<VcamServer>>>>,
     handle: Option<JoinHandle<()>>,
 }
 
@@ -118,23 +122,33 @@ impl Pipeline {
         stream: FrameStream,
         config: TunerConfig,
         preview_bus: Arc<PreviewBus>,
+        vcam_holder: Arc<RwLock<Option<Arc<VcamServer>>>>,
         on_stats: Option<StatsCallback>,
     ) -> Result<Self, String> {
         let stop = Arc::new(AtomicBool::new(false));
         let config = Arc::new(RwLock::new(config));
         let thread_stop = stop.clone();
         let thread_config = config.clone();
+        let thread_vcam = vcam_holder.clone();
 
         let handle = std::thread::Builder::new()
             .name("camtuner-pipeline".to_string())
             .spawn(move || {
-                run_loop(stream, thread_config, preview_bus, on_stats, &thread_stop);
+                run_loop(
+                    stream,
+                    thread_config,
+                    preview_bus,
+                    thread_vcam,
+                    on_stats,
+                    &thread_stop,
+                );
             })
             .map_err(|err| format!("failed to spawn pipeline thread: {err}"))?;
 
         Ok(Self {
             stop,
             config,
+            vcam: vcam_holder,
             handle: Some(handle),
         })
     }
@@ -143,6 +157,13 @@ impl Pipeline {
     pub fn update_config(&self, config: TunerConfig) {
         if let Ok(mut guard) = self.config.write() {
             *guard = config;
+        }
+    }
+
+    /// Attaches or detaches the virtual-camera sink at runtime.
+    pub fn set_vcam(&self, server: Option<Arc<VcamServer>>) {
+        if let Ok(mut guard) = self.vcam.write() {
+            *guard = server;
         }
     }
 
@@ -165,6 +186,7 @@ fn run_loop(
     stream: FrameStream,
     config: Arc<RwLock<TunerConfig>>,
     preview_bus: Arc<PreviewBus>,
+    vcam: Arc<RwLock<Option<Arc<VcamServer>>>>,
     on_stats: Option<StatsCallback>,
     stop: &AtomicBool,
 ) {
@@ -206,16 +228,33 @@ fn run_loop(
                     None => continue,
                 };
 
-                let published = publish_preview(
-                    out,
-                    &mut bgra_scratch,
-                    &mut preview_scratch,
-                    &mut jpeg_buf,
-                    &preview_bus,
-                );
+                // Preview JPEG only feeds connected viewers; skip the whole
+                // (relatively expensive) encode when nobody is watching so
+                // the camera rate belongs to the virtual camera instead.
+                let published = if preview_bus.has_consumers() {
+                    publish_preview(
+                        out,
+                        &mut bgra_scratch,
+                        &mut preview_scratch,
+                        &mut jpeg_buf,
+                        &preview_bus,
+                    )
+                } else {
+                    false
+                };
 
                 if published {
                     frames_since_stats += 1;
+                }
+
+                // Virtual camera: only pay the NV12→UYVY conversion when a
+                // client (i.e. a real camera consumer) is listening.
+                if let Ok(guard) = vcam.read() {
+                    if let Some(server) = guard.as_ref() {
+                        if server.client_count() > 0 {
+                            camtuner_vcam::encode_frame(server, out);
+                        }
+                    }
                 }
                 let out_size = (out.width, out.height);
                 let elapsed = last_stats_at.elapsed();
@@ -559,9 +598,10 @@ mod tests {
                 Err(poll) => println!("poll {i}: {poll:?}"),
             }
         }
-
         let bus = crate::preview::PreviewBus::new();
-        let mut pipeline = Pipeline::start(stream, test_config(), bus.clone(), None).unwrap();
+        let no_vcam = std::sync::Arc::new(std::sync::RwLock::new(None));
+        let mut pipeline =
+            Pipeline::start(stream, test_config(), bus.clone(), no_vcam, None).unwrap();
 
         // Subscribe immediately (like the app's MJPEG server does).
         let (initial, mut rx) = bus.subscribe();
@@ -607,5 +647,107 @@ mod tests {
         pipeline.stop();
 
         assert!(frames >= 30, "expected ≥30 preview frames, got {frames}");
+    }
+
+    /// Real camera → pipeline → virtual-camera UDS → connected client.
+    /// Run manually: `cargo test real_camera_vcam -- --ignored --nocapture`
+    #[test]
+    #[ignore = "opens the real camera; needs TCC camera permission"]
+    fn real_camera_vcam_delivers_uyvy_frames() {
+        use camtuner_capture::{CaptureBackend, StreamSettings};
+        use camtuner_vcam::protocol::{MessageType, FORMAT_UYVY};
+
+        let mut backend = camtuner_capture::composite::CompositeBackend::new();
+        let device = backend
+            .list_devices()
+            .into_iter()
+            .find(|d| !d.is_virtual)
+            .expect("no hardware camera");
+        println!("opening camera: {}", device.label);
+
+        let stream = backend
+            .open(Some(&device.id), StreamSettings::default())
+            .unwrap();
+
+        let socket = std::env::temp_dir().join("camtuner-vcam-e2e-test.sock");
+        std::fs::remove_file(&socket).ok();
+        let server = camtuner_vcam::server::VcamServer::start(&socket).unwrap();
+        let vcam = std::sync::Arc::new(std::sync::RwLock::new(Some(server.clone())));
+
+        let bus = crate::preview::PreviewBus::new();
+        let mut pipeline = Pipeline::start(stream, test_config(), bus, vcam, None).unwrap();
+
+        // Give the pipeline a beat to produce, then connect like a client.
+        std::thread::sleep(Duration::from_millis(300));
+        let mut client = std::os::unix::net::UnixStream::connect(&socket).unwrap();
+        client
+            .set_read_timeout(Some(Duration::from_millis(750)))
+            .unwrap();
+
+        let mut frames = 0u32;
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while Instant::now() < deadline {
+            match camtuner_vcam::protocol::read_message(&mut client) {
+                Ok((header, payload)) => {
+                    if header.message_type == MessageType::Ping {
+                        continue;
+                    }
+                    frames += 1;
+                    if frames == 1 {
+                        println!(
+                            "first vcam frame: {}x{} payload {}B",
+                            header.width,
+                            header.height,
+                            payload.len()
+                        );
+                    }
+                    assert_eq!(header.format, FORMAT_UYVY);
+                    assert_eq!(
+                        payload.len() as u64,
+                        u64::from(header.width) * u64::from(header.height) * 2,
+                        "UYVY payload must be w*h*2"
+                    );
+                }
+                Err(err) => {
+                    println!("read error: {err}");
+                    break;
+                }
+            }
+        }
+        let fps = frames as f64 / 2.0;
+        println!(
+            "vcam client received {frames} frames ({fps:.1} fps); pipeline broadcast {} frames",
+            server.broadcast_count()
+        );
+        pipeline.stop();
+        server.stop();
+
+        assert!(frames >= 30, "expected ≥30 vcam frames in 2s, got {frames}");
+    }
+}
+
+#[cfg(test)]
+mod perf_probe {
+    use super::*;
+    use camtuner_core::frame::PixelFormat;
+
+    #[test]
+    #[ignore = "timing probe"]
+    fn probe_uyvy_convert_cost() {
+        let mut hd = Frame::new_nv12(1920, 1080).unwrap();
+        for (i, b) in hd.data.iter_mut().enumerate() {
+            *b = (i % 251) as u8;
+        }
+        let _ = PixelFormat::Uyvy;
+        let mut total = Duration::ZERO;
+        for i in 0..30 {
+            let t = Instant::now();
+            let out = hd.nv12_to_uyvy().unwrap();
+            total += t.elapsed();
+            if i == 0 {
+                println!("first convert: {:?} ({}B out)", t.elapsed(), out.data.len());
+            }
+        }
+        println!("avg nv12_to_uyvy: {:?}", total / 30);
     }
 }

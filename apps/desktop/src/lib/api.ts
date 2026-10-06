@@ -13,9 +13,21 @@ export interface CameraInfo {
 }
 
 export interface PipelineStats {
-  fps: number
-  width: number
-  height: number
+  fps: number;
+  width: number;
+  height: number;
+}
+
+export interface VcamStatus {
+  streaming: boolean;
+  clients: number;
+  socketPath: string;
+}
+
+export interface VcamPluginStatus {
+  installed: boolean;
+  upToDate: boolean;
+  path: string;
 }
 
 export const api = {
@@ -28,6 +40,16 @@ export const api = {
   startPreview: (deviceId?: string | null) =>
     invoke<string>("start_preview", { deviceId: deviceId ?? null }),
   stopPreview: () => invoke<void>("stop_preview"),
+
+  vcamStart: (deviceId?: string | null) =>
+    invoke<VcamStatus>("vcam_start", { deviceId: deviceId ?? null }),
+  vcamStop: () => invoke<VcamStatus>("vcam_stop"),
+  vcamStatus: () => invoke<VcamStatus>("vcam_status"),
+
+  vcamPluginStatus: () => invoke<VcamPluginStatus>("vcam_plugin_status"),
+  vcamPluginInstall: () => invoke<VcamPluginStatus>("vcam_plugin_install"),
+  vcamPluginUninstall: () =>
+    invoke<VcamPluginStatus>("vcam_plugin_uninstall"),
 
   getTunerConfig: () => invoke<TunerConfig>("get_tuner_config"),
   setTunerConfig: (config: TunerConfig) =>

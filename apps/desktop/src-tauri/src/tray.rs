@@ -1,12 +1,14 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
-    AppHandle,
+    AppHandle, Manager,
 };
 
 use crate::brand;
+use crate::commands;
+use crate::state::AppState;
 
-/// Builds the tray menu. Static here — swap in DB-driven items by rebuilding
-/// this menu whenever your data changes (see commands that call rebuild_menu).
+/// Builds the tray menu. The virtual-camera item is rebuilt on demand so its
+/// label always reflects whether the sink is streaming.
 pub fn rebuild_menu(app: &AppHandle) {
     let menu = match Menu::new(app) {
         Ok(m) => m,
@@ -20,6 +22,15 @@ pub fn rebuild_menu(app: &AppHandle) {
         true,
         None::<&str>,
     ) {
+        let _ = menu.append(&item);
+    }
+
+    let vcam_label = if is_vcam_streaming(app) {
+        "Virtual Camera: On"
+    } else {
+        "Virtual Camera: Off"
+    };
+    if let Ok(item) = MenuItem::with_id(app, "vcam-toggle", vcam_label, true, None::<&str>) {
         let _ = menu.append(&item);
     }
 
@@ -42,10 +53,27 @@ pub fn rebuild_menu(app: &AppHandle) {
     }
 }
 
+fn is_vcam_streaming(app: &AppHandle) -> bool {
+    app.state::<AppState>()
+        .vcam
+        .read()
+        .map(|v| v.is_some())
+        .unwrap_or(false)
+}
+
 pub fn handle_menu_event(app: &AppHandle, id: &str) {
     match id {
         "open" => {
             crate::show_window(app);
+        }
+        "vcam-toggle" => {
+            // The toggle needs an async context; spawn it and refresh the
+            // menu label when it settles.
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                let _ = commands::vcam_toggle(app.clone()).await;
+                crate::tray::rebuild_menu(&app);
+            });
         }
         "quit" => {
             app.exit(0);

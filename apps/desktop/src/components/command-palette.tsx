@@ -1,4 +1,4 @@
-import { Settings, Video } from "lucide-react"
+import { Settings, Video, Webcam } from "lucide-react"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -51,6 +51,10 @@ export function CommandPalette() {
             <CommandItem onSelect={() => go("/")}>
               <Video />
               <span>Studio</span>
+            </CommandItem>
+            <CommandItem onSelect={() => go("/vcam")}>
+              <Webcam />
+              <span>Virtual Camera</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {

@@ -1,4 +1,4 @@
-import { PanelLeftIcon, Search, Settings, Video } from "lucide-react"
+import { PanelLeftIcon, Search, Settings, Video, Webcam } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import { UpdateNotification } from "@/components/update-notification"
@@ -25,7 +25,10 @@ type NavItem = {
 }
 
 // Add your app's routes here (and matching <Route> entries in app.tsx).
-const NAV_ITEMS: NavItem[] = [{ path: "/", label: "Studio", icon: Video }]
+const NAV_ITEMS: NavItem[] = [
+  { path: "/", label: "Studio", icon: Video },
+  { path: "/vcam", label: "Virtual Camera", icon: Webcam },
+]
 
 export function AppSidebar() {
   const navigate = useNavigate()

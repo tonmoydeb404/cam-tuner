@@ -50,6 +50,14 @@ impl PreviewBus {
         let _ = self.tx.send(frame); // Err = no subscribers yet, fine
     }
 
+    /// True when at least one consumer is subscribed (MJPEG connections
+    /// subscribe in the handler; tests subscribe directly). The pipeline
+    /// skips JPEG encoding entirely while this is false — at 1080p that's
+    /// the difference between ~18 and ~30 fps in dev builds.
+    pub fn has_consumers(&self) -> bool {
+        self.tx.receiver_count() > 0
+    }
+
     /// Returns the cached latest frame (if any) plus a live subscription.
     pub fn subscribe(&self) -> (Option<PreviewFrame>, broadcast::Receiver<PreviewFrame>) {
         (

@@ -12,7 +12,8 @@ pub const DOWNLOAD_URL: &str = "https://github.com/tonmoydeb404/cam-tuner/releas
 pub const LICENSE_URL: &str = "https://github.com/tonmoydeb404/cam-tuner/blob/main/LICENSE";
 pub const COPYRIGHT: &str = "Copyright (c) 2026 Tonmoy Deb";
 pub const HOMEBREW_TAP: &str = "tonmoydeb404/cam-tuner";
-pub const SETUP_SCRIPT_URL: &str = "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/unix.sh";
+pub const SETUP_SCRIPT_URL: &str =
+    "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/unix.sh";
 
 /// App version, read from Cargo.toml at compile time.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

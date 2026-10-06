@@ -58,6 +58,8 @@ Verify a change end-to-end: `pnpm lint && pnpm typecheck && pnpm turbo build && 
 | `packages/{eslint,typescript}-config` | `@workspace/*` | Shared lint/TS configs. |
 | `crates/camtuner-core` | `camtuner-core` | Pure Rust video-processing core (crop/zoom/align geometry, `TunerConfig` mirror, NV12/BGRA frame ops). Path dep of `apps/desktop/src-tauri`; future home of capture + virtual-camera crates. |
 | `crates/camtuner-capture` | `camtuner-capture` | Capture backends behind a `CaptureBackend` trait: AVFoundation (macOS hardware, NV12), synthetic test pattern, and a composite (hardware + synthetic) used by the app. |
+| `crates/camtuner-vcam` | `camtuner-vcam` | Virtual-camera transport: Unix-socket frame protocol (32-byte header + UYVY payload) shared by the app's `VcamServer` and future native camera-plugin clients. |
+| `crates/camtuner-vcam-dal` | `camtuner-vcam-dal` | CMIO DAL virtual camera (macOS): pure-Rust `CMIOHardwarePlugInInterface` vtable, cdylib packaged into `CamTunerCamera.plugin` by the `assemble-plugin` bin (`--install`/`--status`/`--uninstall`). |
 
 Workspace aliases: `@cam-tuner/*` for apps, `@workspace/*` for packages. `ui` depends on `stream-config`; both apps depend on both packages.
 

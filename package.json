@@ -6,6 +6,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "dev:desktop": "pnpm --filter @cam-tuner/desktop dev",
+    "dev:web": "pnpm --filter @cam-tuner/web dev",
+    "dev:ext": "pnpm --filter @cam-tuner/extension dev",
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",

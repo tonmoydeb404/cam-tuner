@@ -22,6 +22,7 @@ const CAMTUNER_FETCH_BG = "camtuner:fetch-bg"
 const CAMTUNER_FETCH_BG_RESULT = "camtuner:fetch-bg-result"
 const CAMTUNER_INJECT_ADAPTER = "camtuner:inject-adapter"
 const CAMTUNER_ADAPTER_INJECTED = "camtuner:adapter-injected"
+const CAMTUNER_STREAM_STATE = "camtuner:stream-state"
 
 const FACE_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
@@ -50,6 +51,13 @@ export default defineContentScript({
   world: "MAIN",
   runAt: "document_start",
   main() {
+    // Idempotency guard — this script is also injected manually into
+    // already-open tabs on install/update (see background.ts). Running twice
+    // would double-patch getUserMedia and process streams twice.
+    const w = window as any
+    if (w.__camtunerInstalled) return
+    w.__camtunerInstalled = true
+
     // Some pages (e.g. Google Meet) enforce `require-trusted-types-for 'script'`
     // which blocks any plain string passed to a script-loading sink: Worker(),
     // importScripts(), script.src, etc.
@@ -192,13 +200,73 @@ export default defineContentScript({
       }
     })()
 
-    let enabled = true
+    // Start as disabled: until the ISOLATED bridge answers with the real
+    // state, pass raw video through instead of processing with defaults.
+    let enabled = false
     let currentConfig: TunerConfig = DEFAULT_TUNER_CONFIG
     let wasmUrl: string | null = null
+    let cameraLabel: string | null = null
     const activeModifiers: StreamModifier[] = []
     const trackToModifier = new WeakMap<MediaStreamTrack, StreamModifier>()
     let faceDetectorLoaded = false
     const backgroundAttached = new WeakSet<StreamModifier>()
+
+    // Core (non-adapter) plugins, in execution order. Attached to a modifier
+    // while CamTuner is enabled for this page; removed when disabled so the
+    // engine keeps piping original frames (passthrough) without a teardown
+    // that would kill the page's live stream.
+    const coreManifests = [...PLUGIN_REGISTRY]
+      .filter((m) => !m.adapter && m.id !== BACKGROUND_PLUGIN_ID)
+      .sort((a, b) => a.executionOrder - b.executionOrder)
+    const coreAttached = new WeakSet<StreamModifier>()
+
+    function setCorePlugins(modifier: StreamModifier, want: boolean) {
+      if (want) {
+        if (coreAttached.has(modifier)) return
+        coreAttached.add(modifier)
+        const context: PluginContext = { modifier, wasmUrl: null }
+        for (const manifest of coreManifests) {
+          const plugin = manifest.createPlugin(context)
+          const initialConfig =
+            manifest.id === CROP_PLUGIN_ID
+              ? tunerConfigToCropConfig(currentConfig)
+              : manifest.configMapper(currentConfig)
+          modifier.addPlugin(plugin, initialConfig)
+        }
+        return
+      }
+      if (!coreAttached.has(modifier)) return
+      coreAttached.delete(modifier)
+      for (const manifest of coreManifests) {
+        modifier.removePlugin(manifest.id)
+      }
+    }
+
+    // Report whether the page's camera is flowing through CamTuner so the
+    // popup can tell users what is (not) happening:
+    //   tuned=true                    → stream is being processed
+    //   tuned=false, reason="disabled"→ camera opened while CamTuner was off
+    //   tuned=false, reason="camera"  → page is using a different camera than
+    //                                   the one picked in the web preview
+    //   tuned=null                    → camera closed (clears the state)
+    //   warning="tracking"|"background" → an AI effect failed to load on an
+    //                                   otherwise tuned stream
+    function notifyStreamState(
+      tuned: boolean | null,
+      reason?: "disabled" | "camera"
+    ) {
+      window.postMessage(
+        { type: CAMTUNER_STREAM_STATE, tuned, reason },
+        window.location.origin
+      )
+    }
+
+    function notifyStreamWarning(warning: "tracking" | "background") {
+      window.postMessage(
+        { type: CAMTUNER_STREAM_STATE, warning },
+        window.location.origin
+      )
+    }
 
     // Pending requests waiting for camtuner:adapter-injected responses.
     const pendingAdapterRequests = new Map<
@@ -351,12 +419,14 @@ export default defineContentScript({
       modifier.destroy()
       const idx = activeModifiers.indexOf(modifier)
       if (idx !== -1) activeModifiers.splice(idx, 1)
+      if (activeModifiers.length === 0) notifyStreamState(null)
     }
 
     function faceTrackingActive(): boolean {
       return (
-        currentConfig.centerStageEnabled === true ||
-        currentConfig.zoomMode === "auto"
+        enabled &&
+        (currentConfig.centerStageEnabled === true ||
+          currentConfig.zoomMode === "auto")
       )
     }
 
@@ -388,12 +458,14 @@ export default defineContentScript({
         getFaceTrackingService().init(detector)
       } catch (error) {
         faceDetectorLoaded = false
+        notifyStreamWarning("tracking")
         console.error("[CamTuner] Face tracking failed to initialise:", error)
       }
     }
 
     function backgroundActive(): boolean {
       return (
+        enabled &&
         !!currentConfig.backgroundMode &&
         currentConfig.backgroundMode !== "none"
       )
@@ -443,6 +515,7 @@ export default defineContentScript({
         )
       } catch (error) {
         backgroundAttached.delete(modifier)
+        notifyStreamWarning("background")
         console.error(
           "[CamTuner] Background effects failed to initialise:",
           error
@@ -452,22 +525,9 @@ export default defineContentScript({
 
     function processStream(original: MediaStream): MediaStream {
       const modifier = createStreamModifier(original, true)
-      const context: PluginContext = { modifier, wasmUrl: null }
 
-      // Derive active plugins from the registry — removing a manifest here
-      // immediately disables that plugin for all new streams.
-      const sortedManifests = [...PLUGIN_REGISTRY]
-        .filter((m) => !m.adapter)
-        .sort((a, b) => a.executionOrder - b.executionOrder)
-
-      for (const manifest of sortedManifests) {
-        const plugin = manifest.createPlugin(context)
-        const initialConfig =
-          manifest.id === CROP_PLUGIN_ID
-            ? tunerConfigToCropConfig(currentConfig)
-            : manifest.configMapper(currentConfig)
-        modifier.addPlugin(plugin, initialConfig)
-      }
+      // Attach the core plugins (crop, mirror, flip, zoom, align).
+      setCorePlugins(modifier, true)
 
       for (const track of modifier.outputStream.getTracks()) {
         trackToModifier.set(track, modifier)
@@ -513,11 +573,28 @@ export default defineContentScript({
     ) {
       await initialStateReady
       const stream = await originalGetUserMedia(constraints)
-      if (!enabled || !constraints?.video) return stream
+      if (!constraints?.video) return stream
+      if (!enabled) {
+        notifyStreamState(false, "disabled")
+        return stream
+      }
+      // Honor the camera picked in the web preview: only tune that device.
+      if (cameraLabel) {
+        const trackLabel = stream.getVideoTracks()[0]?.label
+        if (trackLabel && trackLabel !== cameraLabel) {
+          notifyStreamState(false, "camera")
+          return stream
+        }
+      }
+      notifyStreamState(true)
       return processStream(stream)
     }
 
     window.addEventListener("message", (event: MessageEvent) => {
+      // Only accept messages from this same window — cross-origin iframes
+      // (or same-origin embeds) must not be able to spoof config updates.
+      if (event.source !== window) return
+
       if (event.data?.type === CAMTUNER_ADAPTER_INJECTED) {
         const { reqId, ok, error } = event.data
         const resolver = pendingAdapterRequests.get(reqId)
@@ -539,12 +616,29 @@ export default defineContentScript({
       }
 
       if (event.data?.type !== CAMTUNER_EVENT) return
-      const { config, enabled: isEnabled, wasmUrl: url } = event.data
+      const {
+        config,
+        enabled: isEnabled,
+        cameraLabel: label,
+        wasmUrl: url,
+      } = event.data
 
       if (typeof url === "string") wasmUrl = url
 
-      if (typeof isEnabled === "boolean") {
+      if (typeof label === "string" || label === null) cameraLabel = label
+
+      if (typeof isEnabled === "boolean" && isEnabled !== enabled) {
         enabled = isEnabled
+        // Toggle live streams between tuned and passthrough without tearing
+        // down the tracks the host page already holds.
+        for (const modifier of activeModifiers) {
+          setCorePlugins(modifier, enabled)
+        }
+        if (activeModifiers.length > 0) {
+          // Only modifiers opened while enabled exist here — streams opened
+          // while disabled were never wrapped and can't be retro-tuned.
+          notifyStreamState(enabled)
+        }
       }
 
       if (config) {
@@ -552,6 +646,7 @@ export default defineContentScript({
         void reconcileFaceDetector()
         for (const modifier of activeModifiers) {
           void reconcileBackground(modifier)
+          if (!coreAttached.has(modifier)) continue
           modifier.updatePluginConfig(
             "core:crop",
             tunerConfigToCropConfig(currentConfig)

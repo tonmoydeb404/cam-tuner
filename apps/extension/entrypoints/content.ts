@@ -1,10 +1,11 @@
 import {
   addBackgroundImage,
   findBackgroundImage,
-  getTunerConfig,
   removeBackgroundImage,
+  resolveEffectiveSettings,
   selectedCameraLabel,
   setTunerConfig,
+  siteSettings,
   tunerConfig,
   virtualCamEnabled,
 } from "../lib/storage"
@@ -15,6 +16,7 @@ const CAMTUNER_FETCH_BG = "camtuner:fetch-bg"
 const CAMTUNER_FETCH_BG_RESULT = "camtuner:fetch-bg-result"
 const CAMTUNER_STORE_BG = "camtuner:store-bg"
 const CAMTUNER_REMOVE_BG = "camtuner:remove-bg"
+const CAMTUNER_STREAM_STATE = "camtuner:stream-state"
 
 // Computed in the ISOLATED world (where browser.runtime is available) and
 // forwarded to the MAIN world injector, which needs the local WASM / adapter
@@ -35,47 +37,41 @@ function sendToPage(config: any, enabled: boolean, cameraLabel: string | null) {
   )
 }
 
+// Resolve global ⊕ this origin's per-site settings and forward the result to
+// the MAIN world injector (which is config-agnostic).
+async function pushEffective() {
+  const [{ config, enabled }, cameraLabel] = await Promise.all([
+    resolveEffectiveSettings(window.location.origin),
+    selectedCameraLabel.getValue(),
+  ])
+  sendToPage(config, enabled, cameraLabel)
+}
+
 export default defineContentScript({
   matches: ["*://*/*"],
   runAt: "document_start",
   main() {
+    // Idempotency guard — this script is also injected manually into
+    // already-open tabs on install/update (see background.ts).
+    const w = window as any
+    if (w.__camtunerBridgeInstalled) return
+    w.__camtunerBridgeInstalled = true
+
     // Immediately push state so the MAIN world injector has it before getUserMedia fires
-    Promise.all([
-      getTunerConfig(),
-      virtualCamEnabled.getValue(),
-      selectedCameraLabel.getValue(),
-    ]).then(([config, enabled, cameraLabel]) =>
-      sendToPage(config, enabled, cameraLabel)
-    )
+    pushEffective()
 
     // Bridge: when the MAIN world requests initial config
-    window.addEventListener(CAMTUNER_REQUEST, async () => {
-      const [config, enabled, cameraLabel] = await Promise.all([
-        getTunerConfig(),
-        virtualCamEnabled.getValue(),
-        selectedCameraLabel.getValue(),
-      ])
-      sendToPage(config, enabled, cameraLabel)
+    window.addEventListener(CAMTUNER_REQUEST, () => {
+      pushEffective()
     })
 
     // Bridge: sync config from web preview page to storage
     window.addEventListener("message", (e) => handleMessage(e))
 
     // Bridge: watch storage changes and forward to MAIN world
-    tunerConfig.watch((config) => {
-      Promise.all([
-        virtualCamEnabled.getValue(),
-        selectedCameraLabel.getValue(),
-      ]).then(([enabled, cameraLabel]) =>
-        sendToPage(config, enabled, cameraLabel)
-      )
-    })
-
-    virtualCamEnabled.watch((enabled) => {
-      Promise.all([getTunerConfig(), selectedCameraLabel.getValue()]).then(
-        ([config, cameraLabel]) => sendToPage(config, enabled, cameraLabel)
-      )
-    })
+    tunerConfig.watch(() => pushEffective())
+    virtualCamEnabled.watch(() => pushEffective())
+    siteSettings.watch(() => pushEffective())
   },
 })
 
@@ -102,6 +98,22 @@ async function handleMessage(event: MessageEvent) {
       await selectedCameraLabel.setValue(event.data.label ?? null)
     } catch (error) {
       console.error("Failed to sync camera label:", error)
+    }
+    return
+  }
+
+  // Bridge: forward the MAIN world's camera stream state to the background
+  // so the popup can show whether the current page's camera is tuned.
+  if (event.data?.type === CAMTUNER_STREAM_STATE) {
+    const { tuned, reason, warning } = event.data
+    if (
+      tuned === null ||
+      typeof tuned === "boolean" ||
+      typeof warning === "string"
+    ) {
+      await browser.runtime
+        .sendMessage({ type: "camtuner:stream-state", tuned, reason, warning })
+        .catch(() => {})
     }
     return
   }

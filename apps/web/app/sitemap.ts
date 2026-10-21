@@ -50,6 +50,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Legal
     entry("/privacy", LEGAL_LAST_MODIFIED, "yearly", 0.3),
     entry("/terms", LEGAL_LAST_MODIFIED, "yearly", 0.3),
+    // Press kit (store promo assets)
+    entry("/screenshots", SITE_LAST_MODIFIED, "monthly", 0.3),
     // Changelog (indexed — dated release history)
     entry(
       "/whats-new",

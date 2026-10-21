@@ -4,7 +4,7 @@ export const brand = {
   name: "CamTuner",
   tagline: "Professional Webcam Configurator",
   title: "CamTuner — Professional Webcam Configurator",
-  version: "3.1.2",
+  version: "3.2.0",
   baseUrl: envLib.webUrl,
   description: {
     full: "Crop, zoom, and align your live camera feed directly in your browser. Free Chrome extension for professional webcam framing on Google Meet and Zoom.",

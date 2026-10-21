@@ -7,7 +7,7 @@ export const brand = {
   appName: "CamTuner",
   slug: "cam-tuner",
   identifier: "app.camtuner",
-  version: "3.1.2",
+  version: "3.2.0",
   tagline: "Professional Webcam Configurator",
   developer: {
     name: "Tonmoy Deb",

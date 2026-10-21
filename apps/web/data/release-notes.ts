@@ -9,6 +9,14 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.1.2",
+    date: "2026-08-07",
+    title: "Maintenance Release",
+    highlights: [
+      "Version and dependency housekeeping — no user-facing changes in this release",
+    ],
+  },
+  {
     version: "3.1.1",
     date: "2026-08-06",
     title: "Firefox Popup Crash Fix",

@@ -31,11 +31,7 @@
     "description": "Crop, zoom and frame your webcam right in the browser, on Meet, Zoom and every other call — with nothing leaving your machine.",
     "primaryCta": "Add to Chrome — it's free",
     "secondaryCta": "Try it live",
-    "trust": [
-      "Free forever",
-      "No account",
-      "100% on-device"
-    ],
+    "trust": ["Free forever", "No account", "100% on-device"],
     "visualAlt": "Before and after: a webcam feed goes from off-center and cluttered to framed and centered with CamTuner"
   },
   "problem": {
@@ -164,6 +160,48 @@
         "icon": "Palette",
         "title": "Your look, remembered",
         "description": "Settings persist between sessions, and you can set different framing per site."
+      }
+    ]
+  },
+  "reviews": {
+    "title": "Straight from the Chrome Web Store.",
+    "subtitle": "Every quote below is a real review from a CamTuner user.",
+    "rating": "5.0 · Chrome Web Store",
+    "sources": {
+      "chrome": "Chrome Web Store review",
+      "firefox": "Firefox Add-ons review"
+    },
+    "allReviewsCta": "Read all reviews on the Chrome Web Store",
+    "items": [
+      {
+        "quote": "CamTuner is a fantastic tool for anyone who wants to look more professional on video calls. I love how I can zoom, crop, adjust brightness, and more — all right from my browser. The best part? It saves my settings and works with Zoom, Meet, and Teams without extra software. Super fast, super easy. Highly recommended!",
+        "name": "Saikat Dey",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjXAWbi38VmV9RfwZEqdlzq_UfnvSxSbs5kLRi0iCWmNED_miK9y=s96-c"
+      },
+      {
+        "quote": "CamTuner is an amazing tool that enhances the webcam experience with some features that are necessary.",
+        "name": "Prodip Karati",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjUgbIsNMlq72g5yf2zTKUS2yRr9DvO6SUmkGh2bDM8yfu12RvkY=s96-c"
+      },
+      {
+        "quote": "A very useful extension for changing webcam aspect ratios and more.",
+        "name": "The Cosmic Yog-Sothoth of Dunwich and Horror",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjVLO1stdYqIS1Djsb0nhTKorc-7Zhtfh_ePj17PdBnR2lDIxsU=s96-c"
+      },
+      {
+        "quote": "The addon Developer is very receptive to users' problems. With a simple update to incorporate a feature request it solved a very difficult problem under Linux and made it work with MS Teams. The Addon works flawlessly. Thank you!",
+        "name": "Maverick",
+        "browser": "firefox",
+        "avatar": null
+      },
+      {
+        "quote": "Insane 🗿",
+        "name": "Digontha Das",
+        "browser": "firefox",
+        "avatar": null
       }
     ]
   },

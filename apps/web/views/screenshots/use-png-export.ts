@@ -125,6 +125,14 @@ export function usePngExport() {
       { scale, filename }: ExportOptions
     ) => {
       setBusyId(id)
+      // The preview wraps the frame in a CSS scale transform. html-to-image
+      // copies that transform into the clone, which would shrink the content
+      // inside the full-size canvas and leave the PNG empty on the right and
+      // bottom — so export the node with the transform neutralized.
+      const prevTransform = node.style.transform
+      const prevVisibility = node.style.visibility
+      node.style.transform = "none"
+      node.style.visibility = "visible"
       try {
         // Fonts must be present in the page before they can be embedded.
         await document.fonts.ready
@@ -138,6 +146,8 @@ export function usePngExport() {
         link.href = dataUrl
         link.click()
       } finally {
+        node.style.transform = prevTransform
+        node.style.visibility = prevVisibility
         setBusyId(null)
       }
     },

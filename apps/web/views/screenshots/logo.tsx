@@ -96,12 +96,13 @@ export const BrandLockup = ({
           fontWeight: 600,
           letterSpacing: "0.08em",
           textTransform: "uppercase",
-          color: palette.lime,
+          color: palette.ink,
           border: `1px solid ${palette.lime}`,
           borderRadius: 999,
           padding: `${fontSize * 0.16}px ${fontSize * 0.48}px`,
           lineHeight: 1.2,
           display: "inline-flex",
+          backgroundColor: palette.lime,
         }}
       >
         {tag}

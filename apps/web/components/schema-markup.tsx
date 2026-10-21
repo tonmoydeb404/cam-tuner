@@ -5,9 +5,11 @@ import { releaseNotes } from "@/data/release-notes"
 import envLib from "@/lib/env"
 
 export const SchemaMarkup = () => {
-  const sameAs = [brand.social.github, envLib.chromeStoreUrl].filter(
-    (url): url is string => Boolean(url)
-  )
+  const sameAs = [
+    brand.social.github,
+    envLib.chromeStoreUrl,
+    envLib.firefoxStoreUrl,
+  ].filter((url): url is string => Boolean(url))
 
   const schema = {
     "@context": "https://schema.org",

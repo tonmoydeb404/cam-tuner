@@ -188,7 +188,16 @@ export default function App() {
   const handlePreview = async () => {
     const webUrl = import.meta.env.VITE_WEB_URL
     if (!webUrl) return
-    await browser.tabs.create({ url: `${webUrl}/preview` })
+    // In site scope, open the preview pre-scoped to this site so edits there
+    // update the site's settings. Bare domain for https; full origin for
+    // http (e.g. localhost dev) so the scheme round-trips.
+    let siteParam: string | null = null
+    if (scope === "site" && siteOrigin) {
+      const url = new URL(siteOrigin)
+      siteParam = url.protocol === "https:" ? url.host : siteOrigin
+    }
+    const query = siteParam ? `?site=${encodeURIComponent(siteParam)}` : ""
+    await browser.tabs.create({ url: `${webUrl}/preview${query}` })
   }
 
   return (
@@ -250,7 +259,7 @@ export default function App() {
             className="flex-1"
           >
             <IconEye size={15} />
-            Show Preview
+            {scope === "site" ? "Preview This Site" : "Show Preview"}
           </Button>
           <HelpButton onClick={() => setHelpOpen(true)} />
         </div>

@@ -226,10 +226,7 @@ export default async function PersonaPage({ params }: Props) {
           </section>
 
           <div className="flex flex-col items-start gap-3 border-t border-border pt-10">
-            <InstallButton
-              label="Add to Chrome — it's free"
-              className="h-14 px-8"
-            />
+            <InstallButton size="lg" />
             <p className="text-sm text-muted-foreground">
               Set it up once — every call after that is already framed. No
               account, fully on-device.

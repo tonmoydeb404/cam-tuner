@@ -39,8 +39,8 @@ export const CtaSection = () => (
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 pb-6">
         <InstallButton
-          label={content.cta.button}
-          className="h-14 bg-background px-8 text-foreground hover:bg-background/85"
+          size="lg"
+          className="bg-background text-foreground hover:bg-background/85"
         />
         <span className="text-sm font-medium">{content.cta.note}</span>
       </div>

@@ -176,10 +176,7 @@ export default async function CropRatioPage({ params }: Props) {
           </section>
 
           <div className="flex flex-col items-start gap-3 border-t border-border pt-10">
-            <InstallButton
-              label="Keep this framing on every call"
-              className="h-14 px-8"
-            />
+            <InstallButton size="lg" />
             <p className="text-sm text-muted-foreground">
               The extension applies your crop automatically in Meet, Zoom and
               everywhere else. Free, no account, on-device.

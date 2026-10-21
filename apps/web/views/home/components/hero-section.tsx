@@ -29,10 +29,7 @@ export const HeroSection = () => (
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <InstallButton
-              label={content.hero.primaryCta}
-              className="h-14 px-8"
-            />
+            <InstallButton size="lg" />
             <Link
               href="/#demo"
               className={cn(

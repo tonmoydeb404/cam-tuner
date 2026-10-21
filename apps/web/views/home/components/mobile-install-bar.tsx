@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import content from "../../../data/content.json"
 import { InstallButton } from "./install-button"
 
 /** Keeps an install CTA in reach on small screens once the hero scrolls away. */
@@ -25,7 +24,11 @@ export const MobileInstallBar = () => {
           exit={{ y: 80 }}
           className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 p-3 backdrop-blur-md sm:hidden"
         >
-          <InstallButton label={content.nav.primaryCta} className="w-full" />
+          <InstallButton
+            size="default"
+            groupClassName="w-full"
+            className="flex-1"
+          />
         </motion.div>
       )}
     </AnimatePresence>

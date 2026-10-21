@@ -52,7 +52,7 @@ export const InstallSection = () => (
       </ol>
 
       <div className="mt-14">
-        <InstallButton label={content.hero.primaryCta} className="h-14 px-8" />
+        <InstallButton size="lg" />
       </div>
     </div>
   </section>

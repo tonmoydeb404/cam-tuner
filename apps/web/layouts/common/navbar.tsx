@@ -8,8 +8,7 @@ import { assets } from "@/assets"
 import ThemeButton from "@/components/theme-button"
 import { brand } from "@/data/brand"
 import content from "@/data/content.json"
-import envLib from "@/lib/env"
-import { buttonVariants } from "@workspace/ui/components/button"
+import { InstallButton } from "@/views/home/components/install-button"
 import {
   Drawer,
   DrawerClose,
@@ -63,17 +62,7 @@ export const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeButton />
 
-          <Link
-            href={envLib.chromeStoreUrl ?? "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              buttonVariants({ variant: "default", size: "lg" }),
-              "hidden sm:inline-flex"
-            )}
-          >
-            {content.nav.primaryCta}
-          </Link>
+          <InstallButton size="sm" groupClassName="hidden sm:inline-flex" />
 
           <Drawer open={menuOpen} onOpenChange={setMenuOpen} showSwipeHandle>
             <button
@@ -111,18 +100,11 @@ export const Navbar = () => {
               </nav>
 
               <DrawerFooter>
-                <Link
-                  href={envLib.chromeStoreUrl ?? "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "w-full"
-                  )}
-                >
-                  {content.nav.primaryCta}
-                </Link>
+                <InstallButton
+                  size="default"
+                  groupClassName="w-full"
+                  className="flex-1"
+                />
               </DrawerFooter>
             </DrawerContent>
           </Drawer>

@@ -135,7 +135,7 @@ export const Showcase = () => {
             ))}
 
             <div className="py-8">
-              <InstallButton label={content.hero.primaryCta} />
+              <InstallButton />
             </div>
           </div>
         </div>

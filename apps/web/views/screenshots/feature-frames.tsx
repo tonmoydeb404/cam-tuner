@@ -1,12 +1,6 @@
 import { fontSans } from "./fonts"
 import { palette } from "./palette"
-import {
-  Stage,
-  CropOverlay,
-  SceneChip,
-  TrackingBox,
-  type Rect,
-} from "./scene"
+import { Stage, CropOverlay, SceneChip, TrackingBox, type Rect } from "./scene"
 import { FeatureLayout } from "./kit"
 
 const RAW_16_9: Rect = { x: 4, y: 27, w: 152, h: 85.5 }

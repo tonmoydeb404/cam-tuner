@@ -42,8 +42,8 @@ export function getGuides({
       id: "camera",
       title: "A different camera is in use",
       message: cameraLabel
-        ? `CamTuner is only tuning “${cameraLabel}”, but this page is using a different camera. Switch to that camera, or clear the camera selection.`
-        : "This page is using a different camera than the one selected in the web preview. Switch cameras, or clear the selection.",
+        ? `CamTuner is only tuning “${cameraLabel}”, but this page is using a different camera. Switch to that camera, or change the tuned camera in the web preview.`
+        : "This page is using a different camera than the one selected in the web preview. Switch cameras, or change the selected camera in the web preview.",
       active: live?.tuned === false && live.reason === "camera",
     },
     {
@@ -59,6 +59,14 @@ export function getGuides({
       message:
         "Center Stage couldn't load on this page. Check your connection and reload the page.",
       active: live?.warning === "tracking",
+    },
+    {
+      id: "change-camera",
+      title: "How to change camera",
+      message: `Click “Show Preview” below to open the web preview, then pick your camera under “Camera Source”. CamTuner tunes the camera you pick there${
+        cameraLabel ? ` — currently “${cameraLabel}”` : ""
+      }.`,
+      active: false,
     },
   ]
 
@@ -140,7 +148,7 @@ export function GuideBanners({
         return (
           <div
             key={g.id}
-            className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-snug text-amber-700 dark:text-amber-400"
+            className="flex items-start gap-1.5 rounded-[12px] border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-snug text-amber-700 dark:text-amber-400"
           >
             <p className="flex-1">{g.message}</p>
             {dismissable && (

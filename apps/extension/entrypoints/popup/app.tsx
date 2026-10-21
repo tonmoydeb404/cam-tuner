@@ -149,6 +149,12 @@ export default function App() {
   }
 
   const handleResetSite = async (origin: string) => {
+    // On the current site, stay on the "This site" tab: re-snapshot the
+    // global settings instead of dropping the entry.
+    if (origin === siteOrigin && scope === "site") {
+      await customizeSite(origin)
+      return
+    }
     await resetSite(origin)
     if (origin === siteOrigin) setScope("global")
   }

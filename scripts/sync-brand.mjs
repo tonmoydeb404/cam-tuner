@@ -105,11 +105,16 @@ export const brand = ${JSON.stringify(
     name: brand.appName,
     tagline: brand.tagline,
     title: `${brand.appName} — ${brand.tagline}`,
+    version: brand.version,
     baseUrl: "__WEB_URL__",
     description: brand.web.description,
     author: brand.appName,
     keywords: brand.web.keywords,
     social: { github: brand.repository },
+    developer: {
+      name: brand.developer.name,
+      website: brand.developer.website,
+    },
     ogImage: brand.web.ogImage,
     footerLinks: [
       { name: "Privacy", url: "/privacy" },

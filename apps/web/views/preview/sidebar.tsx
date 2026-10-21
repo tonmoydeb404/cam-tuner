@@ -67,7 +67,7 @@ const PreviewSidebar = ({ webcam, tuner }: Props) => {
 
   return (
     <div className="flex w-full flex-col gap-6 md:w-80">
-      <Card className="bg-muted dark:bg-card">
+      <Card className="bg-background dark:bg-card">
         <CardHeader>
           <CameraSourceSelect
             devices={webcam.devices}

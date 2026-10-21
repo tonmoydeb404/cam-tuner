@@ -1,12 +1,13 @@
 import { brand } from "@/data/brand"
 import PageHeader from "@/layouts/page-layout/header"
-import type { Metadata } from "next"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: "/terms",
   title: "Terms and Conditions — CamTuner",
   description:
-    "CamTuner terms and conditions. Read the terms governing your use of the extension and website.",
-}
+    "CamTuner terms and conditions. The terms governing your use of the free webcam framing extension and this website.",
+})
 
 export default function TermsPage() {
   return (

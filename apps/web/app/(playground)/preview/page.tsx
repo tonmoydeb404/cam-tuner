@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 import PreviewPageClient from "./preview-client"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: "/preview",
   title: "Camera Preview — CamTuner",
   description:
     "Preview and configure your webcam settings in real-time with CamTuner.",
-  robots: { index: false, follow: false },
-}
+  noindex: true,
+})
 
 export default function PreviewPage() {
   return <PreviewPageClient />

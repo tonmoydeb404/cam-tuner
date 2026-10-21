@@ -1,17 +1,23 @@
 import {
   addBackgroundImage,
   findBackgroundImage,
+  getSiteSetting,
+  getTunerConfig,
   removeBackgroundImage,
   resolveEffectiveSettings,
   selectedCameraLabel,
+  setSiteConfig,
   setTunerConfig,
   siteSettings,
   tunerConfig,
   virtualCamEnabled,
 } from "../lib/storage"
+import type { TunerConfig } from "@workspace/stream-config"
 
 const CAMTUNER_EVENT = "camtuner:config-update"
 const CAMTUNER_REQUEST = "camtuner:request-config"
+const CAMTUNER_REQUEST_SITE_CONFIG = "camtuner:request-site-config"
+const CAMTUNER_SITE_CONFIG = "camtuner:site-config"
 const CAMTUNER_FETCH_BG = "camtuner:fetch-bg"
 const CAMTUNER_FETCH_BG_RESULT = "camtuner:fetch-bg-result"
 const CAMTUNER_STORE_BG = "camtuner:store-bg"
@@ -57,6 +63,32 @@ export default defineContentScript({
     if (w.__camtunerBridgeInstalled) return
     w.__camtunerBridgeInstalled = true
 
+    // Site-scope editing bridge: the web preview can edit one origin's
+    // settings via /preview?site=<origin>. Track the requested origin and
+    // push its effective config whenever global or per-site settings change.
+    let siteConfigOrigin: string | null = null
+
+    async function pushSiteConfig(origin: string) {
+      const [globalConfig, site] = await Promise.all([
+        getTunerConfig(),
+        getSiteSetting(origin),
+      ])
+      window.postMessage(
+        {
+          type: CAMTUNER_SITE_CONFIG,
+          origin,
+          config: site ? site.config : globalConfig,
+          customized: site !== null,
+        },
+        window.location.origin
+      )
+    }
+
+    function pushAll() {
+      void pushEffective()
+      if (siteConfigOrigin) void pushSiteConfig(siteConfigOrigin)
+    }
+
     // Immediately push state so the MAIN world injector has it before getUserMedia fires
     pushEffective()
 
@@ -65,13 +97,21 @@ export default defineContentScript({
       pushEffective()
     })
 
+    // Bridge: when the web preview requests a specific site's config
+    window.addEventListener(CAMTUNER_REQUEST_SITE_CONFIG, (e) => {
+      const origin = (e as CustomEvent).detail?.origin
+      if (typeof origin !== "string") return
+      siteConfigOrigin = origin
+      void pushSiteConfig(origin)
+    })
+
     // Bridge: sync config from web preview page to storage
     window.addEventListener("message", (e) => handleMessage(e))
 
     // Bridge: watch storage changes and forward to MAIN world
-    tunerConfig.watch(() => pushEffective())
+    tunerConfig.watch(pushAll)
     virtualCamEnabled.watch(() => pushEffective())
-    siteSettings.watch(() => pushEffective())
+    siteSettings.watch(pushAll)
   },
 })
 
@@ -87,6 +127,33 @@ async function handleMessage(event: MessageEvent) {
       console.error("Failed to sync config:", error)
       window.postMessage(
         { type: "syncConfigError", error: "Failed to save config" },
+        event.origin
+      )
+    }
+    return
+  }
+
+  if (event.data?.type === "syncSiteConfig" && event.data.config) {
+    const { origin, config } = event.data as {
+      origin?: unknown
+      config?: unknown
+    }
+    if (typeof origin !== "string" || typeof config !== "object" || !config)
+      return
+    try {
+      await setSiteConfig(origin, config as TunerConfig)
+      window.postMessage(
+        { type: "syncSiteConfigSuccess", origin },
+        event.origin
+      )
+    } catch (error) {
+      console.error("Failed to sync site config:", error)
+      window.postMessage(
+        {
+          type: "syncSiteConfigError",
+          origin,
+          error: "Failed to save site config",
+        },
         event.origin
       )
     }

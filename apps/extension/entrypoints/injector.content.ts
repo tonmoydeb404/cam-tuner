@@ -58,147 +58,179 @@ export default defineContentScript({
     if (w.__camtunerInstalled) return
     w.__camtunerInstalled = true
 
-    // Some pages (e.g. Google Meet) enforce `require-trusted-types-for 'script'`
-    // which blocks any plain string passed to a script-loading sink: Worker(),
-    // importScripts(), script.src, etc.
+    // Trusted Types / Worker / console compatibility shims for MediaPipe.
     //
-    // @mediapipe/tasks-vision bundles Google's Closure Library.  Closure wraps
-    // script URLs in Xi(), a helper that produces a plain JS object:
-    //   { g: <string | TrustedScriptURL>, toString() { return this.g + "" } }
-    // When that object hits a TT sink, the browser calls toString() → gets a
-    // plain string → enforcement blocks it.
-    //
-    // The Worker constructor runs in the main thread AND MediaPipe's Emscripten
-    // runtime calls importScripts() *inside* the spawned Worker — both inherit
-    // the page's TT enforcement.
-    //
-    // Fix A — "default" Trusted Types policy (broadest fix)
-    // The "default" policy is the browser's last-resort fallback invoked
-    // automatically whenever any TT sink (Worker(), importScripts(), script.src,
-    // eval(), etc.) receives a plain string — including inside Workers that
-    // inherit the page's enforcement.  We install it at document_start, before
-    // any page script, so the slot is guaranteed empty.
-    //
-    // createScriptURL: allow any URL — the WASM runtime loads scripts from
-    //   blob:, https://, and chrome-extension:// origins at runtime.
-    // createScript:    allow any script string — chrome.scripting.executeScript
-    //   with world:"MAIN" internally evaluates scripts; without this, the
-    //   injection would be blocked and our adapters could never load.
-    // createHTML:      intentionally absent → stays blocked, preserving the
-    //   page's innerHTML/template-injection protections.
-    ;(function installTrustedTypesDefaultPolicy() {
-      const tt = (self as any).trustedTypes
-      if (!tt?.createPolicy) return
-      try {
-        tt.createPolicy("default", {
-          createScriptURL: (url: string) => url,
-          createScript: (script: string) => script,
-        })
-      } catch {
-        // "default" may already exist or be forbidden by the page's
-        // trusted-types CSP directive.  The Worker patch below is the fallback.
-      }
-    })()
+    // Deliberately NOT installed at document_start: these patches are only
+    // needed while a MediaPipe adapter (Center Stage / background effects) is
+    // being loaded.  Installing them on every page up front broke Outlook on
+    // the web on both Chrome and Firefox: Outlook's boot code creates its own
+    // `default` Trusted Types policy, and our earlier `default` policy made
+    // that call throw (`Policy with name "default" already exists`), killing
+    // the boot.  It also silently defeated `require-trusted-types-for
+    // 'script'` XSS protections on pages where no camera is ever opened.
+    // ensureTTCompliance() is called from injectAdapter() below, so the shims
+    // are in place before any adapter or WASM code runs.
+    let ttComplianceInstalled = false
+    function ensureTTCompliance() {
+      if (ttComplianceInstalled) return
+      ttComplianceInstalled = true
 
-    // Fix B — duplicate createPolicy caching
-    // If the page creates "goog#html" before MediaPipe runs (which Meet does),
-    // MediaPipe's own createPolicy("goog#html") call throws and Xi() falls back
-    // to raw strings.  Caching lets MediaPipe reuse the already-created policy
-    // and produce proper TrustedScriptURL objects.
-    ;(function patchTrustedTypesForDuplicatePolicies() {
       const tt = (self as any).trustedTypes
-      if (!tt?.createPolicy) return
-      const cache = new Map<string, unknown>()
-      const original: (name: string, rules: unknown) => unknown =
-        tt.createPolicy.bind(tt)
-      try {
-        tt.createPolicy = function (name: string, rules: unknown) {
-          if (cache.has(name)) return cache.get(name)
-          const policy = original(name, rules)
-          cache.set(name, policy)
-          return policy
-        }
-      } catch {
-        // trustedTypes.createPolicy may be non-writable on some pages; ignore
-      }
-    })()
 
-    // Fix C — Worker constructor patch
-    // Secondary fallback for pages where the "default" policy slot is already
-    // taken.  Unwraps Closure Library TrustedScriptURL wrappers (.g property)
-    // and converts chrome-extension:// strings through a named policy so the
-    // native Worker constructor receives a proper TrustedScriptURL.
-    // Note: this does NOT cover importScripts() inside spawned Workers —
-    // Fix A (default policy) is required for that case.
-    ;(function patchWorkerForExtensionUrls() {
-      const tt = (self as any).trustedTypes
-      const NativeWorker = (self as any).Worker
-      if (!tt || !NativeWorker) return
-
-      let policy: { createScriptURL: (u: string) => unknown } | null = null
-      for (const name of ["camtuner-wasm", "camtuner"]) {
+      // Fix A — "default" Trusted Types policy (broadest fix)
+      // Some pages (e.g. Google Meet) enforce `require-trusted-types-for
+      // 'script'`, which blocks any plain string passed to a script-loading
+      // sink: Worker(), importScripts(), script.src, etc.
+      //
+      // @mediapipe/tasks-vision bundles Google's Closure Library.  Closure
+      // wraps script URLs in Xi(), a helper that produces a plain JS object:
+      //   { g: <string | TrustedScriptURL>, toString() { return this.g + "" } }
+      // When that object hits a TT sink, the browser calls toString() → gets a
+      // plain string → enforcement blocks it.
+      //
+      // The Worker constructor runs in the main thread AND MediaPipe's
+      // Emscripten runtime calls importScripts() *inside* the spawned Worker —
+      // both inherit the page's TT enforcement.
+      //
+      // The "default" policy is the browser's last-resort fallback invoked
+      // automatically whenever any TT sink (Worker(), importScripts(),
+      // script.src, eval(), etc.) receives a plain string — including inside
+      // Workers that inherit the page's enforcement.  Installed right before
+      // the adapter loads: if the page already claimed the slot, the Worker
+      // patch (Fix C) is the fallback.
+      //
+      // createScriptURL: allow any URL — the WASM runtime loads scripts from
+      //   blob:, https://, and chrome-extension:// origins at runtime.
+      // createScript:    allow any script string — chrome.scripting.executeScript
+      //   with world:"MAIN" internally evaluates scripts; without this, the
+      //   injection would be blocked and our adapters could never load.
+      // createHTML:      intentionally absent → stays blocked, preserving the
+      //   page's innerHTML/template-injection protections.
+      let defaultPolicy: unknown = null
+      if (tt?.createPolicy) {
         try {
-          policy = tt.createPolicy(name, {
+          defaultPolicy = tt.createPolicy("default", {
             createScriptURL: (url: string) => url,
+            createScript: (script: string) => script,
           })
-          break
         } catch {
-          // Policy name forbidden by CSP or already taken — try next.
+          // "default" may already exist (pages like Outlook on the web create
+          // their own during boot — colliding on this name is exactly what
+          // broke Outlook's startup) or be forbidden by the page's
+          // trusted-types CSP directive.  Reuse the page's default policy when
+          // one exists; the Worker patch below is the remaining fallback.
+          defaultPolicy = tt.defaultPolicy ?? null
         }
       }
-      if (!policy) return
 
-      function resolveUrl(raw: unknown): unknown {
-        // Closure Library wrapper: { g: <TrustedScriptURL | string> }
-        if (raw != null && typeof raw === "object") {
-          const inner = (raw as any).g
-          if (inner != null) {
-            if (tt.isScriptURL(inner)) return inner // native TrustedScriptURL
-            if (
-              typeof inner === "string" &&
-              inner.startsWith("chrome-extension://")
-            )
-              return policy!.createScriptURL(inner)
+      // Fix B — duplicate createPolicy fallback
+      // Natively, a second createPolicy() with an existing name can throw
+      // (this is what crashed Outlook's boot once our "default" policy
+      // existed).  The native call always runs first, respecting pages that
+      // intentionally create same-named policies; the wrapper only softens
+      // the failure for MediaPipe's benefit: reuse the cached policy if it
+      // was created through this wrapper, otherwise fall back to the
+      // "default" policy from Fix A — MediaPipe's Closure helper treats the
+      // throw as "fall back to raw strings", which the default policy then
+      // lets through TT sinks.
+      if (tt?.createPolicy) {
+        const cache = new Map<string, unknown>()
+        try {
+          const original: (name: string, rules: unknown) => unknown =
+            tt.createPolicy.bind(tt)
+          tt.createPolicy = function (name: string, rules: unknown) {
+            try {
+              const policy = original(name, rules)
+              cache.set(name, policy)
+              return policy
+            } catch {
+              const cached = cache.get(name)
+              if (cached !== undefined) return cached
+              if (defaultPolicy) return defaultPolicy
+              throw new Error(`Policy "${name}" already exists`)
+            }
           }
+        } catch {
+          // trustedTypes.createPolicy may be non-writable on some pages; ignore
+        }
+      }
+
+      // Fix C — Worker constructor patch
+      // Secondary fallback for pages where the "default" policy slot is
+      // already taken.  Unwraps Closure Library TrustedScriptURL wrappers
+      // (.g property) and converts chrome-extension:// strings through a
+      // named policy so the native Worker constructor receives a proper
+      // TrustedScriptURL.
+      // Note: this does NOT cover importScripts() inside spawned Workers —
+      // Fix A (default policy) is required for that case.
+      ;(function patchWorkerForExtensionUrls() {
+        const NativeWorker = (self as any).Worker
+        if (!tt || !NativeWorker) return
+
+        let policy: { createScriptURL: (u: string) => unknown } | null = null
+        for (const name of ["camtuner-wasm", "camtuner"]) {
+          try {
+            policy = tt.createPolicy(name, {
+              createScriptURL: (url: string) => url,
+            })
+            break
+          } catch {
+            // Policy name forbidden by CSP or already taken — try next.
+          }
+        }
+        if (!policy) return
+
+        function resolveUrl(raw: unknown): unknown {
+          // Closure Library wrapper: { g: <TrustedScriptURL | string> }
+          if (raw != null && typeof raw === "object") {
+            const inner = (raw as any).g
+            if (inner != null) {
+              if (tt.isScriptURL(inner)) return inner // native TrustedScriptURL
+              if (
+                typeof inner === "string" &&
+                inner.startsWith("chrome-extension://")
+              )
+                return policy!.createScriptURL(inner)
+            }
+            return raw
+          }
+          if (typeof raw === "string" && raw.startsWith("chrome-extension://"))
+            return policy!.createScriptURL(raw)
           return raw
         }
-        if (typeof raw === "string" && raw.startsWith("chrome-extension://"))
-          return policy!.createScriptURL(raw)
-        return raw
-      }
 
-      function PatchedWorker(this: Worker, url: unknown, options?: unknown) {
-        return new NativeWorker(resolveUrl(url), options)
-      }
-      PatchedWorker.prototype = NativeWorker.prototype
-      Object.setPrototypeOf(PatchedWorker, NativeWorker)
-      try {
-        ;(self as any).Worker = PatchedWorker
-      } catch {
-        // Worker may be non-writable on some pages; ignore.
-      }
-    })()
+        function PatchedWorker(this: Worker, url: unknown, options?: unknown) {
+          return new NativeWorker(resolveUrl(url), options)
+        }
+        PatchedWorker.prototype = NativeWorker.prototype
+        Object.setPrototypeOf(PatchedWorker, NativeWorker)
+        try {
+          ;(self as any).Worker = PatchedWorker
+        } catch {
+          // Worker may be non-writable on some pages; ignore.
+        }
+      })()
 
-    // Fix D — silence noisy MediaPipe/Emscripten glog output.
-    // The MediaPipe WASM runtime (Google's prebuilt binary) routes its native
-    // glog lines (e.g. "W0731 08:39:51 ... gl_context.cc:1118] OpenGL error
-    // checking is disabled") through Emscripten's default stderr handler,
-    // which calls console.error. These are harmless init-time diagnostics,
-    // but console.error calls originating from an injected extension script
-    // get flagged in chrome://extensions' "Errors" panel. We can't patch the
-    // prebuilt WASM binary, so filter these specific glog-formatted lines
-    // before they reach the real console.error.
-    ;(function silenceMediaPipeGlogNoise() {
+      // Fix D — silence noisy MediaPipe/Emscripten glog output.
+      // The MediaPipe WASM runtime (Google's prebuilt binary) routes its native
+      // glog lines (e.g. "W0731 08:39:51 ... gl_context.cc:1118] OpenGL error
+      // checking is disabled") through Emscripten's default stderr handler,
+      // which calls console.error. These are harmless init-time diagnostics,
+      // but console.error calls originating from an injected extension script
+      // get flagged in chrome://extensions' "Errors" panel. We can't patch the
+      // prebuilt WASM binary, so filter these specific glog-formatted lines
+      // before they reach the real console.error.
       const GLOG_PATTERN = /^[EWI]\d{4}\s+[\d:.]+\s+\d+\s+\S+\.(cc|h):\d+\]/
       const nativeError = console.error.bind(console)
+      const nativeDebug = console.debug.bind(console)
       console.error = (...args: unknown[]) => {
         if (typeof args[0] === "string" && GLOG_PATTERN.test(args[0])) {
-          console.debug(...args)
+          nativeDebug(...args)
           return
         }
         nativeError(...args)
       }
-    })()
+    }
 
     // Start as disabled: until the ISOLATED bridge answers with the real
     // state, pass raw video through instead of processing with defaults.
@@ -285,6 +317,10 @@ export default defineContentScript({
         "mediapipe-segmenter-adapter.js": "__camtunerSegmenterAdapter",
         "rvm-segmenter-adapter.js": "__camtunerRVMAdapter",
       }
+      // Only adapter/WASM code consumes the shims — install them on first
+      // adapter use, never at document_start (see ensureTTCompliance above).
+      ensureTTCompliance()
+
       if ((self as any)[globalKeys[file]]) return Promise.resolve()
 
       const reqId = `adapter-${++adapterReqCounter}`
@@ -562,13 +598,17 @@ export default defineContentScript({
       }
     }
 
-    const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
-      navigator.mediaDevices
-    )
+    // `navigator.mediaDevices` is undefined on insecure origins and in a few
+    // embedded contexts — there is nothing to intercept there.
+    const mediaDevices = (navigator as any).mediaDevices as
+      MediaDevices | undefined
+    if (!mediaDevices?.getUserMedia) return
+
+    const originalGetUserMedia = mediaDevices.getUserMedia.bind(mediaDevices)
 
     ;(window as any).__camtuner_getUserMedia = originalGetUserMedia
 
-    navigator.mediaDevices.getUserMedia = async function (
+    mediaDevices.getUserMedia = async function (
       constraints?: MediaStreamConstraints
     ) {
       await initialStateReady

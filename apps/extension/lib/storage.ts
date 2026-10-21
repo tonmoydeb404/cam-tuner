@@ -194,6 +194,23 @@ export async function setSiteTunerConfig(
   })
 }
 
+// Create-or-replace a site's full config snapshot (keeps its enabled mode).
+// Used by the web preview's ?site=<origin> editor, which always sends a
+// complete TunerConfig.
+export async function setSiteConfig(
+  origin: string,
+  config: TunerConfig
+): Promise<void> {
+  const all = await getSiteSettings()
+  await siteSettings.setValue({
+    ...all,
+    [origin]: {
+      config: { ...config },
+      enabled: all[origin]?.enabled ?? "default",
+    },
+  })
+}
+
 export async function setSiteEnabledMode(
   origin: string,
   enabled: SiteEnabledMode

@@ -4,6 +4,7 @@ export const brand = {
   name: "CamTuner",
   tagline: "Professional Webcam Configurator",
   title: "CamTuner — Professional Webcam Configurator",
+  version: "3.1.2",
   baseUrl: envLib.webUrl,
   description: {
     full: "Crop, zoom, and align your live camera feed directly in your browser. Free Chrome extension for professional webcam framing on Google Meet and Zoom.",
@@ -29,6 +30,10 @@ export const brand = {
   social: {
     github: "https://github.com/tonmoydeb404/cam-tuner",
   },
+  developer: {
+    name: "Tonmoy Deb",
+    website: "https://tonmoydeb.com",
+  },
   ogImage: {
     url: "https://camtuner.app/opengraph-image",
     width: 1200,
@@ -36,9 +41,21 @@ export const brand = {
     alt: "CamTuner — Professional Webcam Configurator",
   },
   footerLinks: [
-    { name: "Privacy", url: "/privacy" },
-    { name: "Terms", url: "/terms" },
-    { name: "Github", url: "https://github.com/tonmoydeb404/cam-tuner" },
-    { name: "Developer", url: "https://tonmoydeb.com" },
+    {
+      name: "Privacy",
+      url: "/privacy",
+    },
+    {
+      name: "Terms",
+      url: "/terms",
+    },
+    {
+      name: "Github",
+      url: "https://github.com/tonmoydeb404/cam-tuner",
+    },
+    {
+      name: "Developer",
+      url: "https://tonmoydeb.com",
+    },
   ],
 } as const

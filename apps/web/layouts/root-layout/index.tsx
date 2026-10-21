@@ -1,6 +1,6 @@
 import { ReactNode } from "react"
 import { Footer } from "../common/footer"
-import { HomeNavbar } from "./navbar"
+import { Navbar } from "../common/navbar"
 
 type Props = {
   children: ReactNode
@@ -9,7 +9,7 @@ type Props = {
 const RootLayout = ({ children }: Props) => {
   return (
     <>
-      <HomeNavbar />
+      <Navbar />
       {children}
       <Footer />
     </>

@@ -14,6 +14,9 @@ const nunitoSansHeading = Nunito_Sans({
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
+// Site-wide defaults only. No canonical here: layout metadata cascades to
+// every child page, so a root canonical would point all pages at the
+// homepage. Each page declares its own via pageMetadata() in lib/seo.ts.
 export const metadata: Metadata = {
   title: brand.title,
   description: brand.description.full,
@@ -24,7 +27,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: brand.baseUrl,
     siteName: brand.name,
     title: brand.title,
     description: brand.description.short,
@@ -44,9 +46,6 @@ export const metadata: Metadata = {
     images: [brand.ogImage.url],
   },
   robots: { index: true, follow: true },
-  alternates: {
-    canonical: brand.baseUrl,
-  },
 }
 
 export default function AppLayout({

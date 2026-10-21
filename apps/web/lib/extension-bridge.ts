@@ -15,10 +15,7 @@ function postAndWait(
   return new Promise((resolve) => {
     const reqId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const handler = (event: MessageEvent) => {
-      if (
-        event.data?.type === resultType &&
-        event.data?.reqId === reqId
-      ) {
+      if (event.data?.type === resultType && event.data?.reqId === reqId) {
         window.removeEventListener("message", handler)
         resolve(event.data as Record<string, unknown>)
       }
@@ -36,11 +33,9 @@ function postAndWait(
 }
 
 export function fetchBgImage(id: string): Promise<string | null> {
-  return postAndWait(
-    "camtuner:fetch-bg",
-    "camtuner:fetch-bg-result",
-    { id }
-  ).then((res) => (res?.dataUrl as string) ?? null)
+  return postAndWait("camtuner:fetch-bg", "camtuner:fetch-bg-result", {
+    id,
+  }).then((res) => (res?.dataUrl as string) ?? null)
 }
 
 export function storeBgImage(
@@ -56,8 +51,5 @@ export function storeBgImage(
 }
 
 export async function removeBgImage(id: string): Promise<void> {
-  window.postMessage(
-    { type: "camtuner:remove-bg", id },
-    window.location.origin
-  )
+  window.postMessage({ type: "camtuner:remove-bg", id }, window.location.origin)
 }

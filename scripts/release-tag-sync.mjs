@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 
 import { execSync } from "node:child_process"
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 
 const ROOT = resolve(process.cwd())
-const TARGETS = [
-  "package.json",
-  "apps/web/package.json",
-  "apps/extension/package.json",
-]
+const BRAND_FILE = "brand.json"
 
 function run(cmd, options = {}) {
   const output = execSync(cmd, {
@@ -83,14 +79,8 @@ function main() {
     process.exit(1)
   }
 
-  for (const filePath of TARGETS) {
-    if (!existsSync(resolve(ROOT, filePath))) {
-      throw new Error(`Missing target file: ${filePath}`)
-    }
-  }
-
-  const rootPkg = readJson("package.json")
-  const currentVersion = rootPkg.version
+  const brand = readJson(BRAND_FILE)
+  const currentVersion = brand.version
   const newVersion = nextVersion(currentVersion, bumpOrVersion)
   const tag = `v${newVersion}`
 
@@ -100,11 +90,8 @@ function main() {
 
   if (dryRun) {
     console.log(
-      `Dry run complete. Would set version ${currentVersion} -> ${newVersion} in:`
+      `Dry run complete. Would set version ${currentVersion} -> ${newVersion} in ${BRAND_FILE} (and sync all consumers).`
     )
-    for (const filePath of TARGETS) {
-      console.log(`- ${filePath}`)
-    }
     console.log(`Would create tag: ${tag}`)
     return
   }
@@ -122,14 +109,13 @@ function main() {
     throw new Error(`Tag already exists: ${tag}`)
   }
 
-  for (const filePath of TARGETS) {
-    const pkg = readJson(filePath)
-    pkg.version = newVersion
-    writeJson(filePath, pkg)
-  }
+  // brand.json is the single version source of truth; sync-brand propagates it
+  // into every consumer (package.jsons, generated brand.ts files, README, ...).
+  brand.version = newVersion
+  writeJson(BRAND_FILE, brand)
+  run("node scripts/sync-brand.mjs", { stdio: "inherit" })
 
-  const files = TARGETS.join(" ")
-  run(`git add ${files}`)
+  run("git add -A")
   run(`git commit -m "chore(release): ${tag}"`, { stdio: "inherit" })
   run(`git tag -a ${tag} -m "Release ${tag}"`)
 
@@ -138,9 +124,7 @@ function main() {
     run("git push --tags", { stdio: "inherit" })
   }
 
-  console.log(
-    `Released ${tag} and synced versions in ${TARGETS.length} package files.`
-  )
+  console.log(`Released ${tag} (version synced via ${BRAND_FILE}).`)
 }
 
 try {

@@ -1,6 +1,6 @@
 ![CamTuner Logo](./apps/extension/public/icon128.png)
 
-# CamTuner
+# <!-- @brand:appName -->CamTuner<!-- /@brand:appName -->
 
 **Your webcam, your rules.** CamTuner is a browser extension that lets you fine-tune your webcam feed — crop, zoom, align, switch aspect ratios, and apply letterbox framing — all in real-time as a virtual webcam for video calls and streaming.
 

@@ -1,86 +1,63 @@
-"use client"
-
-import envLib from "@/lib/env"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import { motion } from "framer-motion"
 import Link from "next/link"
 import content from "../../../data/content.json"
-import { DemoSection } from "./demo-section"
+import { displayClass } from "../fonts"
+import { HeroStage } from "./hero-stage"
+import { InstallButton } from "./install-button"
 
-export const HeroSection = () => {
-  return (
-    <section
-      aria-labelledby="hero-heading"
-      className="relative flex flex-col items-center overflow-hidden px-4 pt-28 pb-20 text-center sm:px-6 lg:pt-36 lg:pb-28"
-    >
-      {/* Background Glows */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/4 left-1/2 -z-10 h-75 w-75 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 opacity-70 blur-[80px] sm:h-150 sm:w-150 sm:blur-[120px]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/4 -z-10 h-50 w-50 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-secondary/10 opacity-50 blur-[60px] sm:h-100 sm:w-100 sm:blur-[100px]"
-      />
-
-      {/* Headline */}
-      <motion.h1
+export const HeroSection = () => (
+  <section
+    aria-labelledby="hero-heading"
+    className="px-4 pt-28 pb-16 sm:px-6 sm:pt-36 lg:pb-24"
+  >
+    <div className="mx-auto max-w-6xl">
+      <h1
         id="hero-heading"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.7, delay: 0.1 }}
-        className="max-w-[90vw] text-5xl leading-[1.1] font-black tracking-tighter sm:max-w-5xl sm:text-7xl sm:leading-[0.95] md:text-8xl lg:text-[9rem]"
+        className={cn(
+          displayClass,
+          "max-w-5xl text-5xl leading-[0.95] font-bold tracking-[-0.04em] text-balance sm:text-7xl lg:text-8xl"
+        )}
       >
-        <span className="bg-linear-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
-          {content.hero.headlineMain}
-        </span>
-        <br />
-        <span className="text-muted-foreground/30">
-          {content.hero.headlineSub}
-        </span>
-      </motion.h1>
+        {content.hero.headlineMain}
+      </h1>
 
-      {/* Description */}
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="mt-6 max-w-xl text-base leading-relaxed font-medium text-muted-foreground sm:mt-8 sm:max-w-2xl sm:text-lg md:text-xl"
-      >
-        {content.hero.description}
-      </motion.p>
+      <div className="mt-12 grid gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:col-span-4">
+          <p className="text-lg leading-relaxed text-muted-foreground">
+            {content.hero.description}
+          </p>
 
-      {/* CTA Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className="z-10 mt-10 flex w-full flex-col gap-4 sm:mt-12 sm:w-auto sm:flex-row"
-      >
-        <Link
-          href={envLib.chromeStoreUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            buttonVariants({ variant: "default" }),
-            "h-15 min-w-60 text-base font-semibold"
-          )}
-        >
-          {content.hero.primaryCta}
-        </Link>
-        <Link
-          href={"/#hero-demo"}
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-15 min-w-50 text-base font-semibold"
-          )}
-        >
-          {content.hero.secondaryCta}
-        </Link>
-      </motion.div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:flex-col">
+            <InstallButton size="lg" />
+            <Link
+              href="/#demo"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-14 rounded-full px-8 text-base font-semibold"
+              )}
+            >
+              {content.hero.secondaryCta}
+            </Link>
+          </div>
 
-      <DemoSection />
-    </section>
-  )
-}
+          <ul className="mt-8 space-y-2 text-sm text-muted-foreground">
+            {content.hero.trust.map((item) => (
+              <li key={item} className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-primary"
+                />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="lg:col-span-8">
+          <HeroStage />
+        </div>
+      </div>
+    </div>
+  </section>
+)

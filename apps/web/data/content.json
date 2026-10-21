@@ -2,91 +2,238 @@
   "nav": {
     "links": [
       {
-        "label": "Demo",
-        "href": "#hero-demo"
+        "label": "Try it",
+        "href": "/#demo"
       },
       {
         "label": "Features",
-        "href": "#features"
+        "href": "/#features"
       },
       {
-        "label": "Workflow",
-        "href": "#workflow"
+        "label": "How it works",
+        "href": "/#install"
+      },
+      {
+        "label": "FAQ",
+        "href": "/#faq"
+      },
+      {
+        "label": "Guides",
+        "href": "/webcam"
       }
     ],
-    "primaryCta": "Get Extension"
+    "primaryCta": "Add to Chrome"
   },
   "hero": {
-    "badge": "Available on Chrome Web Store",
-    "headlineBadge": "PIXEL PERFECT",
-    "headlineMain": "PRO CAMERA",
-    "headlineSub": "IN YOUR BROWSER.",
-    "description": "Stop settling for awkward webcam angles on Google Meet or Zoom. CamTuner is a professional browser extension that lets you crop, zoom, and align your live feed without installing bulky desktop software.",
-    "primaryCta": "Add to Chrome — Free",
-    "secondaryCta": "View Demo",
-    "mockupBadge": "1080p • 60FPS"
+    "badge": "Free Chrome extension",
+    "headlineMain": "Frame yourself properly on every call.",
+    "headlineSub": "Crop, zoom and frame your webcam, right in the browser.",
+    "description": "Crop, zoom and frame your webcam right in the browser, on Meet, Zoom and every other call — with nothing leaving your machine.",
+    "primaryCta": "Add to Chrome — it's free",
+    "secondaryCta": "Try it live",
+    "trust": ["Free forever", "No account", "100% on-device"],
+    "visualAlt": "Before and after: a webcam feed goes from off-center and cluttered to framed and centered with CamTuner"
   },
-  "features": {
-    "title": "Unmatched Control",
-    "subtitle": "Native browser adjustments built for professionals.",
-    "cards": [
+  "problem": {
+    "kicker": "The problem",
+    "title": "Laptop webcams weren't made for calls.",
+    "description": "You look smaller, darker and further away on camera than you do in person — and none of it is your fault.",
+    "pains": [
       {
-        "icon": "Settings",
-        "title": "Granular Controls",
-        "description": "Adjust your aspect ratio, dial in the perfect zoom, and align your shot frame. Our extension intercepts your browser's MediaStream API for zero-latency framing.",
-        "stats": [
-          {
-            "value": "<2ms",
-            "label": "Latency"
-          },
-          {
-            "value": "HD+",
-            "label": "Support"
-          }
-        ]
+        "icon": "Crop",
+        "title": "Wrong shape",
+        "description": "4:3 feeds leave awkward bars or clumsy crops on every call app."
       },
       {
-        "icon": "Shield",
-        "title": "Local Only Processing",
-        "description": "Everything runs in-browser. Frames are cropped locally via WebCodecs, meaning no video data ever leaves your machine."
+        "icon": "UserOff",
+        "title": "Off-center",
+        "description": "You drift to the edge of the frame while half the shot is empty room."
       },
       {
-        "icon": "Palette",
-        "title": "Custom Letterboxing",
-        "description": "Crop to 21:9 or 1:1 and customize the letterbox padding color to match your brand or presentation background."
+        "icon": "ZoomIn",
+        "title": "Too far away",
+        "description": "Wide-angle lenses turn you into a tiny figure in your own meeting."
+      },
+      {
+        "icon": "Home",
+        "title": "Messy background",
+        "description": "Laundry, cables, roommates — whatever's behind you is in the shot too."
+      }
+    ],
+    "bridge": "CamTuner fixes all four before the call app sees a single frame.",
+    "bridgeCta": "See it live"
+  },
+  "worksWith": {
+    "label": "Works on any site that uses your camera",
+    "items": [
+      "Google Meet",
+      "Zoom",
+      "Microsoft Teams",
+      "Discord",
+      "Slack Huddles",
+      "Whereby",
+      "Riverside",
+      "StreamYard"
+    ]
+  },
+  "showcase": {
+    "title": "Tune it live. Right here.",
+    "description": "Start your camera and scroll. Every control below is the real thing, the same ones you get inside the extension.",
+    "sections": [
+      {
+        "id": "frame",
+        "kicker": "Frame",
+        "title": "Pick the shape of your shot",
+        "description": "Choose an aspect ratio, then decide whether the leftover space is padded with bars in any color or cropped away entirely."
+      },
+      {
+        "id": "zoom",
+        "kicker": "Zoom",
+        "title": "Move in without moving the camera",
+        "description": "Dial in a fixed zoom, or switch to auto and let CamTuner keep you at the right size as you lean in and out."
+      },
+      {
+        "id": "align",
+        "kicker": "Align & Center Stage",
+        "title": "Put yourself exactly where you want",
+        "description": "Anchor your shot to any of nine positions, or switch to Auto and let Center Stage track your face to keep you framed as you move. Tracking runs locally, so no video is ever uploaded."
+      },
+      {
+        "id": "background",
+        "kicker": "Background",
+        "title": "Tidy up what's behind you",
+        "description": "Blur a messy room or swap it for an image. Person segmentation happens on your device, frame by frame."
+      },
+      {
+        "id": "flip",
+        "kicker": "Mirror & flip",
+        "title": "Correct the orientation",
+        "description": "Mirror your feed or flip it vertically for webcams and rigs that come out the wrong way around."
       }
     ]
   },
-  "workflow": {
+  "install": {
+    "title": "Installed in under a minute",
+    "description": "Three steps and your next call looks better. There's nothing to configure on the meeting side.",
     "steps": [
       {
         "number": "01",
-        "title": "Mount Extension",
-        "description": "Install from the Chrome Web Store, pin the extension, and give it access to your camera."
+        "title": "Add it to Chrome",
+        "description": "One click from the Chrome Web Store. Pin the icon so it's always within reach."
       },
       {
         "number": "02",
-        "title": "Frame & Tune",
-        "description": "Open the popup to establish your Aspect Ratio, adjust the slider to Zoom in, and drag to Align your face."
+        "title": "Tune your shot",
+        "description": "Open the popup and set your ratio, zoom and alignment. Changes show up instantly."
       },
       {
         "number": "03",
-        "title": "Look Professional",
-        "description": "Your settings persist seamlessly across sessions. Join every Google Meet or Zoom call with perfect framing."
+        "title": "Join any call",
+        "description": "Pick your camera as usual in Meet, Zoom or anywhere else. Your settings are already applied."
       }
     ]
   },
-  "demo": {
-    "badge": "INTERACTIVE DEMO",
-    "title": "Try It Yourself",
-    "description": "Start your camera below and tweak the aspect ratio, zoom, and framing. All processing happens entirely inside your browser using WebCodecs.",
-    "startButton": "Start Camera",
-    "stopButton": "Stop"
+  "features": {
+    "title": "Small extension. Big difference.",
+    "subtitle": "Everything you need to fix a bad camera angle, nothing you don't.",
+    "cards": [
+      {
+        "icon": "Bolt",
+        "title": "Zero-latency framing",
+        "description": "CamTuner hooks the browser's camera stream directly, so adjustments are applied in real time with no visible delay.",
+        "stat": {
+          "value": "<2ms",
+          "label": "Added latency"
+        }
+      },
+      {
+        "icon": "Shield",
+        "title": "Private by design",
+        "description": "Frames are processed locally with WebCodecs. No video, audio or settings ever leave your machine."
+      },
+      {
+        "icon": "World",
+        "title": "Works everywhere",
+        "description": "If a website can ask for your camera, CamTuner can tune it. No per-app setup."
+      },
+      {
+        "icon": "Palette",
+        "title": "Your look, remembered",
+        "description": "Settings persist between sessions, and you can set different framing per site."
+      }
+    ]
+  },
+  "reviews": {
+    "title": "Straight from the Chrome Web Store.",
+    "subtitle": "Every quote below is a real review from a CamTuner user.",
+    "rating": "5.0 · Chrome Web Store",
+    "sources": {
+      "chrome": "Chrome Web Store review",
+      "firefox": "Firefox Add-ons review"
+    },
+    "allReviewsCta": "Read all reviews on the Chrome Web Store",
+    "items": [
+      {
+        "quote": "CamTuner is a fantastic tool for anyone who wants to look more professional on video calls. I love how I can zoom, crop, adjust brightness, and more — all right from my browser. The best part? It saves my settings and works with Zoom, Meet, and Teams without extra software. Super fast, super easy. Highly recommended!",
+        "name": "Saikat Dey",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjXAWbi38VmV9RfwZEqdlzq_UfnvSxSbs5kLRi0iCWmNED_miK9y=s96-c"
+      },
+      {
+        "quote": "CamTuner is an amazing tool that enhances the webcam experience with some features that are necessary.",
+        "name": "Prodip Karati",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjUgbIsNMlq72g5yf2zTKUS2yRr9DvO6SUmkGh2bDM8yfu12RvkY=s96-c"
+      },
+      {
+        "quote": "A very useful extension for changing webcam aspect ratios and more.",
+        "name": "The Cosmic Yog-Sothoth of Dunwich and Horror",
+        "browser": "chrome",
+        "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjVLO1stdYqIS1Djsb0nhTKorc-7Zhtfh_ePj17PdBnR2lDIxsU=s96-c"
+      },
+      {
+        "quote": "The addon Developer is very receptive to users' problems. With a simple update to incorporate a feature request it solved a very difficult problem under Linux and made it work with MS Teams. The Addon works flawlessly. Thank you!",
+        "name": "Maverick",
+        "browser": "firefox",
+        "avatar": null
+      },
+      {
+        "quote": "Insane 🗿",
+        "name": "Digontha Das",
+        "browser": "firefox",
+        "avatar": null
+      }
+    ]
+  },
+  "faq": {
+    "title": "Questions, answered",
+    "items": [
+      {
+        "q": "Is CamTuner really free?",
+        "a": "Yes. It's a free extension with no account, no trial and no watermark."
+      },
+      {
+        "q": "Does my video get uploaded anywhere?",
+        "a": "No. Everything is processed on your device inside the browser. Your camera feed is never sent to us or to any server."
+      },
+      {
+        "q": "Which video call apps does it work with?",
+        "a": "Any website that uses your webcam through the browser, including Google Meet, Zoom in the browser, Microsoft Teams, Discord and more."
+      },
+      {
+        "q": "Will it slow down my computer?",
+        "a": "Cropping and zooming are very light. Face tracking and background effects use more CPU, so you can switch them on only when you need them."
+      },
+      {
+        "q": "Do I need to change settings in Zoom or Meet?",
+        "a": "No. Keep using your normal camera. CamTuner adjusts the stream before the site ever sees it."
+      }
+    ]
   },
   "cta": {
-    "headline": "READY TO UPGRADE?",
-    "description": "Take control of your framing and join thousands of professionals looking their best.",
-    "button": "Install CamTuner Now"
-  },
-  "footer": {}
+    "headline": "Your next call, framed properly.",
+    "description": "Add CamTuner to Chrome in one click. It's free, and it takes less than a minute.",
+    "button": "Add to Chrome — it's free",
+    "note": "No account needed"
+  }
 }

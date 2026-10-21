@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Sync brand check
+        run: pnpm sync-brand:check
+
       - name: Typecheck
         run: pnpm turbo typecheck --filter='!@cam-tuner/web'
 

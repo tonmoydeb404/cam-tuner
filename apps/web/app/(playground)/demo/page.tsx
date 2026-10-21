@@ -1,12 +1,13 @@
 import DemoView from "@/views/demo"
-import type { Metadata } from "next"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: "/demo",
   title: "Demo — CamTuner",
   description:
     "Explore CamTuner's tuner controls with a static image — no webcam needed.",
-  robots: { index: false, follow: false },
-}
+  noindex: true,
+})
 
 export default function DemoPage() {
   return <DemoView />

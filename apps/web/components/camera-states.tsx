@@ -32,13 +32,15 @@ export const IdleState = ({
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="flex flex-col items-center justify-center gap-5 p-8 text-center"
+    className="flex flex-col items-center justify-center gap-4 p-5 text-center sm:gap-5 sm:p-8"
   >
-    <div className="rounded-full border border-primary/30 bg-primary/10 p-6 text-primary">
-      <IconCamera className="size-10" />
+    <div className="rounded-full border border-primary/30 bg-primary/10 p-4 text-primary sm:p-6">
+      <IconCamera className="size-8 sm:size-10" />
     </div>
     <div>
-      <p className="text-lg font-semibold text-foreground">{title}</p>
+      <p className="text-base font-semibold text-foreground sm:text-lg">
+        {title}
+      </p>
       <p className="mb-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
         {description}
       </p>
@@ -53,17 +55,17 @@ export const RequestingState = () => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="flex flex-col items-center justify-center gap-5 p-8 text-center"
+    className="flex flex-col items-center justify-center gap-4 p-5 text-center sm:gap-5 sm:p-8"
   >
     <motion.div
       animate={{ rotate: 360 }}
       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-      className="rounded-full border border-primary/30 bg-primary/10 p-6 text-primary"
+      className="rounded-full border border-primary/30 bg-primary/10 p-4 text-primary sm:p-6"
     >
-      <IconLoader className="size-10" />
+      <IconLoader className="size-8 sm:size-10" />
     </motion.div>
     <div>
-      <p className="mb-0 text-lg font-semibold text-foreground">
+      <p className="mb-0 text-base font-semibold text-foreground sm:text-lg">
         Waiting for permission
       </p>
       <p className="max-w-sm text-sm text-muted-foreground">
@@ -79,13 +81,13 @@ export const DeniedState = ({ onStart }: OnStartProps) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0 }}
-    className="flex flex-col items-center justify-center gap-5 p-8 text-center"
+    className="flex flex-col items-center justify-center gap-4 p-5 text-center sm:gap-5 sm:p-8"
   >
-    <div className="rounded-full border border-destructive/30 bg-destructive/10 p-6 text-destructive">
-      <IconShield className="size-10" />
+    <div className="rounded-full border border-destructive/30 bg-destructive/10 p-4 text-destructive sm:p-6">
+      <IconShield className="size-8 sm:size-10" />
     </div>
     <div>
-      <p className="mb-0 text-lg font-semibold text-foreground">
+      <p className="mb-0 text-base font-semibold text-foreground sm:text-lg">
         Camera access denied
       </p>
       <p className="mb-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -108,13 +110,13 @@ export const ErrorState = ({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0 }}
-    className="flex flex-col items-center justify-center gap-5 p-8 text-center"
+    className="flex flex-col items-center justify-center gap-4 p-5 text-center sm:gap-5 sm:p-8"
   >
-    <div className="rounded-full border border-yellow-500/30 bg-yellow-500/10 p-6 text-yellow-500">
-      <IconAlertCircle className="size-10" />
+    <div className="rounded-full border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-500 sm:p-6">
+      <IconAlertCircle className="size-8 sm:size-10" />
     </div>
     <div>
-      <p className="text-lg font-semibold text-foreground">
+      <p className="text-base font-semibold text-foreground sm:text-lg">
         Camera not available
       </p>
       <p className="mb-4 text-sm leading-relaxed text-muted-foreground">

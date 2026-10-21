@@ -36,3 +36,7 @@ npm-debug.log*
 *.pem
 .source
 .agents
+
+# Signing keys (never commit)
+.keys/
+.keys

@@ -67,7 +67,7 @@ export const AlignControl = ({
             size="xs"
             variant={!isAuto ? "default" : "ghost"}
             onClick={() => onModeChange("fixed")}
-            className={cn(!isAuto && "shadow-sm")}
+            className={cn(!isAuto && "shadow-sm", "rounded-md")}
           >
             Fixed
           </Button>
@@ -76,7 +76,7 @@ export const AlignControl = ({
             size="xs"
             variant={isAuto ? "default" : "ghost"}
             onClick={() => onModeChange("auto")}
-            className={cn(isAuto && "shadow-sm")}
+            className={cn(isAuto && "shadow-sm", "rounded-md")}
           >
             Auto
           </Button>

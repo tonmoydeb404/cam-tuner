@@ -1,0 +1,46 @@
+{
+  "appName": "CamTuner",
+  "slug": "cam-tuner",
+  "identifier": "app.camtuner",
+  "version": "3.1.2",
+  "tagline": "Professional Webcam Configurator",
+  "developer": {
+    "name": "Tonmoy Deb",
+    "website": "https://tonmoydeb.com"
+  },
+  "repository": "https://github.com/tonmoydeb404/cam-tuner",
+  "licenseUrl": "https://github.com/tonmoydeb404/cam-tuner/blob/main/LICENSE",
+  "description": {
+    "short": "Fine-tune your webcam — crop, zoom, align, and blur, right in your browser.",
+    "long": "CamTuner is a browser extension for professional webcam framing: crop, zoom, and align your live camera feed, lock aspect ratios, keep yourself centered with Center Stage tracking, and blur or replace your background. Built with React and TypeScript."
+  },
+  "web": {
+    "description": {
+      "full": "Crop, zoom, and align your live camera feed directly in your browser. Free Chrome extension for professional webcam framing on Google Meet and Zoom.",
+      "short": "Crop, zoom, and align your live camera feed directly in your browser. Free Chrome extension for professional webcam framing.",
+      "schema": "Professional webcam configurator. Crop, zoom, and align your live camera feed directly in your browser.",
+      "app": "Professional browser extension for webcam framing. Crop, zoom, and align your live video feed with zero-latency processing."
+    },
+    "keywords": [
+      "webcam",
+      "camera settings",
+      "crop video",
+      "zoom webcam",
+      "browser extension",
+      "Google Meet",
+      "Zoom",
+      "CamTuner",
+      "video framing",
+      "webcam configurator"
+    ],
+    "ogImage": {
+      "url": "https://camtuner.app/opengraph-image",
+      "width": 1200,
+      "height": 630,
+      "alt": "CamTuner — Professional Webcam Configurator"
+    }
+  },
+  "extension": {
+    "description": "CamTuner browser extension for webcam configuration"
+  }
+}

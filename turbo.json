@@ -1,6 +1,11 @@
 {
   "$schema": "https://v2-9-6.turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "DEV",
+    "MODE"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [

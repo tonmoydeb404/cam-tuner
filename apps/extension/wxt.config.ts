@@ -1,6 +1,7 @@
 import { AutoIconsOptions } from "@wxt-dev/auto-icons"
 import { execFileSync } from "node:child_process"
 import { defineConfig } from "wxt"
+import { brand } from "./lib/brand"
 
 // web-ext looks for a plain `firefox` binary on $PATH. On machines where
 // Firefox is only installed via Flatpak, fall back to a shim script (see
@@ -30,8 +31,8 @@ export default defineConfig({
     return firefox ? { binaries: { firefox } } : undefined
   })(),
   zip: {
-    artifactTemplate: "cam-tuner-{{version}}-{{browser}}.zip",
-    sourcesTemplate: "cam-tuner-{{version}}-sources.zip",
+    artifactTemplate: `${brand.slug}-{{version}}-{{browser}}.zip`,
+    sourcesTemplate: `${brand.slug}-{{version}}-sources.zip`,
   },
   manifest: {
     permissions: ["storage", "scripting"],
@@ -41,7 +42,8 @@ export default defineConfig({
         : "http://localhost:3000/*",
       "*://*/*",
     ],
-    name: "CamTuner",
+    name: brand.appName,
+    description: brand.extension.description,
     // MediaPipe (Center Stage) compiles WebAssembly on extension pages. MV3
     // requires 'wasm-unsafe-eval' (NOT 'unsafe-eval', which is blocked).
     content_security_policy: {

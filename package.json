@@ -5,10 +5,15 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:web": "pnpm --filter @cam-tuner/web dev",
+    "dev:ext": "pnpm --filter @cam-tuner/extension dev",
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "release:tag": "node ./scripts/release-tag-sync.mjs"
+    "sync-brand": "node scripts/sync-brand.mjs",
+    "sync-brand:check": "node scripts/sync-brand.mjs --check",
+    "release:tag": "node ./scripts/release-tag-sync.mjs",
+    "prepare": "git config core.hooksPath .husky || true"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",

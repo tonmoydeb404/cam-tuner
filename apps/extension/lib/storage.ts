@@ -46,6 +46,25 @@ export const backgroundImages = storage.defineItem<StoredBackgroundImage[]>(
   }
 )
 
+export type SiteEnabledMode = "default" | "off"
+
+export type SiteSetting = {
+  // Full snapshot of the global TunerConfig taken when the site was
+  // customized; later global changes do not affect customized sites.
+  config: TunerConfig
+  // "off" forces the camera off for this site; "default" follows the
+  // global virtual-camera switch.
+  enabled: SiteEnabledMode
+}
+
+export const siteSettings = storage.defineItem<Record<string, SiteSetting>>(
+  "local:siteSettings",
+  {
+    fallback: {},
+    init: () => ({}),
+  }
+)
+
 export async function getTunerConfig(): Promise<TunerConfig> {
   return await tunerConfig.getValue()
 }
@@ -139,4 +158,80 @@ export async function findBackgroundImage(
 ): Promise<StoredBackgroundImage | undefined> {
   const list = await backgroundImages.getValue()
   return list.find((img) => img.id === id)
+}
+
+export async function getSiteSettings(): Promise<Record<string, SiteSetting>> {
+  return await siteSettings.getValue()
+}
+
+export async function getSiteSetting(
+  origin: string
+): Promise<SiteSetting | null> {
+  const all = await getSiteSettings()
+  return all[origin] ?? null
+}
+
+export async function customizeSite(origin: string): Promise<SiteSetting> {
+  const snapshot: SiteSetting = {
+    config: { ...(await getTunerConfig()) },
+    enabled: "default",
+  }
+  const all = await getSiteSettings()
+  await siteSettings.setValue({ ...all, [origin]: snapshot })
+  return snapshot
+}
+
+export async function setSiteTunerConfig(
+  origin: string,
+  config: Partial<TunerConfig>
+): Promise<void> {
+  const all = await getSiteSettings()
+  const site = all[origin]
+  if (!site) return
+  await siteSettings.setValue({
+    ...all,
+    [origin]: { ...site, config: { ...site.config, ...config } },
+  })
+}
+
+export async function setSiteEnabledMode(
+  origin: string,
+  enabled: SiteEnabledMode
+): Promise<void> {
+  const all = await getSiteSettings()
+  const site = all[origin]
+  if (!site) return
+  await siteSettings.setValue({ ...all, [origin]: { ...site, enabled } })
+}
+
+export async function resetSite(origin: string): Promise<void> {
+  const all = await getSiteSettings()
+  if (!(origin in all)) return
+  const next = { ...all }
+  delete next[origin]
+  await siteSettings.setValue(next)
+}
+
+export type EffectiveSettings = {
+  config: TunerConfig
+  enabled: boolean
+  siteSetting: SiteSetting | null
+}
+
+export async function resolveEffectiveSettings(
+  origin: string
+): Promise<EffectiveSettings> {
+  const [globalConfig, globalEnabled, site] = await Promise.all([
+    getTunerConfig(),
+    virtualCamEnabled.getValue(),
+    getSiteSetting(origin),
+  ])
+  if (site) {
+    return {
+      config: site.config,
+      enabled: site.enabled !== "off" ? globalEnabled : false,
+      siteSetting: site,
+    }
+  }
+  return { config: globalConfig, enabled: globalEnabled, siteSetting: null }
 }

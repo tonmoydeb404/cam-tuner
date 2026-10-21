@@ -4,11 +4,11 @@
  * Identical to the extension adapter but lives in the web app so it can be
  * code-split by Next.js. Uses CDN-hosted WASM instead of local extension files.
  */
+import { type FaceDetector, toFaceBoxes } from "@workspace/stream-config"
 import {
-  type FaceDetector,
-  toFaceBoxes,
-} from "@workspace/stream-config"
-import { FaceDetector as MPFaceDetector, FilesetResolver } from "@mediapipe/tasks-vision"
+  FaceDetector as MPFaceDetector,
+  FilesetResolver,
+} from "@mediapipe/tasks-vision"
 
 type DetectorHandle = {
   detectForVideo: (
@@ -60,11 +60,7 @@ export function createMediaPipeFaceDetector(
       return detector !== null
     },
 
-    async detect(
-      source: CanvasImageSource,
-      _width: number,
-      _height: number
-    ) {
+    async detect(source: CanvasImageSource, _width: number, _height: number) {
       await ensureInitialised()
       if (!detector) return []
 

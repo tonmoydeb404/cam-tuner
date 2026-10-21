@@ -1,11 +1,13 @@
 import { brand } from "@/data/brand"
 import PageHeader from "@/layouts/page-layout/header"
-import type { Metadata } from "next"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
+  path: "/privacy",
   title: "Privacy Policy — CamTuner",
-  description: "CamTuner privacy policy. Learn how we handle your data.",
-}
+  description:
+    "CamTuner privacy policy. CamTuner processes your webcam feed entirely on your device — no video, audio, or personal data ever leaves your browser.",
+})
 
 export default function PrivacyPolicyPage() {
   return (

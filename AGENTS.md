@@ -14,6 +14,8 @@ pnpm build              # build all (extension -> web); build:firefox for Firefo
 pnpm lint               # eslint across workspaces
 pnpm typecheck          # tsc --noEmit across workspaces
 pnpm format             # prettier across workspaces
+pnpm sync-brand         # rewrite brand consumers from brand.json
+pnpm sync-brand:check   # exit 1 if any consumer drifted (CI enforces this)
 ```
 
 Run a task in one workspace:
@@ -59,11 +61,12 @@ Workspace aliases: `@cam-tuner/*` for apps, `@workspace/*` for packages. `ui` de
 - **The MediaPipe adapter is lazy-loaded** via `import(/* @vite-ignore */ url)` (for Center Stage tracking) because WXT builds content scripts as IIFE (which inlines dynamic imports). Keep the `@vite-ignore` comments — without them Vite tries to bundle the adapter and breaks the runtime URL loading.
 - **CSP uses `wasm-unsafe-eval`** (not `unsafe-eval`, which MV3 blocks). MediaPipe compiles WASM on extension pages — set in `wxt.config.ts`.
 - **`VITE_WEB_URL` is required.** Background script and manifest `host_permissions` use it; copy `.env.example` → `.env.local` in `apps/extension`. Release workflow injects it from `vars.VITE_WEB_URL`.
+- **Brand files are generated — never edit them by hand.** `brand.json` (repo root) is the single source of truth for app name, slug, identifier, version, URLs, and copy. `pnpm sync-brand` rewrites all consumers: package.jsons, generated `apps/extension/lib/brand.ts` + `apps/web/data/brand.ts`, and README marker regions (`apps/extension/wxt.config.ts` imports `lib/brand`). Brand sync runs only in the release script (`pnpm release:tag`) and drift is caught by CI's `sync-brand:check` — there is no pre-commit hook. Surface-specific copy lives in `brand.json` under `web` / `extension`.
 
 ## Versioning & release
 
-- Versions are kept in lockstep across `package.json`, `apps/web/package.json`, `apps/extension/package.json` only. Shared packages (`stream-config`, `ui`, configs) are **not** version-synced.
-- Cut a release with `pnpm release:tag <major|minor|patch|x.y.z>` (`scripts/release-tag-sync.mjs`). Requires a clean git tree — it bumps, commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes.
+- `brand.json` → `version` is the single version source of truth. `pnpm sync-brand` propagates it to root/extension/web `package.json`s. Shared packages (`stream-config`, `ui`, configs) are **not** version-synced.
+- Cut a release with `pnpm release:tag <major|minor|patch|x.y.z>` (`scripts/release-tag-sync.mjs`). Requires a clean git tree — it bumps `brand.json`, runs `sync-brand`, commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes.
 - Pushing a `v*` tag triggers `.github/workflows/release.yml`, which runs extension CI, zips Chrome + Firefox + sources (`wxt zip`), and attaches them to a GitHub Release.
 - `--dry-run` previews; `--no-push` skips pushing.
 

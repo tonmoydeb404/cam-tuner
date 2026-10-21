@@ -26,7 +26,6 @@ import {
   type SiteSetting,
   type StoredBackgroundImage,
 } from "../../lib/storage"
-import { CameraCard } from "./components/camera-card"
 import { Header } from "./components/header"
 import { getGuides, HelpButton, HelpDrawer } from "./components/help-guides"
 import {
@@ -168,10 +167,6 @@ export default function App() {
     await setTunerConfig(update)
   }
 
-  const handleClearCamera = async () => {
-    await selectedCameraLabel.setValue(null)
-  }
-
   const handleUpload = async (file: File) => {
     const processed = await processUploadedImage(file)
     await addBackgroundImage(processed.name, processed.dataUrl, processed.id)
@@ -188,7 +183,16 @@ export default function App() {
   const handlePreview = async () => {
     const webUrl = import.meta.env.VITE_WEB_URL
     if (!webUrl) return
-    await browser.tabs.create({ url: `${webUrl}/preview` })
+    // In site scope, open the preview pre-scoped to this site so edits there
+    // update the site's settings. Bare domain for https; full origin for
+    // http (e.g. localhost dev) so the scheme round-trips.
+    let siteParam: string | null = null
+    if (scope === "site" && siteOrigin) {
+      const url = new URL(siteOrigin)
+      siteParam = url.protocol === "https:" ? url.host : siteOrigin
+    }
+    const query = siteParam ? `?site=${encodeURIComponent(siteParam)}` : ""
+    await browser.tabs.create({ url: `${webUrl}/preview${query}` })
   }
 
   return (
@@ -212,10 +216,6 @@ export default function App() {
 
       {/* Scrollable body */}
       <div className="space-y-2.5 px-3 py-2.5">
-        {cameraLabel && (
-          <CameraCard cameraLabel={cameraLabel} onClear={handleClearCamera} />
-        )}
-
         <div
           className={cn(
             "space-y-4",
@@ -250,7 +250,7 @@ export default function App() {
             className="flex-1"
           >
             <IconEye size={15} />
-            Show Preview
+            {scope === "site" ? "Preview This Site" : "Show Preview"}
           </Button>
           <HelpButton onClick={() => setHelpOpen(true)} />
         </div>

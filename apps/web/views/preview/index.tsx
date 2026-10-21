@@ -11,17 +11,34 @@ import {
 import { brand } from "@/data/brand"
 import { useTuner } from "@/hooks/use-tuner"
 import { useWebcam } from "@/hooks/use-webcam"
-import { IconVideoOff } from "@tabler/icons-react"
+import { IconVideoOff, IconWorld } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import PreviewSidebar from "./sidebar"
 import PreviewVideo from "./video"
 
+// Accepts "meet.google.com" (assumes https) or a full "http://localhost:3000".
+function siteOriginFromParam(raw: string | null): string | null {
+  if (!raw) return null
+  try {
+    const url = new URL(raw.includes("://") ? raw : `https://${raw}`)
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
 const PreviewView = () => {
+  const searchParams = useSearchParams()
+  const siteOrigin = siteOriginFromParam(searchParams.get("site"))
+  const siteHostname = siteOrigin ? new URL(siteOrigin).hostname : null
+
   const webcam = useWebcam({ autoStart: true, bypassExtension: true })
-  const tuner = useTuner(webcam.stream)
+  const tuner = useTuner(webcam.stream, {}, { siteOrigin })
 
   const camState = deriveCamState({
     isLoading: webcam.isLoading,
@@ -38,6 +55,19 @@ const PreviewView = () => {
         <Image src={assets.logo} alt={brand.name} width={28} priority />
         <span className="font-heading text-base font-bold">{brand.name}</span>
       </Link>
+
+      {siteHostname && (
+        <div className="fixed top-5 left-1/2 z-20 -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border bg-background/95 px-3.5 py-1.5 text-xs shadow-sm backdrop-blur">
+            <IconWorld size={14} className="shrink-0 text-primary" />
+            <span>
+              Editing settings for{" "}
+              <span className="font-semibold">{siteHostname}</span> — changes
+              save for this site only
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 md:flex-row">
         {/* Main Camera Preview Area */}

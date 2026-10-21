@@ -9,7 +9,9 @@ const PreviewPageClient = () => (
     <Suspense>
       <WelcomeHandler />
     </Suspense>
-    <PreviewView />
+    <Suspense>
+      <PreviewView />
+    </Suspense>
   </>
 )
 

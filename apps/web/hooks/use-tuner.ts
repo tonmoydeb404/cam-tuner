@@ -49,6 +49,13 @@ function syncConfigToExtension(config: TunerConfig) {
   window.postMessage({ type: "syncConfig", config }, window.location.origin)
 }
 
+function syncSiteConfigToExtension(origin: string, config: TunerConfig) {
+  window.postMessage(
+    { type: "syncSiteConfig", origin, config },
+    window.location.origin
+  )
+}
+
 function useConfigSetter<K extends keyof TunerConfig>(
   key: K,
   updateConfig: (update: Partial<TunerConfig>) => void
@@ -64,13 +71,20 @@ function useConfigSetter<K extends keyof TunerConfig>(
 export function useTuner(
   inputStream: MediaStream | null,
   initialConfig: Partial<TunerConfig> = {},
-  { syncExtension = true }: { syncExtension?: boolean } = {}
+  {
+    syncExtension = true,
+    siteOrigin,
+  }: { syncExtension?: boolean; siteOrigin?: string | null } = {}
 ): UseTunerReturn {
   const mergedConfig = { ...DEFAULT_TUNER_CONFIG, ...initialConfig }
   const [config, setConfig] = useState<TunerConfig>(mergedConfig)
   const configRef = useRef<TunerConfig>(mergedConfig)
   const debouncedSync = useDebouncedCallback(
     syncConfigToExtension,
+    SYNC_DEBOUNCE_MS
+  )
+  const debouncedSiteSync = useDebouncedCallback(
+    syncSiteConfigToExtension,
     SYNC_DEBOUNCE_MS
   )
 
@@ -98,7 +112,10 @@ export function useTuner(
       const next = { ...configRef.current, ...update }
       configRef.current = next
       setConfig(next)
-      if (syncExtension) debouncedSync(next)
+      if (syncExtension) {
+        if (siteOrigin) debouncedSiteSync(siteOrigin, next)
+        else debouncedSync(next)
+      }
 
       for (const manifest of PLUGIN_REGISTRY) {
         const affected = Object.keys(update).some((k) =>
@@ -111,11 +128,11 @@ export function useTuner(
         )
       }
     },
-    [debouncedSync, modifierRef, syncExtension]
+    [debouncedSync, debouncedSiteSync, modifierRef, syncExtension, siteOrigin]
   )
 
   useEffect(() => {
-    if (!syncExtension) return
+    if (!syncExtension || siteOrigin) return
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type !== "camtuner:config-update") return
       const newConfig: TunerConfig = event.data.config
@@ -132,7 +149,34 @@ export function useTuner(
     window.addEventListener("message", handleMessage)
     window.dispatchEvent(new CustomEvent("camtuner:request-config"))
     return () => window.removeEventListener("message", handleMessage)
-  }, [modifierRef, syncExtension])
+  }, [modifierRef, syncExtension, siteOrigin])
+
+  // Site-scope editing: load the requested site's effective config and adopt
+  // live updates (e.g. from the popup) while editing /preview?site=<origin>.
+  useEffect(() => {
+    if (!syncExtension || !siteOrigin) return
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "camtuner:site-config") return
+      if (event.data.origin !== siteOrigin) return
+      const newConfig: TunerConfig = event.data.config
+      if (!newConfig) return
+      configRef.current = newConfig
+      setConfig(newConfig)
+      for (const manifest of PLUGIN_REGISTRY) {
+        modifierRef.current?.updatePluginConfig(
+          manifest.id,
+          manifest.configMapper(newConfig)
+        )
+      }
+    }
+    window.addEventListener("message", handleMessage)
+    window.dispatchEvent(
+      new CustomEvent("camtuner:request-site-config", {
+        detail: { origin: siteOrigin },
+      })
+    )
+    return () => window.removeEventListener("message", handleMessage)
+  }, [modifierRef, syncExtension, siteOrigin])
 
   const setAspectRatio = useConfigSetter("aspectRatio", updateConfig)
   const setZoom = useConfigSetter("zoom", updateConfig)

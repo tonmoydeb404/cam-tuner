@@ -9,6 +9,17 @@ export type ReleaseNote = {
 
 export const releaseNotes: ReleaseNote[] = [
   {
+    version: "3.2.0",
+    date: "2026-10-21",
+    title: "Per-Site Settings & Outlook Fix",
+    highlights: [
+      "Settings are now saved per website — the popup scopes itself to the site you're on, falling back to your global defaults",
+      'New "Preview this site" button in the popup opens the live preview editor preconfigured for the current site',
+      "Fixed CamTuner breaking Outlook on the web — Trusted Types shims now load only when needed (also preps Firefox 148+)",
+      "Tabs being actively tuned now show a live badge, and the popup gained troubleshooting guides like how to change your camera",
+    ],
+  },
+  {
     version: "3.1.2",
     date: "2026-08-07",
     title: "Maintenance Release",

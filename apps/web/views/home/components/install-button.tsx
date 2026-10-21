@@ -64,6 +64,7 @@ export const InstallButton = ({
       className={groupClassName}
     >
       <Button
+        nativeButton={false}
         render={
           <Link
             href={envLib.chromeStoreUrl ?? "#"}

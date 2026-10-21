@@ -3,8 +3,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import logo from "../../../assets/icon.svg"
 import type { SiteSetting } from "../../../lib/storage"
 import type { Scope } from "../utils"
-import { SiteCard } from "./site-card"
 import { GuideBanners, type Guide } from "./help-guides"
+import { SiteCard } from "./site-card"
 
 type HeaderProps = {
   siteOrigin: string | null
@@ -33,7 +33,7 @@ export function Header({
   onResetSite,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-10 shrink-0 space-y-2.5 border-b bg-background/95 px-3 py-2.5 backdrop-blur">
+    <header className="sticky top-0 z-10 shrink-0 space-y-2.5 border-b bg-card px-3 py-2.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img

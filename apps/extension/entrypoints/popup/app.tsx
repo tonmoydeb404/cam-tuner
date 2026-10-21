@@ -241,7 +241,7 @@ export default function App() {
       </div>
 
       {/* Footer — floats below the scrolling body */}
-      <footer className="sticky bottom-0 z-10 mt-auto shrink-0 border-t bg-background/95 px-3 py-2.5 backdrop-blur">
+      <footer className="sticky bottom-0 z-10 mt-auto shrink-0 border-t bg-card px-3 py-2.5">
         <div className="flex gap-2">
           <Button
             variant="default"

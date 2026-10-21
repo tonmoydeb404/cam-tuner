@@ -14,24 +14,11 @@ export const brand = {
     website: "https://tonmoydeb.com",
   },
   repository: "https://github.com/tonmoydeb404/cam-tuner",
-  downloadUrl: "https://github.com/tonmoydeb404/cam-tuner/releases/latest",
   licenseUrl: "https://github.com/tonmoydeb404/cam-tuner/blob/main/LICENSE",
-  updaterEndpoint:
-    "https://github.com/tonmoydeb404/cam-tuner/releases/latest/download/latest.json",
-  scripts: {
-    setupSh:
-      "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/unix.sh",
-    setupPs1:
-      "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/windows.ps1",
-    uninstallSh:
-      "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/unix-uninstall.sh",
-    uninstallPs1:
-      "https://raw.githubusercontent.com/tonmoydeb404/cam-tuner/main/setup/windows-uninstall.ps1",
-  },
   description: {
     short:
-      "Fine-tune your webcam — crop, zoom, align, and blur, as a cross-platform desktop app.",
-    long: "CamTuner is a cross-platform desktop app for professional webcam framing: crop, zoom, and align your live camera feed, lock aspect ratios, keep yourself centered with Center Stage tracking, and blur or replace your background. Built with Tauri 2, React, and Rust.",
+      "Fine-tune your webcam — crop, zoom, align, and blur, right in your browser.",
+    long: "CamTuner is a browser extension for professional webcam framing: crop, zoom, and align your live camera feed, lock aspect ratios, keep yourself centered with Center Stage tracking, and blur or replace your background. Built with React and TypeScript.",
   },
   web: {
     description: {
@@ -64,8 +51,6 @@ export const brand = {
   extension: {
     description: "CamTuner browser extension for webcam configuration",
   },
-  copyright: "Copyright (c) 2026 Tonmoy Deb",
-  homebrewTap: "tonmoydeb404/cam-tuner",
 } as const
 
 export type Brand = typeof brand

@@ -1,3 +1,0 @@
-[workspace]
-resolver = "2"
-members = ["camtuner-core", "camtuner-capture", "camtuner-vcam", "camtuner-vcam-dal"]

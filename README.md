@@ -6,11 +6,6 @@
 
 [![Get it on Chrome Web Store](https://img.shields.io/badge/Available_on-Chrome_Web_Store-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/camtuner/jokbnapnjdkccejojfidegbpnknfacmo?utm_source=item-share-cb)
 [![Get it on Firefox Add-ons](https://img.shields.io/badge/Available_on-Firefox_Add--ons-orange?style=for-the-badge&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/camtuner/)
-<!-- @brand:start downloadLink -->
-
-[![Download Desktop](https://img.shields.io/github/v/release/tonmoydeb404/cam-tuner?label=desktop%20download)](https://github.com/tonmoydeb404/cam-tuner/releases/latest)
-
-<!-- @brand:end downloadLink -->
 
 > **Note**: CamTuner is an enhanced version of [vCam](https://github.com/tonmoydeb404/v-cam). It is built with React and TypeScript, unlike vCam, which was written in raw JavaScript.
 
@@ -45,7 +40,6 @@ CamTuner is a **monorepo** powered by [pnpm workspaces](https://pnpm.io/workspac
 | Package                      | Description                                                  |
 | ---------------------------- | ------------------------------------------------------------ |
 | `apps/extension`             | Browser extension (Chrome & Firefox)                         |
-| `apps/desktop`               | Tauri 2 desktop app (macOS, Windows, Linux)                  |
 | `apps/web`                   | Next.js marketing & live-preview site                        |
 | `packages/stream-config`     | Shared video-processing library (Canvas & WebCodecs engines) |
 | `packages/ui`                | Shared React component library (Radix UI + shadcn)           |

@@ -110,7 +110,7 @@ function main() {
   }
 
   // brand.json is the single version source of truth; sync-brand propagates it
-  // into every consumer (package.jsons, tauri.conf.json, Cargo.toml/lock, ...).
+  // into every consumer (package.jsons, generated brand.ts files, README, ...).
   brand.version = newVersion
   writeJson(BRAND_FILE, brand)
   run("node scripts/sync-brand.mjs", { stdio: "inherit" })

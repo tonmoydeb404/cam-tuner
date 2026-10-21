@@ -26,7 +26,6 @@ import {
   type SiteSetting,
   type StoredBackgroundImage,
 } from "../../lib/storage"
-import { CameraCard } from "./components/camera-card"
 import { Header } from "./components/header"
 import { getGuides, HelpButton, HelpDrawer } from "./components/help-guides"
 import {
@@ -168,10 +167,6 @@ export default function App() {
     await setTunerConfig(update)
   }
 
-  const handleClearCamera = async () => {
-    await selectedCameraLabel.setValue(null)
-  }
-
   const handleUpload = async (file: File) => {
     const processed = await processUploadedImage(file)
     await addBackgroundImage(processed.name, processed.dataUrl, processed.id)
@@ -221,10 +216,6 @@ export default function App() {
 
       {/* Scrollable body */}
       <div className="space-y-2.5 px-3 py-2.5">
-        {cameraLabel && (
-          <CameraCard cameraLabel={cameraLabel} onClear={handleClearCamera} />
-        )}
-
         <div
           className={cn(
             "space-y-4",

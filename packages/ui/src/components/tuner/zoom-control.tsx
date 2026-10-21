@@ -43,7 +43,7 @@ export const ZoomControl = ({
         <Label className="text-xs font-semibold tracking-wider uppercase">
           Zoom
         </Label>
-        <span className="rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+        <span className="rounded-md bg-primary px-2 py-0.5 font-mono text-xs text-primary-foreground dark:bg-primary/10 dark:text-primary">
           {isAuto
             ? `${min.toFixed(1)}\u2013${max.toFixed(1)}x`
             : `${value.toFixed(1)}x`}

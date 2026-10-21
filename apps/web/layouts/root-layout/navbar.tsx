@@ -22,7 +22,7 @@ export const HomeNavbar = () => {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href={"/"} className="flex items-center gap-x-2">
-          <Image src={assets.logo} alt={brand.name} width={35} />
+          <Image src={assets.logo} alt={brand.name} width={35} priority />
           <span className="font-heading text-xl font-bold">{brand.name}</span>
         </Link>
 

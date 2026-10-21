@@ -12,7 +12,7 @@ export const PageNavbar = () => {
     <header className="border-b border-border/50 bg-background">
       <div className="container flex items-center justify-between py-4">
         <Link href="/" className="flex items-center gap-2">
-          <Image src={assets.logo} alt={brand.name} width={28} />
+          <Image src={assets.logo} alt={brand.name} width={28} priority />
           <span className="font-heading text-base font-bold text-foreground">
             {brand.name}
           </span>

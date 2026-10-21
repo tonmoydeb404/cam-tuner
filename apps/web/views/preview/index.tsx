@@ -35,7 +35,7 @@ const PreviewView = () => {
         href="/"
         className="fixed top-5 left-6 z-10 flex items-center gap-2"
       >
-        <Image src={assets.logo} alt={brand.name} width={28} />
+        <Image src={assets.logo} alt={brand.name} width={28} priority />
         <span className="font-heading text-base font-bold">{brand.name}</span>
       </Link>
 

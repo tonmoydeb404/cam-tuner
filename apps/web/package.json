@@ -12,14 +12,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
+    "@base-ui/react": "1.6.0",
     "@mediapipe/tasks-vision": "^0.10.35",
-    "@tabler/icons-react": "^3.46.0",
+    "@tabler/icons-react": "^3.49.0",
     "@workspace/ui": "workspace:*",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.43.0",
     "html-to-image": "^1.11.13",
-    "next": "16.3.0",
+    "next": "16.4.3",
     "next-themes": "^0.4.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -28,7 +28,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^25.9.5",
+    "@types/node": "^25.9.9",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "@workspace/eslint-config": "workspace:^",
